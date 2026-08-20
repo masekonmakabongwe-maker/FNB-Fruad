@@ -3106,3 +3106,84 @@ tr.filler {
     color: var(--text-3);
     font-family: var(--mono);
 }
+
+/* ============================================================
+   AGENT TIMESTAMP + SUMMARY TAB
+   ============================================================ */
+.agent-timestamp {
+    font-size: 9.5px;
+    font-weight: 600;
+    color: var(--text-3);
+    margin-left: 6px;
+    font-family: var(--mono);
+}
+
+.summary-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.summary-entry {
+    display: flex;
+    gap: 12px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+.summary-entry.human {
+    background: var(--purple-50);
+    border-color: #E9D8FD;
+}
+.summary-entry-icon {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.summary-entry-icon.agent {
+    background: var(--border-soft);
+    color: var(--purple-700);
+}
+.summary-entry-icon.human {
+    background: var(--purple-100);
+    color: var(--purple-800);
+}
+.summary-entry-body {
+    flex: 1;
+    min-width: 0;
+}
+.summary-entry-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+.summary-entry-title {
+    font-size: 12.5px;
+    font-weight: 800;
+}
+.summary-entry-time {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-3);
+    font-family: var(--mono);
+    white-space: nowrap;
+}
+.summary-entry-finding {
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 3px;
+}
+.summary-entry-finding.tone-clean { color: var(--green-700); }
+.summary-entry-finding.tone-flag { color: var(--amber-700); }
+.summary-entry-finding.tone-block { color: var(--red-700); }
+.summary-entry-desc {
+    font-size: 11.5px;
+    color: var(--text-2);
+    margin-top: 3px;
+    line-height: 1.5;
+}

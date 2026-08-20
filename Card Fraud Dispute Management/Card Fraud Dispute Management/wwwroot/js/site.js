@@ -258,6 +258,7 @@ function freshState(p) {
         activeStageTab: 0,
         gates: [null, null, null, null, null, null],
         gateApprover: [null, null, null, null, null, null],
+        gateDecidedAt: [null, null, null, null, null, null],
         closed: false,
         escalated: false,
         escalatedAt: null,
@@ -364,6 +365,17 @@ function formatLiveClock(seconds) {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
     const s = (seconds % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
+}
+
+// Wall-clock timestamp, e.g. "20 Aug, 22:58" - used next to agents and human
+// gate decisions so it's clear WHEN something happened, not just how long it took.
+function formatWallClock(isoString) {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return '';
+    const datePart = d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' });
+    const timePart = d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return `${datePart}, ${timePart}`;
 }
 
 /* ============================================================
@@ -1629,7 +1641,7 @@ function openCase(id) {
     document.querySelectorAll('.wtab').forEach(x => x.classList.toggle('active', x.dataset.wtab === 'agents'));
     const wbScrollEl = document.getElementById('wbScroll');
     if (wbScrollEl) wbScrollEl.style.display = 'block';
-    ['wbReportPanel', 'wbFilesPanel', 'wbCorrPanel'].forEach(pid => { const el = document.getElementById(pid); if (el) el.style.display = 'none'; });
+    ['wbReportPanel', 'wbFilesPanel', 'wbCorrPanel', 'wbSummaryPanel'].forEach(pid => { const el = document.getElementById(pid); if (el) el.style.display = 'none'; });
     wireWorkspaceTabs(p);
 
     renderStatusBanner(p);
@@ -1674,7 +1686,7 @@ function renderFillerCaseShell(filler) {
 
     const wbScrollEl = document.getElementById('wbScroll');
     if (wbScrollEl) { wbScrollEl.style.display = 'block'; wbScrollEl.innerHTML = `<div class="filler-empty">No agent activity for this case.</div>`; }
-    ['wbReportPanel', 'wbFilesPanel', 'wbCorrPanel'].forEach(pid => { const el = document.getElementById(pid); if (el) el.style.display = 'none'; });
+    ['wbReportPanel', 'wbFilesPanel', 'wbCorrPanel', 'wbSummaryPanel'].forEach(pid => { const el = document.getElementById(pid); if (el) el.style.display = 'none'; });
     document.querySelectorAll('.wtab').forEach(t => t.classList.toggle('active', t.dataset.wtab === 'agents'));
 
     const ringLabel = document.getElementById('ringLabel');
@@ -1808,6 +1820,9 @@ function renderAgentCard(p, agentKey) {
         timerBadge = `<span class="agent-timer-badge live">${I('timer', 11)} ${formatLiveClock(liveSec)}</span>`;
     } else if (st === 'done' && data.elapsedSeconds) {
         timerBadge = `<span class="agent-timer-badge completed">${I('timer', 11)} Took ${formatDuration(data.elapsedSeconds)}</span>`;
+        if (data.completedAt) {
+            timerBadge += `<span class="agent-timestamp">${formatWallClock(data.completedAt)}</span>`;
+        }
     }
 
     const body = (st === 'done' || st === 'blocked') ? `
@@ -1912,7 +1927,7 @@ async function runScreenAgents(p) {
                 : gate1Action === 'override' ? 'OVERRIDDEN — proceed with amendment'
                 : gate1Action === 'escalate' ? 'ESCALATED — routed to senior review'
                 : gate1Action.toUpperCase();
-            recognitionCheckText += `\n\n---\nHUMAN GATE DECISION (Screen 1 - Case Summary, Gate 1)\nDecision: ${decisionLabel}\nDecided by: ${approver}\n---`;
+            recognitionCheckText += `\n\n---\nHUMAN GATE DECISION (Screen 1 - Case Summary, Gate 1)\nDecision: ${decisionLabel}\nDecided by: ${approver}\nDecided at: ${s.gateDecidedAt[0] || new Date().toISOString()}\n---`;
         }
 
         const allOutputs = {
@@ -1982,6 +1997,7 @@ async function runScreenAgents(p) {
                     delete agentTimerIntervals[timerKey];
                 }
                 p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
+                p.a[ak].completedAt = new Date().toISOString();
 
                 if (apiRes.success && apiRes.outputText) {
                     p.a[ak].rawText = apiRes.outputText;
@@ -2033,6 +2049,8 @@ async function runScreenAgents(p) {
                     clearInterval(agentTimerIntervals[timerKey]);
                     delete agentTimerIntervals[timerKey];
                 }
+                p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
+                p.a[ak].completedAt = new Date().toISOString();
                 p.a[ak].finding = 'Connection Error';
                 p.a[ak].desc = err.message || 'Failed to reach local API service.';
                 p.a[ak].tone = 'block';
@@ -2053,6 +2071,7 @@ function handleGate(p, screenIdx, action) {
     const s = state[p.id];
     s.gates[screenIdx] = action;
     s.gateApprover[screenIdx] = currentUser ? `${currentUser.name} (${currentUser.title})` : null;
+    s.gateDecidedAt[screenIdx] = new Date().toISOString();
 
     const gateLabel = SCREENS[screenIdx] ? SCREENS[screenIdx].title : `Gate ${screenIdx + 1}`;
     if (action === 'approve') showToast(`${gateLabel} approved`, 'success', 'check');
@@ -2162,7 +2181,7 @@ function openAgentModal(p, agentKey) {
 
     let html = '';
     if (data.elapsedSeconds) {
-        html += `<div style="display:inline-flex;align-items:center;gap:6px;background:#F1F5F9;color:#334155;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-bottom:12px;">${I('timer', 12)} Agent Response Time: ${formatDuration(data.elapsedSeconds)}</div>`;
+        html += `<div style="display:inline-flex;align-items:center;gap:6px;background:#F1F5F9;color:#334155;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-bottom:12px;">${I('timer', 12)} Agent Response Time: ${formatDuration(data.elapsedSeconds)}${data.completedAt ? ` · Completed ${formatWallClock(data.completedAt)}` : ''}</div>`;
     }
 
     html += renderRichAgentReport(data.rawText || data.fullText || data, agentKey);
@@ -2186,7 +2205,7 @@ function wireWorkspaceTabs(p) {
         t.onclick = () => {
             activeWorkspaceTab = t.dataset.wtab;
             document.querySelectorAll('.wtab').forEach(x => x.classList.toggle('active', x === t));
-            const panels = { agents: 'wbScroll', report: 'wbReportPanel', files: 'wbFilesPanel', corr: 'wbCorrPanel' };
+            const panels = { agents: 'wbScroll', report: 'wbReportPanel', files: 'wbFilesPanel', corr: 'wbCorrPanel', summary: 'wbSummaryPanel' };
             Object.entries(panels).forEach(([key, id]) => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = (key === activeWorkspaceTab) ? 'block' : 'none';
@@ -2200,6 +2219,7 @@ function renderWorkspaceTab(p) {
     if (activeWorkspaceTab === 'report') renderReportTab(p);
     else if (activeWorkspaceTab === 'files') renderCaseFilesTab(p);
     else if (activeWorkspaceTab === 'corr') renderCorrespondenceTab(p);
+    else if (activeWorkspaceTab === 'summary') renderSummaryTab(p);
 }
 
 function agentRunState(p, agentKey) {
@@ -2311,6 +2331,76 @@ function renderCorrespondenceTab(p) {
     panel.innerHTML = html;
 }
 
+/* ---- Summary tab: a chronological, plain-language record of the case -
+       each agent's finding as it completed, interleaved with the human
+       decision made at each gate. Built for handover / audit reading,
+       not for re-deriving the agent's full analysis (that's the Agents
+       and Report tabs) - every entry carries a real wall-clock timestamp. ---- */
+function renderSummaryTab(p) {
+    const panel = document.getElementById('wbSummaryPanel');
+    if (!panel) return;
+    const s = state[p.id];
+
+    const anyStarted = Object.keys(s.agentStatus).length > 0;
+    if (!anyStarted) {
+        panel.innerHTML = `<div class="corr-empty"><b>No summary yet</b>This builds up as agents complete and gates are decided - nothing has run for this case yet.</div>`;
+        return;
+    }
+
+    let entries = [];
+    SCREENS.forEach((scr, screenIdx) => {
+        scr.agents.forEach(ak => {
+            const st = s.agentStatus[ak];
+            if (st !== 'done' && st !== 'blocked') return;
+            const data = p.a[ak];
+            const meta = AGENTS[ak];
+            entries.push({
+                sortKey: data.completedAt || '',
+                html: `
+                <div class="summary-entry">
+                    <div class="summary-entry-icon agent">${I(meta.icon, 14)}</div>
+                    <div class="summary-entry-body">
+                        <div class="summary-entry-head">
+                            <span class="summary-entry-title">${meta.label}</span>
+                            <span class="summary-entry-time">${data.completedAt ? formatWallClock(data.completedAt) : ''}</span>
+                        </div>
+                        <div class="summary-entry-finding ${agentToneClass(data.tone)}">${data.finding || ''}</div>
+                        <div class="summary-entry-desc">${data.desc || ''}</div>
+                    </div>
+                </div>`
+            });
+        });
+
+        // Human decision for this screen's gate, if one has been recorded
+        if (s.gates[screenIdx]) {
+            const action = s.gates[screenIdx];
+            const actionLabel = action === 'approve' ? 'Approved' : action === 'override' ? 'Overridden' : action === 'escalate' ? 'Escalated' : action;
+            entries.push({
+                sortKey: s.gateDecidedAt[screenIdx] || '',
+                html: `
+                <div class="summary-entry human">
+                    <div class="summary-entry-icon human">${I('check', 14)}</div>
+                    <div class="summary-entry-body">
+                        <div class="summary-entry-head">
+                            <span class="summary-entry-title">Human decision — ${scr.title} (Gate ${screenIdx + 1})</span>
+                            <span class="summary-entry-time">${s.gateDecidedAt[screenIdx] ? formatWallClock(s.gateDecidedAt[screenIdx]) : ''}</span>
+                        </div>
+                        <div class="summary-entry-finding ${agentToneClass(action === 'escalate' || action === 'override' ? 'flag' : 'clean')}">${actionLabel}</div>
+                        <div class="summary-entry-desc">Decided by ${s.gateApprover[screenIdx] || 'Unknown approver'}.</div>
+                    </div>
+                </div>`
+            });
+        }
+    });
+
+    if (!entries.length) {
+        panel.innerHTML = `<div class="corr-empty"><b>No summary yet</b>This builds up as agents complete and gates are decided.</div>`;
+        return;
+    }
+
+    panel.innerHTML = `<div class="summary-timeline">${entries.map(e => e.html).join('')}</div>`;
+}
+
 function openPolicyModal(p) {
     const pol = POLICY_TEXT[p.id];
     if (!pol) return;
@@ -2346,14 +2436,14 @@ function openThread() {
     renderThread(p);
 
     const scrimEl = document.getElementById('scrim') || document.querySelector('.scrim');
-    const drawerEl = document.getElementById('drawer') || document.querySelector('.drawer');
+    const drawerEl = document.getElementById('threadDrawer');
     if (scrimEl) scrimEl.classList.add('open');
     if (drawerEl) drawerEl.classList.add('open');
 }
 
 function closeThread() {
     const scrimEl = document.getElementById('scrim') || document.querySelector('.scrim');
-    const drawerEl = document.getElementById('drawer') || document.querySelector('.drawer');
+    const drawerEl = document.getElementById('threadDrawer');
     if (scrimEl) scrimEl.classList.remove('open');
     if (drawerEl) drawerEl.classList.remove('open');
 }
