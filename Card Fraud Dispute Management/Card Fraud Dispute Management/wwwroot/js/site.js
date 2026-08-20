@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    ICONS
    ============================================================ */
 function I(name, size) {
@@ -494,23 +494,39 @@ function formatAgentData(agentKey, data) {
         }
     }
     else {
-        const provHyp = getProp(data, 'provisionalHypothesis', 'provisional Hypothesis');
-        const rec = getProp(data, 'recommendation') || {};
-        finding = provHyp || data.finding || rec.action || 'Analysis Completed';
-
-        let descParts = [];
-        if (rec.reason) descParts.push(rec.reason);
-        const custPos = getProp(data, 'customerPosition', 'customer Position');
-        if (custPos) descParts.push(custPos);
-        if (data.desc) descParts.push(data.desc);
-
-        desc = descParts.join(' ') || 'The agent processed the transaction and returned full analytical findings.';
-
         const materialGaps = getProp(data, 'materialGaps', 'material Gaps');
-        if (materialGaps && Array.isArray(materialGaps)) {
-            reasoning = materialGaps;
+
+        // Every agent from Transaction Classification onward returns this same
+        // "gated" envelope when an upstream human decision hasn't been recorded
+        // yet: applicability: 'not-applicable' + a top-level reason (a DIFFERENT
+        // field from recommendation.reason, which is usually null in this state -
+        // that mismatch is what produced the generic "Analysis Completed" /
+        // "processed the transaction..." boilerplate here before). Handle it
+        // first, before falling through to the generic recommendation-based path.
+        if (data.applicability === 'not-applicable') {
+            finding = 'Not Yet Applicable';
+            desc = data.reason || 'This agent has not yet run its normal analysis - an upstream human decision is still pending.';
+            tone = 'flag';
+            if (materialGaps && Array.isArray(materialGaps)) reasoning = materialGaps;
+        } else {
+            const provHyp = getProp(data, 'provisionalHypothesis', 'provisional Hypothesis');
+            const rec = getProp(data, 'recommendation') || {};
+            finding = provHyp || data.finding || (rec.action ? String(rec.action).replace(/-/g, ' ') : null) || 'Analysis Completed';
+
+            let descParts = [];
+            if (rec.reason) descParts.push(rec.reason);
+            else if (data.reason) descParts.push(data.reason); // top-level reason, when recommendation.reason is empty
+            const custPos = getProp(data, 'customerPosition', 'customer Position');
+            if (custPos) descParts.push(custPos);
+            if (data.desc) descParts.push(data.desc);
+
+            desc = descParts.join(' ') || 'The agent processed the transaction and returned full analytical findings.';
+
+            if (materialGaps && Array.isArray(materialGaps)) {
+                reasoning = materialGaps;
+            }
+            if (data.status === 'failed' || data.error) tone = 'block';
         }
-        if (data.status === 'failed' || data.error) tone = 'block';
     }
 
     return { finding, desc, tone, reasoning, fullText, urgencyLevel };
@@ -535,6 +551,17 @@ function renderRichAgentReport(data, fallbackAgentKey) {
 
     const agentType = (obj.agent || fallbackAgentKey || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
+    // Every agent from Transaction Classification onward shares the same envelope:
+    // applicability + a top-level reason explaining why it hasn't run its normal
+    // analysis yet (usually an upstream human gate not yet cleared). This is a
+    // DIFFERENT field from recommendation.reason, which is frequently null in this
+    // state - that mismatch was why agents in this state were showing generic
+    // "Analysis Completed" boilerplate instead of the real, useful explanation.
+    // Handle it once, for every agent, before any agent-specific rendering.
+    if (obj.applicability === 'not-applicable') {
+        return renderNotApplicablePanel(obj);
+    }
+
     switch (agentType) {
         case 'caseintake':
             return renderCaseIntakeReport(obj);
@@ -550,9 +577,56 @@ function renderRichAgentReport(data, fallbackAgentKey) {
             return renderShadowCreditReport(obj);
         case 'chargebackpreparation':
             return renderChargebackPreparationReport(obj);
+        case 'recallandrepatriation':
+            return renderRecallRepatriationReport(obj);
+        case 'obligationcheck':
+            return renderObligationCheckReport(obj);
         default:
             return renderGenericAgentReport(obj);
     }
+}
+
+// Shared "gated / not yet applicable" panel - used by every agent from
+// Transaction Classification onward when an upstream human decision hasn't
+// been recorded yet. Verified against real API responses (20 Aug run).
+function renderNotApplicablePanel(obj) {
+    const reason = obj.reason || 'This agent has not yet run its normal analysis.';
+    const gaps = gP(obj, 'materialGaps', 'material Gaps') || [];
+    const gate = gP(obj, 'humanGate') || {};
+    const rec = gP(obj, 'recommendation') || {};
+
+    return `
+    <div class="agent-report-wrap" style="line-height:1.5;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">⏳ Not Yet Applicable</div>
+            <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-top:2px;text-transform:uppercase;letter-spacing:0.4px;">Status: ${obj.status || 'completed'} · Applicability: not-applicable</div>
+        </div>
+
+        <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#92400E;">Why this agent has nothing to report yet</div>
+            <div style="font-size:12.5px;color:#78350F;margin-top:4px;line-height:1.6;">${reason}</div>
+        </div>
+
+        ${gaps.length ? `
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Material Gaps</div>
+            <ul style="margin:0;padding-left:18px;">
+                ${gaps.map(g => `<li style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:4px;">${g}</li>`).join('')}
+            </ul>
+        </div>` : ''}
+
+        ${gate.gateId ? `
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:12px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--text-3);">Waiting on</div>
+            <div style="font-size:12px;color:var(--text);margin-top:4px;">Gate <b>${gate.gateId}</b> — ${gate.status || 'awaiting-review'}${gate.requiredRole ? `, requires <b>${gate.requiredRole.replace(/-/g, ' ')}</b>` : ''}</div>
+        </div>` : ''}
+
+        ${(rec.action || rec.reason) ? `
+        <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
+            <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">${rec.action ? `<b>${String(rec.action).replace(/-/g, ' ')}</b>: ` : ''}${rec.reason || ''}</div>
+        </div>` : ''}
+    </div>`;
 }
 
 function gP(o, ...keys) {
@@ -762,7 +836,7 @@ function renderRecognitionCheckReport(obj) {
 
         <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
             <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
-            <div style="font-size:12px;color:var(--text-2);margin-top:2px;"><b>${rec.action}</b>: ${rec.reason}</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">${rec.action ? `<b>${String(rec.action).replace(/-/g, " ")}</b>: ` : ""}${rec.reason || "No recommendation recorded yet."}</div>
         </div>
     </div>`;
 }
@@ -771,46 +845,66 @@ function renderRecognitionCheckReport(obj) {
    3. FRAUD ASSESSMENT AGENT RENDERER
    ------------------------------------------------------------ */
 function renderFraudAssessmentReport(obj) {
-    const classification = gP(obj, 'classification') || {};
-    const compromise = gP(obj, 'compromiseExtent', 'compromise Extent') || {};
-    const containment = gP(obj, 'containment') || {};
-    const bankControl = gP(obj, 'bankControlAssessment', 'bank ControlAssessment') || 'N/A';
+    // NOTE: unlike the other 6 renderers below, this one has not yet been
+    // verified against a real completed Fraud Assessment response - the terminal
+    // log used to fix the others started mid-run, after Fraud Assessment had
+    // already completed. Field names here are best-effort guesses with wide
+    // fallbacks, degrading to the generic renderer's safe fields rather than
+    // showing "undefined"/"null" when a guess is wrong. Replace with confirmed
+    // field names once a completed Fraud Assessment log is available.
+    const classification = gP(obj, 'classification', 'fraudClassification') || {};
+    const compromise = gP(obj, 'compromiseExtent', 'compromise Extent', 'extentOfCompromise') || {};
+    const containment = gP(obj, 'containment', 'containmentRecommendation') || {};
+    const bankControl = gP(obj, 'bankControlAssessment', 'bank ControlAssessment', 'processAssessment');
     const rec = gP(obj, 'recommendation') || {};
+    const materialGaps = gP(obj, 'materialGaps', 'material Gaps') || [];
 
-    const recActions = gP(containment, 'recommendedActions', 'recommendedActions') || [];
+    const fraudType = gP(classification, 'fraudType', 'fraudType', 'family', 'method');
+    const channel = gP(classification, 'channel');
+    const recActions = gP(containment, 'recommendedActions', 'recommendedActions', 'actions') || [];
+    const compromiseText = gP(compromise, 'plainEnglish', 'plainEnglish', 'description', 'summary');
 
     return `
     <div class="agent-report-wrap" style="line-height:1.5;">
         <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
             <div style="font-size:16px;font-weight:800;color:var(--purple-800);">🚨 Fraud Assessment</div>
-            <div style="font-size:12px;font-weight:700;color:var(--red-700);margin-top:2px;">
-                Type: ${gP(classification, 'fraudType', 'fraudType')} (${gP(classification, 'channel')})
-            </div>
+            ${(fraudType || channel) ? `<div style="font-size:12px;font-weight:700;color:var(--red-700);margin-top:2px;">
+                ${fraudType ? `Type: ${fraudType}` : ''}${fraudType && channel ? ' · ' : ''}${channel ? `Channel: ${channel}` : ''}
+            </div>` : ''}
         </div>
 
+        ${compromiseText ? `
         <div style="background:#FFF5F5;border:1px solid #FED7D7;border-radius:10px;padding:12px;margin-bottom:14px;">
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--red-700);">Compromise Extent (${compromise.label || 'Card Credentials'})</div>
-            <div style="font-size:12px;color:#742A2A;margin-top:4px;">${gP(compromise, 'plainEnglish', 'plainEnglish') || 'N/A'}</div>
-        </div>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--red-700);">Compromise Extent${compromise.label ? ` (${compromise.label})` : ''}</div>
+            <div style="font-size:12px;color:#742A2A;margin-top:4px;">${compromiseText}</div>
+        </div>` : ''}
 
+        ${recActions.length ? `
         <div style="margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Containment Actions</div>
             ${recActions.map(a => `
                 <div style="display:flex;justify-content:space-between;background:#F0FDF4;border:1px solid #BBF7D0;padding:6px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;color:#166534;">
-                    <span><b>Action:</b> ${a.action}</span>
-                    <span>🟢 ${a.state}</span>
+                    <span><b>Action:</b> ${typeof a === 'string' ? a : (a.action || JSON.stringify(a))}</span>
+                    ${a.state ? `<span>🟢 ${a.state}</span>` : ''}
                 </div>
             `).join('')}
-        </div>
+        </div>` : ''}
 
+        ${bankControl ? `
         <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:12px;margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--text-3);">Bank Control Assessment</div>
             <div style="font-size:12px;color:var(--text);margin-top:4px;line-height:1.5;">${bankControl}</div>
-        </div>
+        </div>` : ''}
+
+        ${materialGaps.length ? `
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Material Gaps</div>
+            <ul style="margin:0;padding-left:18px;">${materialGaps.map(g => `<li style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:4px;">${g}</li>`).join('')}</ul>
+        </div>` : ''}
 
         <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
             <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
-            <div style="font-size:12px;color:var(--text-2);margin-top:2px;"><b>${rec.action}</b>: ${rec.reason}</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">${rec.action ? `<b>${String(rec.action).replace(/-/g, " ")}</b>: ` : ""}${rec.reason || obj.reason || "No recommendation recorded yet."}</div>
         </div>
     </div>`;
 }
@@ -821,6 +915,7 @@ function renderFraudAssessmentReport(obj) {
 function renderFundsTraceReport(obj) {
     const items = gP(obj, 'items') || [];
     const counterparties = gP(obj, 'counterparties') || [];
+    const timeCriticality = gP(obj, 'timeCriticalityRanking', 'timeCriticalityRanking') || [];
     const recPosition = gP(obj, 'recoveryPosition', 'recoveryPosition') || {};
     const rec = gP(obj, 'recommendation') || {};
 
@@ -832,38 +927,51 @@ function renderFundsTraceReport(obj) {
             <div style="font-size:16px;font-weight:800;color:var(--purple-800);">🌐 Funds Trace</div>
             <div style="font-size:12px;color:var(--text-2);margin-top:2px;">
                 Potentially Recoverable: <b>R${Number(potentiallyRecoverable || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })} ${recPosition.currency || 'ZAR'}</b>
+                ${recPosition.heldOrRestrictable ? ` · Held/Restrictable: <b>R${Number(recPosition.heldOrRestrictable).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</b>` : ''}
+                ${recPosition.confirmedGone ? ` · Confirmed Gone: <b>R${Number(recPosition.confirmedGone).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</b>` : ''}
             </div>
         </div>
 
+        ${items.length ? `
         <div style="margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Card Scheme Movement Paths</div>
             ${items.map(item => {
         const movPath = gP(item, 'movementPath', 'movementPath') || [];
         return `
                 <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;">
-                    <div style="font-family:var(--mono);font-size:11px;font-weight:700;">${gP(item, 'transactionRef', 'transaction Ref')} (ARN: ${item.arn || 'N/A'})</div>
-                    <div style="font-size:12px;font-weight:700;color:var(--purple-700);margin-top:2px;">R${Number(item.amount || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</div>
-                    <div style="font-size:11px;color:var(--text-2);margin-top:4px;">
-                        Path: ${movPath.join(' ➔ ')}
-                    </div>
+                    <div style="font-family:var(--mono);font-size:11px;font-weight:700;">${gP(item, 'transactionRef', 'transaction Ref') || 'Item'}${item.arn ? ` (ARN: ${item.arn})` : ''}</div>
+                    ${item.amount ? `<div style="font-size:12px;font-weight:700;color:var(--purple-700);margin-top:2px;">R${Number(item.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</div>` : ''}
+                    ${movPath.length ? `<div style="font-size:11px;color:var(--text-2);margin-top:4px;">Path: ${movPath.join(' ➔ ')}</div>` : ''}
                 </div>`;
     }).join('')}
-        </div>
+        </div>` : '<div style="font-size:11.5px;color:var(--text-3);font-style:italic;margin-bottom:14px;">No movement items traced yet.</div>'}
 
+        ${counterparties.length ? `
         <div style="margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Identified Counterparties</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 ${counterparties.map(c => `
                     <span style="background:#F1F5F9;border:1px solid #CBD5E1;padding:4px 10px;border-radius:6px;font-size:11.5px;font-weight:600;">
-                        ${c.name} (${c.type})
+                        ${c.name || c.who || 'Counterparty'}${c.type || c.class ? ` (${c.type || c.class})` : ''}
                     </span>
                 `).join('')}
             </div>
-        </div>
+        </div>` : ''}
+
+        ${timeCriticality.length ? `
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Time-Criticality Ranking</div>
+            ${timeCriticality.map((t, i) => `
+                <div style="display:flex;justify-content:space-between;background:#FFFBEB;border:1px solid #FDE68A;padding:6px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;color:#92400E;">
+                    <span><b>#${i + 1}</b> ${t.who || t.counterparty || JSON.stringify(t)}</span>
+                    ${t.window || t.recoveryWindow ? `<span>${t.window || t.recoveryWindow}</span>` : ''}
+                </div>
+            `).join('')}
+        </div>` : ''}
 
         <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
             <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
-            <div style="font-size:12px;color:var(--text-2);margin-top:2px;"><b>${rec.action}</b>: ${rec.reason}</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">${rec.action ? `<b>${String(rec.action).replace(/-/g, " ")}</b>: ` : ""}${rec.reason || obj.reason || "No recommendation recorded yet."}</div>
         </div>
     </div>`;
 }
@@ -906,7 +1014,7 @@ function renderTransactionClassificationReport(obj) {
 
         <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
             <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
-            <div style="font-size:12px;color:var(--text-2);margin-top:2px;"><b>${rec.action}</b>: ${rec.reason}</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">${rec.action ? `<b>${String(rec.action).replace(/-/g, " ")}</b>: ` : ""}${rec.reason || "No recommendation recorded yet."}</div>
         </div>
     </div>`;
 }
@@ -1000,7 +1108,145 @@ function renderChargebackPreparationReport(obj) {
 
         <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
             <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
-            <div style="font-size:12px;color:var(--text-2);margin-top:2px;"><b>${rec.action}</b>: ${rec.reason}</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">${rec.action ? `<b>${String(rec.action).replace(/-/g, " ")}</b>: ` : ""}${rec.reason || "No recommendation recorded yet."}</div>
+        </div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------
+   RECALL & REPATRIATION AGENT RENDERER
+   ------------------------------------------------------------ */
+function renderRecallRepatriationReport(obj) {
+    const recallItems = gP(obj, 'recallItems') || [];
+    const caspHolds = gP(obj, 'caspHoldRequests', 'caspHoldRequests') || [];
+    const bankRequests = gP(obj, 'counterpartyBankRequests', 'counterpartyBankRequests') || [];
+    const blocking = gP(obj, 'blockingActionsOnFNB', 'blockingActionsOnFNB') || [];
+    const recPosition = gP(obj, 'recoveryPosition', 'recoveryPosition') || {};
+    const rec = gP(obj, 'recommendation') || {};
+    const routeOwner = gP(obj, 'routeOwner', 'routeOwner');
+
+    const potentiallyRecoverable = gP(recPosition, 'potentiallyRecoverable', 'potentially Recoverable');
+
+    return `
+    <div class="agent-report-wrap" style="line-height:1.5;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">📨 Recall & Repatriation</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">
+                Potentially Recoverable: <b>R${Number(potentiallyRecoverable || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })} ${recPosition.currency || 'ZAR'}</b>
+                ${routeOwner ? ` · Route owner: <b>${String(routeOwner).replace(/-/g, ' ')}</b>` : ''}
+            </div>
+        </div>
+
+        ${recallItems.length ? `
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Recall Requests</div>
+            ${recallItems.map(r => `
+                <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;font-size:11.5px;">
+                    <div style="font-family:var(--mono);font-weight:700;">${r.transactionRef || r.reference || 'Item'}</div>
+                    <div style="color:var(--text-2);margin-top:4px;">${r.status || r.reason || JSON.stringify(r)}</div>
+                </div>`).join('')}
+        </div>` : '<div style="font-size:11.5px;color:var(--text-3);font-style:italic;margin-bottom:14px;">No recall requests raised yet.</div>'}
+
+        ${caspHolds.length ? `
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">CASP Hold Requests</div>
+            ${caspHolds.map(h => `<div style="background:#FFFBEB;border:1px solid #FDE68A;padding:8px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;color:#92400E;">${h.provider || h.name || JSON.stringify(h)}</div>`).join('')}
+        </div>` : ''}
+
+        ${bankRequests.length ? `
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Counterparty Bank Requests</div>
+            ${bankRequests.map(b => `<div style="background:#F1F5F9;border:1px solid #CBD5E1;padding:8px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;">${b.bank || b.institution || JSON.stringify(b)}</div>`).join('')}
+        </div>` : ''}
+
+        ${blocking.length ? `
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--red-700);margin-bottom:6px;">Blocking Actions on FNB</div>
+            ${blocking.map(b => `<div style="background:#FFF5F5;border:1px solid #FED7D7;padding:8px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;color:#742A2A;">${typeof b === 'string' ? b : JSON.stringify(b)}</div>`).join('')}
+        </div>` : ''}
+
+        <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
+            <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">${rec.action ? `<b>${String(rec.action).replace(/-/g, " ")}</b>: ` : ""}${rec.reason || obj.reason || "No recommendation recorded yet."}</div>
+        </div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------
+   OBLIGATION CHECK AGENT RENDERER
+   Verified against a real completed response (20 Aug run) - the
+   5-instrument obligations array is the centrepiece here.
+   ------------------------------------------------------------ */
+function renderObligationCheckReport(obj) {
+    const obligations = gP(obj, 'obligations') || [];
+    const summary = gP(obj, 'summary') || {};
+    const rec = gP(obj, 'recommendation') || {};
+    const screenReason = gP(obj, 'screenReason', 'screenReason');
+    const commsRestriction = gP(obj, 'communicationRestriction', 'communicationRestriction') || {};
+    const voluntaryComplaint = gP(obj, 'voluntaryCriminalComplaint', 'voluntaryCriminalComplaint') || {};
+    const openEscalations = gP(obj, 'openEscalations', 'openEscalations') || [];
+
+    const statusStyle = {
+        'owed': { bg: '#FFF5F5', border: '#FED7D7', text: '#742A2A', badge: 'b-high', label: 'Owed' },
+        'verify-first': { bg: '#FFFBEB', border: '#FDE68A', text: '#92400E', badge: 'b-medium', label: 'Verify First' },
+        'not-owed': { bg: '#F0FDF4', border: '#BBF7D0', text: '#166534', badge: 'b-low', label: 'Not Owed' },
+        'not-in-force': { bg: '#F8FAFC', border: '#E2E8F0', text: 'var(--text-3)', badge: 'b-neutral', label: 'Not In Force' }
+    };
+
+    return `
+    <div class="agent-report-wrap" style="line-height:1.5;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">⚖️ Obligation Check</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">
+                ${summary.owed || 0} owed · ${summary.verifyFirst || 0} verify-first · ${summary.notOwed || 0} not owed · ${summary.notInForce || 0} not in force
+            </div>
+        </div>
+
+        ${screenReason ? `
+        <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#92400E;">Screen Gate</div>
+            <div style="font-size:12px;color:#78350F;margin-top:4px;">${screenReason}</div>
+        </div>` : ''}
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Five Instruments</div>
+            ${obligations.map(o => {
+        const st = statusStyle[o.status] || statusStyle['not-in-force'];
+        return `
+                <div style="background:${st.bg};border:1px solid ${st.border};border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-weight:700;font-size:12.5px;color:${st.text};">${o.instrument}${o.provision ? ` — ${o.provision}` : ''}</span>
+                        <span class="badge ${st.badge}">${st.label}</span>
+                    </div>
+                    <div style="font-size:11.5px;color:${st.text};margin-top:6px;line-height:1.6;">${o.reason || ''}</div>
+                    ${o.timeRemainingDays != null ? `<div style="font-size:10.5px;color:${st.text};margin-top:4px;font-weight:600;">${o.timeRemainingDays} days remaining</div>` : ''}
+                    ${o.humanRole ? `<div style="font-size:10.5px;color:var(--text-3);margin-top:4px;">Owner: ${String(o.humanRole).replace(/-/g, ' ')}</div>` : ''}
+                </div>`;
+    }).join('')}
+        </div>
+
+        ${commsRestriction.active || commsRestriction.basis ? `
+        <div style="background:${commsRestriction.active ? '#FFF5F5' : '#F8FAFC'};border:1px solid ${commsRestriction.active ? '#FED7D7' : '#E2E8F0'};border-radius:10px;padding:12px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:${commsRestriction.active ? 'var(--red-700)' : 'var(--text-3)'};">Communication Restriction ${commsRestriction.active ? '— ACTIVE' : '— Not Active'}</div>
+            <div style="font-size:12px;color:var(--text);margin-top:4px;line-height:1.5;">${commsRestriction.basis || ''}</div>
+        </div>` : ''}
+
+        ${voluntaryComplaint.status ? `
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:12px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--text-3);">Voluntary Criminal Complaint (SAPS)</div>
+            <div style="font-size:12px;color:var(--text);margin-top:4px;">Status: <b>${String(voluntaryComplaint.status).replace(/-/g, ' ')}</b></div>
+            <div style="font-size:11.5px;color:var(--text-2);margin-top:4px;line-height:1.5;">${voluntaryComplaint.reason || ''}</div>
+        </div>` : ''}
+
+        ${openEscalations.length ? `
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--red-700);margin-bottom:6px;">Open Escalations</div>
+            <ul style="margin:0;padding-left:18px;">${openEscalations.map(e => `<li style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:4px;">${e}</li>`).join('')}</ul>
+        </div>` : ''}
+
+        <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
+            <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">${rec.action ? `<b>${String(rec.action).replace(/-/g, " ")}</b>: ` : ""}${rec.reason || "No recommendation recorded yet."}</div>
         </div>
     </div>`;
 }
@@ -1647,10 +1893,31 @@ async function runScreenAgents(p) {
         if (i >= scr.agents.length) { renderHorizontalStepper(p); renderActiveStageContent(p); return; }
         const ak = scr.agents[i];
 
-        // Gather existing outputs
+        // Gather existing outputs. Every downstream agent's real response consistently
+        // cites the SAME blocker when nothing has been decided yet: "Recognition Check
+        // has not been overridden by a recorded human decision to proceed as fraud."
+        // That decision is Gate 1 (Screen 1, Case Summary) in this app's local state -
+        // but it was never being communicated to the live agents at all, only the raw
+        // upstream agent JSON was sent. So even after a human clicked Approve in the UI,
+        // every agent from Fraud Assessment onward correctly reported not-applicable,
+        // because from the agent's point of view no human decision had been made.
+        // Fix: append a clearly-labelled human-decision annotation to the Recognition
+        // Check output text once Gate 1 has actually been decided, so downstream agents
+        // can see it.
+        let recognitionCheckText = p.a.recognitionCheck?.rawText || '';
+        const gate1Action = s.gates[0];
+        if (gate1Action && recognitionCheckText) {
+            const approver = s.gateApprover[0] || 'Unknown approver';
+            const decisionLabel = gate1Action === 'approve' ? 'APPROVED — proceed as fraud'
+                : gate1Action === 'override' ? 'OVERRIDDEN — proceed with amendment'
+                : gate1Action === 'escalate' ? 'ESCALATED — routed to senior review'
+                : gate1Action.toUpperCase();
+            recognitionCheckText += `\n\n---\nHUMAN GATE DECISION (Screen 1 - Case Summary, Gate 1)\nDecision: ${decisionLabel}\nDecided by: ${approver}\n---`;
+        }
+
         const allOutputs = {
             'CASE_INTAKE_OUTPUT_TEXT': p.a.caseIntake?.rawText || '',
-            'RECOGNITION_CHECK_OUTPUT_TEXT': p.a.recognitionCheck?.rawText || '',
+            'RECOGNITION_CHECK_OUTPUT_TEXT': recognitionCheckText,
             'FRAUD_ASSESSMENT_OUTPUT_TEXT': p.a.fraudAssessment?.rawText || '',
             'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT': p.a.transactionClassification?.rawText || '',
             'FUNDS_TRACE_OUTPUT_TEXT': p.a.fundsTrace?.rawText || '',

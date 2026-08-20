@@ -135,6 +135,9 @@ svg {
     height: 100vh;
     position: relative;
     z-index: 1;
+    overflow: hidden; /* forces overflow to be contained within .main's own scroll,
+                          not the page - otherwise the footer can get pushed below
+                          the viewport instead of staying pinned at the bottom */
 }
 
 .topbar {
@@ -3035,7 +3038,8 @@ tr.filler {
     font-size: 12.5px;
 }
 
-/* larger agent boxes, centered when a screen has only one agent */
+/* larger agent boxes; single-agent screens (Fraud Assessment, Shadow Credit)
+   are constrained in width but left-aligned, not centered */
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -3043,7 +3047,7 @@ tr.filler {
 }
 .card-grid.single-agent {
     grid-template-columns: minmax(320px, 460px);
-    justify-content: center;
+    justify-content: start;
 }
 .agent-card {
     padding: 18px 20px;
@@ -3067,6 +3071,7 @@ tr.filler {
     border-top: 1px solid var(--border);
     background: rgba(255,255,255,0.92);
     backdrop-filter: blur(10px);
+    flex-shrink: 0; /* never let the footer get squeezed out by taller content above it */
 }
 .app-footer .footer-left {
     display: flex;
