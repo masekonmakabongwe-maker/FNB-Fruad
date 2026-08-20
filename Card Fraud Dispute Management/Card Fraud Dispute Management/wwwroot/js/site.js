@@ -1,0 +1,2175 @@
+﻿/* ============================================================
+   ICONS
+   ============================================================ */
+function I(name, size) {
+    size = size || 18;
+    const s = `width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"`;
+    const paths = {
+        grid: `<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>`,
+        list: `<line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/>`,
+        radio: `<circle cx="12" cy="12" r="2.4"/><path d="M8 8a5.5 5.5 0 000 8M16 8a5.5 5.5 0 010 8M5 5a10 10 0 000 14M19 5a10 10 0 010 14"/>`,
+        gear: `<circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.9 2.9l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6v.2a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.9-2.9l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H4a2 2 0 110-4h.1a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.9-2.9l.1.1a1.7 1.7 0 001.9.3h.1a1.7 1.7 0 001-1.6V4a2 2 0 114 0v.1a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.9 2.9l-.1.1a1.7 1.7 0 00-.3 1.9v.1a1.7 1.7 0 001.6 1H20a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>`,
+        search: `<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>`,
+        shieldcheck: `<path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>`,
+        card: `<rect x="2.5" y="5.5" width="19" height="13" rx="2"/><line x1="2.5" y1="10" x2="21.5" y2="10"/>`,
+        trace: `<circle cx="6" cy="6" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="12" cy="18" r="2.3"/><path d="M8 7l3 9M16 7l-3 9M8.3 6H15.7"/>`,
+        piggy: `<path d="M19 9V6a1 1 0 00-1-1h-2l-1-2H7l-1 2H4a1 1 0 00-1 1v6l2 2v3h3v-2h6v2h3v-3l1-1"/><circle cx="15.5" cy="10.5" r=".6" fill="currentColor" stroke="none"/>`,
+        filetext: `<path d="M6 2h9l5 5v13a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/>`,
+        send: `<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>`,
+        clock: `<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>`,
+        fileplus: `<path d="M6 2h9l5 5v13a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/>`,
+        msg: `<path d="M21 11.5a8.4 8.4 0 01-8.9 8.4 8.6 8.6 0 01-3.9-.9L3 21l1.9-5.2A8.4 8.4 0 013 11.5 8.5 8.5 0 0111.5 3a8.5 8.5 0 019.5 8.5z"/>`,
+        check: `<polyline points="4 12 9 17 20 6"/>`,
+        alert: `<path d="M12 3l10 18H2z"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r=".4" fill="currentColor" stroke="none"/>`,
+        user: `<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>`,
+        book: `<path d="M4 4.5A2.5 2.5 0 016.5 2H20v17H6.5A2.5 2.5 0 004 16.5z"/><path d="M4 16.5A2.5 2.5 0 016.5 19H20"/>`,
+        arrowLeft: `<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>`,
+        timer: `<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>`
+    };
+    return `<svg ${s}>${paths[name] || ''}</svg>`;
+}
+
+/* ============================================================
+   USERS / ROLES
+   ============================================================ */
+const ROLES = [
+    { id: 'investigator', name: 'N. Dlamini', title: 'Fraud Investigator', initials: 'ND', rank: 1, scope: 'Approves gates 1, 2, 3, 4, 5', username: 'n.dlamini@cfd-demo.bank' },
+    { id: 'fraudmanager', name: 'T. Naidoo', title: 'Fraud Manager', initials: 'TN', rank: 2, scope: 'Approves gates 1–5, senior authority', username: 't.naidoo@cfd-demo.bank' },
+    { id: 'accountable', name: 'K. Adebayo', title: 'Accountable Person', initials: 'KA', rank: 3, scope: 'Approves all gates, incl. Closure', username: 'k.adebayo@cfd-demo.bank' },
+];
+const GATE_MIN_RANK = [1, 1, 1, 1, 1, 3];
+let currentUser = null;
+let selectedRoleId = null;
+
+/* ============================================================
+   MODEL — 6 screens · 11 agents
+   ============================================================ */
+const SCREENS = [
+    { n: 1, id: 's1', title: 'Case Summary', sub: 'Confirm the record', gateRole: 'Investigator', gateAuthority: null, agents: ['caseIntake', 'recognitionCheck'] },
+    { n: 2, id: 's2', title: 'Fraud Assessment', sub: 'Confirm cause · approve containment', gateRole: 'Investigator', gateAuthority: null, agents: ['fraudAssessment'] },
+    { n: 3, id: 's3', title: 'Recovery Assessment', sub: 'Confirm route per transaction', gateRole: 'Investigator', gateAuthority: null, agents: ['transactionClassification', 'fundsTrace'] },
+    { n: 4, id: 's4', title: 'Customer Position', sub: 'Refund now, or not', gateRole: 'Investigator or fraud manager', gateAuthority: 'Authority by value', agents: ['shadowCredit'] },
+    { n: 5, id: 's5', title: 'Recovery Actions', sub: 'Approve what leaves the bank', gateRole: 'Investigator', gateAuthority: null, agents: ['chargebackPreparation', 'recallRepatriation'] },
+    { n: 6, id: 's6', title: 'Obligations & Closure', sub: 'Sign off filings', gateRole: 'Accountable person', gateAuthority: null, agents: ['obligationCheck', 'documentGenerator'] },
+];
+
+const AGENTS = {
+    caseIntake: { label: 'Case Intake', tier: 'standard', icon: 'search', reads: ['Case System', 'Contact Centre', 'Customer & CRM', 'Mandates & Descriptors'] },
+    recognitionCheck: { label: 'Recognition Check', tier: 'reasoning', icon: 'shieldcheck', reads: ['Case Intake Output', 'Contact Note PDF'] },
+    fraudAssessment: { label: 'Fraud Assessment', tier: 'reasoning', icon: 'shieldcheck', reads: ['Authentication', 'MNO Feed', 'fraud-policy.pdf'] },
+    transactionClassification: { label: 'Transaction Classification', tier: 'reasoning', icon: 'card', reads: ['Card Management', 'Payments Platform', 'dispute-rules.pdf'] },
+    fundsTrace: { label: 'Funds Trace', tier: 'reasoning', icon: 'trace', reads: ['Card Management', 'Fraud Prevention Registry'] },
+    shadowCredit: { label: 'Shadow Credit', tier: 'reasoning', icon: 'piggy', reads: ['Core Banking / EDW', 'fraud-policy.pdf'] },
+    chargebackPreparation: { label: 'Chargeback Preparation', tier: 'standard', icon: 'filetext', reads: ['Card Management', 'dispute-rules.pdf'] },
+    recallRepatriation: { label: 'Recall & Repatriation', tier: 'reasoning', icon: 'send', reads: ['Interbank Channel', 'Card Management'] },
+    obligationCheck: { label: 'Obligation Check', tier: 'reasoning', icon: 'clock', reads: ['regulatory-instruments.pdf'] },
+    documentGenerator: { label: 'Document Generator', tier: 'standard', icon: 'fileplus', reads: ['regulatory-instruments.pdf', 'document-templates.pdf'] },
+    messageComposer: { label: 'Message Composer', tier: 'standard', icon: 'msg', reads: [] },
+};
+
+// Map specifying exact allowed upstream entities per agent
+// Field lists below are taken directly from the live Purple Fabric "Run" screens for
+// each agent (screenshots, 20 Aug), cross-checked against each asset's OpenAPI spec.
+// Every field shown on an agent's Run screen is a required multipart field there - so,
+// unlike the earlier version of this map, ALLOWED and MANDATORY are now identical sets
+// per agent. Kept as two separate maps for clarity of intent (one gates payload
+// contents, the other gates whether the agent runs at all) even though the values match.
+const AGENT_ALLOWED_INPUTS = {
+    caseIntake: [],
+    recognitionCheck: ['CASE_INTAKE_OUTPUT_TEXT'],
+    fraudAssessment: ['CASE_INTAKE_OUTPUT_TEXT', 'RECOGNITION_CHECK_OUTPUT_TEXT'],
+    transactionClassification: ['RECOGNITION_CHECK_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT'],
+    fundsTrace: ['FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT'],
+    shadowCredit: ['CASE_INTAKE_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT'],
+    chargebackPreparation: ['FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT'],
+    recallRepatriation: ['TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT'],
+    obligationCheck: ['CASE_INTAKE_OUTPUT_TEXT', 'RECOGNITION_CHECK_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT', 'RECALL_REPATRIATION_OUTPUT_TEXT']
+};
+
+// Strict mandatory inputs that must exist before calling an agent - see note above,
+// these now match AGENT_ALLOWED_INPUTS exactly per the live Run screens.
+const AGENT_MANDATORY_INPUTS = {
+    caseIntake: [],
+    recognitionCheck: ['CASE_INTAKE_OUTPUT_TEXT'],
+    fraudAssessment: ['CASE_INTAKE_OUTPUT_TEXT', 'RECOGNITION_CHECK_OUTPUT_TEXT'],
+    transactionClassification: ['RECOGNITION_CHECK_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT'],
+    fundsTrace: ['FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT'],
+    shadowCredit: ['CASE_INTAKE_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT'],
+    chargebackPreparation: ['FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT'],
+    recallRepatriation: ['TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT'],
+    obligationCheck: ['CASE_INTAKE_OUTPUT_TEXT', 'RECOGNITION_CHECK_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT', 'RECALL_REPATRIATION_OUTPUT_TEXT']
+};
+
+const READS_META = {
+    'Case System': { type: 'system' }, 'Contact Centre': { type: 'system' }, 'Customer & CRM': { type: 'system' },
+    'Mandates & Descriptors': { type: 'system', q: true }, 'Authentication': { type: 'system' }, 'MNO Feed': { type: 'system', q: true },
+    'fraud-policy.pdf': { type: 'doc' }, 'Card Management': { type: 'system' }, 'Payments Platform': { type: 'system' },
+    'Fraud Prevention Registry': { type: 'system', q: true }, 'dispute-rules.pdf': { type: 'doc' }, 'Core Banking / EDW': { type: 'system' },
+    'Interbank Channel': { type: 'system', q: true }, 'regulatory-instruments.pdf': { type: 'doc' }, 'document-templates.pdf': { type: 'doc' },
+};
+
+const ARTEFACT_DEFS = [
+    { id: 'chargeback', label: 'Chargeback filing', afterGate: 5, needsChargeback: true },
+    { id: 'recall', label: 'Recall request', afterGate: 5, needsMule: true },
+    { id: 'hold', label: 'Hold request', afterGate: 5, needsCASP: true },
+    { id: 'str', label: 'Suspicious transaction report', afterGate: 6, needsSTR: true },
+    { id: 'criminal', label: 'Criminal case report', afterGate: 6, needsMule: true },
+    { id: 'determination', label: 'Written determination', afterGate: 6, always: true },
+];
+
+function A(agentKey, o) { return Object.assign({ agentKey }, o); }
+
+/* Helper to resolve case-specific evidence files dynamically from persona ID */
+function getCaseEvidence(p) {
+    if (!p) return { contactNote: 'contact-note.pdf', authLog: 'auth-log.pdf' };
+    if (p.evidenceFiles) return p.evidenceFiles;
+    const num = p.id ? p.id.replace(/^[^\d]*/, '') : '';
+    return {
+        contactNote: num ? `contact-note-${num}.pdf` : 'contact-note.pdf',
+        authLog: num ? `auth-log-${num}.pdf` : 'auth-log.pdf',
+        statementHistory: 'statement-history-24m.pdf',
+        profile: 'customer-profile.pdf'
+    };
+}
+
+const POLICY_TEXT = {
+    'FNB-51204': { clause: 'Policy clause 4.2(b)', text: 'Where card-not-present fraud is confirmed recoverable under scheme rules and the cardholder’s own verification is clean, a provisional refund may be issued ahead of scheme resolution.' },
+    'FNB-51890': { clause: 'Policy clause 6.1 / Recall', text: 'Where scheme recovery is unavailable due to full authentication via device malware, immediate cross-institution recall and repatriation across counterparty chains is authorized.' },
+    'FNB-52377': { clause: 'Policy clause 2.1 (Deflection)', text: 'Amount similarity alone never establishes recognition, and amount difference alone never defeats it. Active recurring mandates with consistent cadence resolve to customer liability.' },
+    'FNB-53042': { clause: 'Policy clauses 4.2(b) and 7.3', text: 'Vulnerable customer provision permits immediate full provisional credit ahead of recovery completion where vulnerability flags and third-party data latency coincide.' }
+};
+
+/* ============================================================
+   PERSONAS DATA
+   ============================================================ */
+const PERSONAS = [
+    {
+        id: 'FNB-51204', tag: 'P1', customer: 'Sipho Ndlovu', urgency: 'Medium', amount: 'R44,300.00', channel: 'Card-not-present', product: 'FNB Gold Cheque Account · Visa Gold Debit Card',
+        headline: 'Phishing → card-not-present fraud → ECI 7 → chargeback', recognised: false, classification: 'recoverable', mule: false, casp: false, str: false, vulnerable: false,
+        a: {
+            caseIntake: A('caseIntake', { conf: 0.90, finding: 'Case record structured', tone: 'clean', desc: 'Customer reports unfamiliar overseas software purchases following SMS phishing with spoofed sender ID.', reasoning: ['Completeness: high. No vulnerability markers.'], feeds: 'Case record → Recognition Check' }),
+            recognitionCheck: A('recognitionCheck', { conf: 0.93, finding: 'Not recognised — not their own spend', tone: 'flag', desc: 'No recurring match against 24 months of history. Single occurrence, unfamiliar merchants.', reasoning: ['Routes forward to Fraud Assessment.'], feeds: 'not their own → Fraud Assessment' }),
+            fraudAssessment: A('fraudAssessment', { conf: 0.89, finding: 'Method: card-not-present · Extent: card + CVV', tone: 'flag', desc: 'Credentials harvested via phishing page. No SIM swap or profile takeover.', reasoning: ['Containment recommended: block and reissue card only.'], feeds: 'method · extent → Transaction Classification · Shadow Credit' }),
+            transactionClassification: A('transactionClassification', { conf: 0.95, finding: 'No 3DS / CAVV absent · recoverable', tone: 'clean', desc: 'TXN-1 ECI 07 (no 3DS). TXN-2 3DS attempted but CAVV absent, downgraded to ECI 07. Liability: merchant/acquirer.', reasoning: ['Recoverability verdict gates Chargeback Preparation.'], feeds: 'route → Chargeback Preparation (open)' }),
+            fundsTrace: A('fundsTrace', { conf: 0.9, finding: 'Merchant-only movement — no mule hop', tone: 'clean', desc: 'Funds settled directly with merchant. Correspondence-led recovery via chargeback.', reasoning: ['No bank recall required.'], feeds: 'who to chase → none (merchant only)' }),
+            shadowCredit: A('shadowCredit', { conf: null, finding: 'Provisional refund recommended (R44,300)', tone: 'clean', desc: 'Recoverable CNP fraud, clean verification. Authority sits within investigator threshold (Band 1).', reasoning: ['Cites internal policy clause 4.2(b).'], feeds: 'evidence volunteered → Document Generator', policy: true }),
+            chargebackPreparation: A('chargebackPreparation', { conf: null, finding: 'Evidence packs assembled for 2 items', tone: 'clean', desc: 'Authorisation records, no-CAVV flag, 24-month history showing no prior merchant relationship.', reasoning: [], feeds: null }),
+            recallRepatriation: A('recallRepatriation', { conf: null, finding: 'No bank recall applicable', tone: 'clean', desc: 'Merchant-only movement — recovery proceeds via chargeback.', reasoning: [], feeds: null }),
+            obligationCheck: A('obligationCheck', { conf: null, finding: 'No obligation triggered', tone: 'clean', desc: 'No mule identified. Below cyber-incident materiality threshold.', reasoning: [], feeds: null }),
+            documentGenerator: A('documentGenerator', { conf: null, finding: 'Chargeback filings + written determination drafted', tone: 'clean', desc: 'No suspicious transaction report or criminal case report required.', reasoning: [], feeds: 'what is owed → filings' }),
+        },
+        customerMsgs: ['We’ve received your report and we’re looking into it now.', 'Your card has been blocked and a new one is on its way. We’ve credited your account while we recover the funds.']
+    },
+    {
+        id: 'FNB-51890', tag: 'P2', customer: 'Andile Khumalo', urgency: 'High', amount: 'R135,500.00', channel: 'Trojanised app · remote-access', product: 'FNB Premier Cheque Account · Visa Platinum Debit Card',
+        headline: 'Trojanised app → remote-access fraud → ECI 5 → chase and repatriate', recognised: false, classification: 'not-recoverable', mule: true, casp: true, str: true, vulnerable: false,
+        a: {
+            caseIntake: A('caseIntake', { conf: 0.90, finding: 'Case record structured', tone: 'clean', desc: 'Customer reports unauthorized withdrawals after downloading a trojanized banking app from a sponsored search ad.', reasoning: ['Completeness high, funds still moving.'], feeds: 'Case record → Recognition Check' }),
+            recognitionCheck: A('recognitionCheck', { conf: 0.90, finding: 'Not recognised — not their own spend', tone: 'flag', desc: 'No recurring match. Single occurrence.', reasoning: [], feeds: 'not their own → Fraud Assessment' }),
+            fraudAssessment: A('fraudAssessment', { conf: 0.87, finding: 'Method: malware/trojan · Extent: device + credentials', tone: 'flag', desc: 'Accessibility service remote takeover on legitimate replacement handset. Alerts suppressed.', reasoning: ['Containment: full profile lock.'], feeds: 'method · extent → Transaction Classification' }),
+            transactionClassification: A('transactionClassification', { conf: 0.93, finding: 'Fully authenticated (ECI 05) · no chargeback route', tone: 'block', desc: 'Valid CAVV present. Scheme liability sits with issuer. No chargeback possible; must pivot immediately to chase and repatriate.', reasoning: ['HARD GATE — no scheme route.'], feeds: 'HARD GATE → Funds Trace & Recall' }),
+            fundsTrace: A('fundsTrace', { conf: 0.94, finding: 'Multi-counterparty chain identified', tone: 'block', desc: 'R135,500 moved to Counterparty Bank A, onward to Counterparty Bank B (mule), then to Licensed CASP.', reasoning: ['Counterparty Bank B has R41k held; Bank A has R40.5k held.'], feeds: 'who to chase → Recall & Repatriation' }),
+            shadowCredit: A('shadowCredit', { conf: null, finding: 'Provisional refund recommended (R135,500)', tone: 'flag', desc: 'Scheme recovery closed, but malware compromise on valid device warrants full provisional credit under Fraud Manager authority (Band 2).', reasoning: ['Cites internal policy clause 6.1.'], feeds: 'determination outcome → Document Generator', policy: true }),
+            chargebackPreparation: A('chargebackPreparation', { conf: null, finding: 'GATE CLOSED — does not run', tone: 'block', desc: 'Transaction Classification verdict = not recoverable via card scheme.', reasoning: [], blocked: true, feeds: null }),
+            recallRepatriation: A('recallRepatriation', { conf: null, finding: 'Recalls dispatched to Counterparty Bank A & B; CASP pledged', tone: 'flag', desc: 'Recall register active. Hostile prompt-injection reply from unverified sender successfully quarantined.', reasoning: [], injection: true, feeds: 'counterparty holds → Document Generator' }),
+            obligationCheck: A('obligationCheck', { conf: null, finding: 'FIC Act s29 STR owed (Mule confirmed)', tone: 'block', desc: 'Mule account positively identified, SAFPS registry hit confirmed. Tipping-off suppression ACTIVE.', reasoning: [], feeds: 'what is owed → Document Generator' }),
+            documentGenerator: A('documentGenerator', { conf: null, finding: 'STR draft + written determination drafted', tone: 'flag', desc: 'FICA s29 STR filed under strict tipping-off non-disclosure.', reasoning: [], feeds: 'filings complete' }),
+        },
+        customerMsgs: ['We’re reviewing the transaction you flagged.', 'We’ve reimbursed this transaction in full and secured your profile.']
+    },
+    {
+        id: 'FNB-52377', tag: 'P3', customer: 'Nomvula Dlamini', urgency: 'Low', amount: 'R429.00', channel: 'Recurring card mandate', product: 'FNB Easy Cheque Account · Visa Debit Card',
+        headline: 'Disputed subscription → recognised as her own → deflected at Screen 2', recognised: true, classification: null, mule: false, casp: false, str: false, vulnerable: false,
+        a: {
+            caseIntake: A('caseIntake', { conf: 0.95, finding: 'Case record structured', tone: 'clean', desc: 'Customer disputes R429 debit with descriptor DLB*SPCPT ZA.', reasoning: ['Completeness high.'], feeds: 'Case record → Recognition Check' }),
+            recognitionCheck: A('recognitionCheck', { conf: 0.98, finding: 'Recognised — customer’s own recurring gym subscription', tone: 'clean', desc: 'Descriptor DLB*SPCPT ZA matches 11 prior monthly debits at R349. Price increase to R429 reflects introductory rate ending for FitHub Wellness Sea Point.', reasoning: ['Active recurring mandate on file, unbroken cadence.', 'Deflected at Screen 2 — no fraud case opened.'], feeds: 'recognised → Case closed' }),
+        },
+        customerMsgs: ['We’ve reviewed your report on the R429 debit.', 'We’ve matched this to your FitHub Wellness gym subscription — your introductory rate ended this month. Let us know if you need help cancelling.']
+    },
+    {
+        id: 'FNB-53042', tag: 'P4', customer: 'Thabo Mokoena', urgency: 'High', amount: 'R143,750.00 (Mixed rails)', channel: 'SIM swap + push payment', product: 'FNB Premier · Visa Platinum Debit Card',
+        headline: 'SIM swap → account takeover → mixed rails → vulnerable customer', recognised: false, classification: 'mixed', mule: true, casp: true, str: true, vulnerable: true,
+        a: {
+            caseIntake: A('caseIntake', { conf: 0.85, finding: 'Vulnerability FLAGGED (Age 71, heart condition, distress)', tone: 'flag', desc: 'Customer unreachable via phone due to SIM swap. Distressed pensioner calling from neighbor phone.', reasoning: ['Vulnerability flag surfaces immediately.'], feeds: 'Case record → Recognition Check' }),
+            recognitionCheck: A('recognitionCheck', { conf: 0.96, finding: 'Not recognised — not their own spend', tone: 'flag', desc: 'Disputed card purchase & transfer have no historical match.', reasoning: [], feeds: 'not their own → Fraud Assessment' }),
+            fraudAssessment: A('fraudAssessment', { conf: 0.92, finding: 'Method: SIM swap + profile takeover', tone: 'block', desc: 'Fraudulent SIM swap at MNO counter on forged ID. SIM-swap check ran before password reset and returned clear because MNO feed publication was delayed 87 minutes.', reasoning: ['Full profile lockdown recommended.'], feeds: 'method · extent → Transaction Classification · Shadow Credit' }),
+            transactionClassification: A('transactionClassification', { conf: 0.90, finding: 'Mixed rails verdict — card recoverable, transfer recallable', tone: 'flag', desc: 'TXN-1 (Card R48,750) has no 3DS → Chargeback open. TXN-2 (Transfer R95,000) has no scheme rails → Recall and repatriation required.', reasoning: ['Two distinct routes on one screen.'], feeds: 'route → Chargeback & Recall' }),
+            fundsTrace: A('fundsTrace', { conf: 0.94, finding: 'Mule account & Licensed CASP identified', tone: 'block', desc: 'R95,000 transfer went to Counterparty Bank A mule account; R54,000 moved onward to Licensed CASP.', reasoning: ['Counterparty Bank A holding R41,000.'], feeds: 'who to chase → Recall & Repatriation' }),
+            shadowCredit: A('shadowCredit', { conf: null, finding: 'Immediate full provisional credit (R143,750)', tone: 'clean', desc: 'Vulnerability presumption applies. Fraud Manager approval (Band 2). Named policy gap: operator recourse escalated.', reasoning: ['Cites internal policy clauses 4.2(b) and 7.3.'], feeds: 'evidence volunteered → Document Generator', policy: true }),
+            chargebackPreparation: A('chargebackPreparation', { conf: null, finding: 'Evidence pack for card leg (R48,750)', tone: 'clean', desc: 'Authorisation record, no-CAVV flag, 24-month history check.', reasoning: [], feeds: null }),
+            recallRepatriation: A('recallRepatriation', { conf: null, finding: 'Recalls and CASP pledge dispatched', tone: 'flag', desc: 'Recall register active. Counterparty Bank A recall prioritized.', reasoning: [], feeds: 'counterparty confirms hold → Document Generator' }),
+            obligationCheck: A('obligationCheck', { conf: null, finding: 'FIC Act s29 STR owed', tone: 'block', desc: 'Mule account identified, SAFPS registry hit. Tipping-off suppression ACTIVE.', reasoning: [], feeds: 'what is owed → Document Generator' }),
+            documentGenerator: A('documentGenerator', { conf: null, finding: 'STR draft + written determination drafted', tone: 'flag', desc: 'FICA s29 STR filed. Customer messages truthful about money while strictly suppressing STR reference.', reasoning: [], feeds: 'filings complete' }),
+        },
+        customerMsgs: ['We’ve received your report and are securing your accounts.', 'We’ve credited your account in full while recovery continues. Next update within 24 hours.']
+    },
+];
+
+const MESSAGES = {
+    'FNB-51204': [{ channel: 'SMS', text: 'Hi Sipho, thanks for reporting this — we’re on it.' }, { channel: 'App push', text: 'We’ve confirmed this wasn’t a payment you made. Your card has been blocked and replaced.' }, { channel: 'Email', text: 'We’ve credited your account for this transaction while we recover the funds via chargeback.' }],
+    'FNB-51890': [{ channel: 'SMS', text: 'Hi Andile, thanks for flagging this — we’re reviewing it now.' }, { channel: 'App push', text: 'Your profile has been locked and secured.' }, { channel: 'Email', text: 'We’ve reimbursed this transaction in full and are actively tracing the funds.' }],
+    'FNB-52377': [{ channel: 'App push', text: 'Hi Nomvula, we’ve reviewed your report on the R429 debit.' }, { channel: 'App push', text: 'We’ve matched this to your FitHub Wellness gym subscription — your introductory rate ended this month.' }],
+    'FNB-53042': [{ channel: 'Voice call', text: 'Hi Mr Mokoena, we’ve received your report and are securing your accounts.' }, { channel: 'Email', text: 'We’ve credited your account in full while recovery continues.', suppression: true }],
+};
+const CHANNEL_ICON = { 'App push': 'radio', 'SMS': 'send', 'Email': 'filetext', 'Voice call': 'user' };
+
+const FILLER = [
+    { name: 'Karabo Sithole', ref: 'CFD-51002', type: 'Card-not-present' },
+    { name: 'Johan van Wyk', ref: 'CFD-50877', type: 'Lost & stolen' },
+    { name: 'Amahle Ngcobo', ref: 'CFD-49930', type: 'ATM' },
+    { name: 'Thandeka Zulu', ref: 'CFD-49812', type: 'Counterfeit card' },
+    { name: 'Pieter Botha', ref: 'CFD-49755', type: 'Card skimming' },
+    { name: 'Lindiwe Mahlangu', ref: 'CFD-49690', type: 'Online subscription dispute' },
+    { name: 'Riaan Fourie', ref: 'CFD-49604', type: 'Card-not-present' },
+    { name: 'Nomsa Dube', ref: 'CFD-49551', type: 'Duplicate billing' },
+    { name: 'Werner Kruger', ref: 'CFD-49487', type: 'Chip-and-PIN fraud' },
+    { name: 'Palesa Moloi', ref: 'CFD-49402', type: 'Lost & stolen' },
+    { name: 'Willem Pretorius', ref: 'CFD-49338', type: 'ATM' },
+    { name: 'Zanele Khumalo', ref: 'CFD-49271', type: 'Card-not-present' },
+    { name: 'Andre Nel', ref: 'CFD-49190', type: 'Counterfeit card' },
+    { name: 'Busisiwe Ndlovu', ref: 'CFD-49122', type: 'Card skimming' },
+    { name: 'Francois du Plessis', ref: 'CFD-49055', type: 'Online subscription dispute' },
+    { name: 'Refilwe Sekhukhune', ref: 'CFD-48981', type: 'Duplicate billing' },
+    { name: 'Johannes Meyer', ref: 'CFD-48904', type: 'Card-not-present' },
+    { name: 'Nokuthula Cele', ref: 'CFD-48830', type: 'Chip-and-PIN fraud' },
+    { name: 'Christiaan Marais', ref: 'CFD-48762', type: 'Lost & stolen' },
+    { name: 'Thabo Radebe', ref: 'CFD-48693', type: 'ATM' },
+    { name: 'Susan van der Merwe', ref: 'CFD-48611', type: 'Counterfeit card' },
+    { name: 'Bongani Mkhize', ref: 'CFD-48548', type: 'Card-not-present' },
+    { name: 'Elmarie Joubert', ref: 'CFD-48470', type: 'Card skimming' },
+    { name: 'Kagiso Mokwena', ref: 'CFD-48399', type: 'Duplicate billing' },
+    { name: 'Deon Coetzee', ref: 'CFD-48321', type: 'Online subscription dispute' },
+    { name: 'Nonhlanhla Buthelezi', ref: 'CFD-48254', type: 'Card-not-present' },
+    { name: 'Stefan Venter', ref: 'CFD-48180', type: 'Chip-and-PIN fraud' },
+    { name: 'Precious Maluleke', ref: 'CFD-48103', type: 'Lost & stolen' },
+    { name: 'Gideon Human', ref: 'CFD-48027', type: 'ATM' },
+    { name: 'Ayanda Gumede', ref: 'CFD-47958', type: 'Counterfeit card' },
+];
+
+/* ============================================================
+   STATE ENGINE & TIMER TRACKING
+   ============================================================ */
+const state = {};
+const agentTimerIntervals = {};
+
+function freshState(p) {
+    return {
+        screenIdx: 0,
+        activeStageTab: 0,
+        gates: [null, null, null, null, null, null],
+        gateApprover: [null, null, null, null, null, null],
+        closed: false,
+        escalated: false,
+        escalatedAt: null,
+        agentStatus: {},
+        artefacts: {},
+        expanded: {},
+        messages: [],
+        urgencyLevel: null,
+        slaStartedAt: null
+    };
+}
+PERSONAS.forEach(p => state[p.id] = freshState(p));
+let currentCaseId = null;
+let activeWorkspaceTab = 'agents'; // which of Agents/Report/Case Files/Correspondence is on screen
+
+function pushMessage(p, triggerIndex) {
+    const templates = MESSAGES[p.id];
+    if (!templates || triggerIndex >= templates.length) return;
+    const s = state[p.id];
+    const tmpl = templates[triggerIndex];
+    const t = new Date();
+    s.messages.push({ text: tmpl.text, channel: tmpl.channel, suppression: !!tmpl.suppression, time: t.toTimeString().slice(0, 5), trigger: triggerIndex + 1 });
+    updateThreadBadge();
+    flashBadge();
+    if (currentCaseId === p.id) renderThread(p);
+    showToast(`Customer notified via ${tmpl.channel}`, 'msg', 'msg');
+}
+
+/* ============================================================
+   LIVELINESS — toasts, badge flash, staggered entrance, count-up
+   ============================================================ */
+function ensureToastStack() {
+    let stack = document.getElementById('toastStack');
+    if (!stack) {
+        stack = document.createElement('div');
+        stack.id = 'toastStack';
+        document.body.appendChild(stack);
+    }
+    return stack;
+}
+function showToast(message, tone, iconName) {
+    const stack = ensureToastStack();
+    const el = document.createElement('div');
+    el.className = `toast ${tone || ''}`.trim();
+    el.innerHTML = `<div class="toast-ico">${I(iconName || 'check', 14)}</div><div class="toast-text">${message}</div>`;
+    stack.appendChild(el);
+    const life = 3600;
+    setTimeout(() => {
+        el.classList.add('leaving');
+        setTimeout(() => el.remove(), 300);
+    }, life);
+    // Cap the stack so it never grows unbounded during a fast run
+    while (stack.children.length > 4) stack.removeChild(stack.firstChild);
+}
+function flashBadge() {
+    document.querySelectorAll('#threadBadge, .tb-badge').forEach(el => {
+        el.classList.remove('flash');
+        void el.offsetWidth; // restart animation
+        el.classList.add('flash');
+    });
+}
+// Ticks every ".thinking .dots" span in the document, independent of which case/screen is showing.
+(function startDotsTicker() {
+    const frames = ['', '.', '..', '...'];
+    let i = 0;
+    setInterval(() => {
+        i = (i + 1) % frames.length;
+        document.querySelectorAll('.ac-desc.thinking .dots').forEach(el => { el.textContent = frames[i]; });
+    }, 420);
+})();
+
+function animateEntrance(container, selector) {
+    const els = container.querySelectorAll(selector);
+    els.forEach((el, i) => {
+        el.classList.add('entering');
+        el.style.animationDelay = (i * 70) + 'ms';
+    });
+}
+function animateCountUp(el, target, duration) {
+    if (!el) return;
+    duration = duration || 550;
+    const start = performance.now();
+    function tick(now) {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(target * eased);
+        if (t < 1) requestAnimationFrame(tick);
+        else el.textContent = target;
+    }
+    requestAnimationFrame(tick);
+}
+
+function formatDuration(seconds) {
+    if (!seconds || seconds <= 0) return '0s';
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    if (m > 0) {
+        return `${m}m ${s}s`;
+    }
+    return `${s}s`;
+}
+
+function formatLiveClock(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+}
+
+/* ============================================================
+   UN-TRUNCATED OUTPUT FORMATTER
+   ============================================================ */
+function parseAgentJson(rawText) {
+    if (!rawText) return null;
+    let obj = rawText;
+    if (typeof rawText === 'string') {
+        try { obj = JSON.parse(rawText); } catch (e) { return null; }
+    }
+    if (obj && obj.output) {
+        if (typeof obj.output === 'string') {
+            try { obj = JSON.parse(obj.output); } catch (e) { obj = obj.output; }
+        } else {
+            obj = obj.output;
+        }
+    }
+    return obj;
+}
+
+function formatAgentData(agentKey, data) {
+    if (!data) return { finding: 'No data', desc: 'No output available.', tone: 'clean', reasoning: [], fullText: '', urgencyLevel: null };
+
+    let finding = 'Completed Analysis';
+    let desc = '';
+    let tone = 'clean';
+    let reasoning = [];
+    let fullText = '';
+    let urgencyLevel = null;
+
+    if (typeof data === 'string') {
+        fullText = data;
+        const parsed = parseAgentJson(data);
+        if (parsed && typeof parsed === 'object') {
+            data = parsed;
+        } else {
+            return {
+                finding: 'Analysis Completed',
+                desc: data.replace(/[\{\}\[\]"]/g, '').trim(),
+                tone: 'clean',
+                reasoning: [],
+                fullText: data,
+                urgencyLevel: null
+            };
+        }
+    } else {
+        fullText = JSON.stringify(data, null, 2);
+    }
+
+    const getProp = (o, ...keys) => {
+        if (!o) return undefined;
+        for (const k of keys) {
+            if (o[k] !== undefined) return o[k];
+        }
+        return undefined;
+    };
+
+    if (agentKey === 'caseIntake') {
+        // provisionalHypothesis, reportedTotal and reportedCount live nested under
+        // reportedEvent in the real API payload, not at the top level - compute
+        // reportedEvent first so these lookups check the right place.
+        const reportedEvent = getProp(data, 'reportedEvent', 'reported Event') || {};
+        const provHyp = getProp(reportedEvent, 'provisionalHypothesis', 'provisional Hypothesis') || getProp(data, 'provisionalHypothesis', 'provisional Hypothesis');
+        const rec = getProp(data, 'recommendation') || {};
+        finding = provHyp || rec.action || 'Case record structured';
+
+        let parts = [];
+        if (data.status) parts.push(`Status: ${data.status}`);
+        const reportedTotal = getProp(reportedEvent, 'reportedTotal', 'reported Total') || getProp(data, 'reportedTotal', 'reported Total');
+        if (reportedTotal && reportedTotal.amount) {
+            parts.push(`Reported Amount: R${Number(reportedTotal.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })} ${reportedTotal.currency || 'ZAR'}`);
+        }
+        const reportedCount = getProp(reportedEvent, 'reportedCount', 'reported Count') || getProp(data, 'reportedCount', 'reported Count');
+        if (reportedCount) parts.push(`Disputed Items: ${reportedCount}`);
+
+        desc = parts.join(' · ');
+        const custPos = getProp(reportedEvent, 'customerPosition', 'customer Position');
+        if (custPos) {
+            desc += `<br/><br/><b>Customer Statement:</b> ${custPos}`;
+        }
+
+        const materialGaps = getProp(data, 'materialGaps', 'material Gaps');
+        if (materialGaps && Array.isArray(materialGaps)) {
+            reasoning = materialGaps;
+        } else if (rec.reason) {
+            reasoning = [rec.reason];
+        }
+
+        const urgency = getProp(data, 'urgency') || {};
+        if (urgency.level === 'high') tone = 'flag';
+        // Vulnerability flag or a blocked/gated status outranks urgency for tone.
+        const vulnerability = getProp(data, 'vulnerability') || {};
+        if (vulnerability.flagged) tone = 'flag';
+        if (typeof data.status === 'string' && /block|fail|error/i.test(data.status)) tone = 'block';
+        // Normalise to the four SLA tiers the Cases table understands. The live
+        // payload only ever returns high/medium/low; "critical" is reserved for
+        // vulnerability-flagged cases, which warrant the tightest SLA regardless
+        // of what the agent itself reported.
+        if (vulnerability.flagged) urgencyLevel = 'Critical';
+        else if (urgency.level === 'high') urgencyLevel = 'High';
+        else if (urgency.level === 'medium') urgencyLevel = 'Medium';
+        else if (urgency.level === 'low') urgencyLevel = 'Low';
+        else urgencyLevel = 'Medium'; // agent completed but didn't state a level - don't leave the SLA clock unset
+    }
+    else if (agentKey === 'recognitionCheck') {
+        const res = getProp(data, 'recognitionResult', 'recognition Result') || 'Processed';
+        const humanReviewLabels = { 'human-review-required': 'Human Review Required', 'blocked-insufficient-evidence': 'Blocked — Insufficient Evidence' };
+        finding = res === 'no-match' ? 'Not Recognised — Fraud Route'
+            : res === 'match' ? 'Recognised Subscription'
+            : (humanReviewLabels[res] || humanReviewLabels[data.status] || (res && res !== 'Processed' ? res.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Recognition Completed'));
+
+        const conf = getProp(data, 'confidence') || {};
+        const rec = getProp(data, 'recommendation') || {};
+        desc = conf.basis || rec.reason || 'Statement history checked against active mandates.';
+        if (res === 'no-match') tone = 'flag';
+        else if (res === 'match') tone = 'clean';
+        else tone = 'flag'; // human-review-required, blocked-insufficient-evidence, or anything else uncertain
+        if (typeof data.status === 'string' && /block|fail|error/i.test(data.status)) tone = 'block';
+
+        // Real field name is "checks", not "merchantChecks" - check both to be safe.
+        const merchantChecks = getProp(data, 'checks', 'merchantChecks', 'merchant Checks');
+        const materialGaps = getProp(data, 'materialGaps', 'material Gaps');
+        if (merchantChecks && Array.isArray(merchantChecks)) {
+            reasoning = merchantChecks.map(m => `<b>${m.transactionRef || m.subject || m.merchant || 'Item'}:</b> ${m.reason || 'Check completed'}`);
+        } else if (materialGaps && Array.isArray(materialGaps)) {
+            reasoning = materialGaps;
+        }
+    }
+    else {
+        const provHyp = getProp(data, 'provisionalHypothesis', 'provisional Hypothesis');
+        const rec = getProp(data, 'recommendation') || {};
+        finding = provHyp || data.finding || rec.action || 'Analysis Completed';
+
+        let descParts = [];
+        if (rec.reason) descParts.push(rec.reason);
+        const custPos = getProp(data, 'customerPosition', 'customer Position');
+        if (custPos) descParts.push(custPos);
+        if (data.desc) descParts.push(data.desc);
+
+        desc = descParts.join(' ') || 'The agent processed the transaction and returned full analytical findings.';
+
+        const materialGaps = getProp(data, 'materialGaps', 'material Gaps');
+        if (materialGaps && Array.isArray(materialGaps)) {
+            reasoning = materialGaps;
+        }
+        if (data.status === 'failed' || data.error) tone = 'block';
+    }
+
+    return { finding, desc, tone, reasoning, fullText, urgencyLevel };
+}
+
+/* ============================================================
+   DYNAMIC MULTI-AGENT REPORT DISPATCHER
+   Routes parsed payload to dedicated renderer per unique schema
+   ============================================================ */
+function renderRichAgentReport(data, fallbackAgentKey) {
+    if (!data) return '<div class="panel-empty">No output available.</div>';
+
+    let obj = data;
+    if (typeof data === 'string') {
+        try {
+            const parsed = JSON.parse(data);
+            obj = parsed.output ? (typeof parsed.output === 'string' ? JSON.parse(parsed.output) : parsed.output) : parsed;
+        } catch (e) {
+            return `<div class="mb-desc" style="white-space:pre-wrap;line-height:1.6;font-size:13px;">${data}</div>`;
+        }
+    }
+
+    const agentType = (obj.agent || fallbackAgentKey || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    switch (agentType) {
+        case 'caseintake':
+            return renderCaseIntakeReport(obj);
+        case 'recognitioncheck':
+            return renderRecognitionCheckReport(obj);
+        case 'fraudassessment':
+            return renderFraudAssessmentReport(obj);
+        case 'fundstrace':
+            return renderFundsTraceReport(obj);
+        case 'transactionclassification':
+            return renderTransactionClassificationReport(obj);
+        case 'shadowcredit':
+            return renderShadowCreditReport(obj);
+        case 'chargebackpreparation':
+            return renderChargebackPreparationReport(obj);
+        default:
+            return renderGenericAgentReport(obj);
+    }
+}
+
+function gP(o, ...keys) {
+    if (!o || typeof o !== 'object') return undefined;
+    for (const k of keys) {
+        if (o[k] !== undefined) return o[k];
+    }
+    return undefined;
+}
+
+/* ------------------------------------------------------------
+   1. CASE INTAKE AGENT RENDERER
+   ------------------------------------------------------------ */
+function renderCaseIntakeReport(obj) {
+    const caseRef = gP(obj, 'caseRef', 'caseRef') || 'N/A';
+    const customer = gP(obj, 'customer') || {};
+    const alert = gP(obj, 'alert') || {};
+    const reportedEvent = gP(obj, 'reportedEvent', 'reported Event') || {};
+    const compromise = gP(reportedEvent, 'compromiseDisclosure', 'compromise Disclosure') || {};
+    const scope = gP(obj, 'caseScope', 'caseScope') || {};
+    const containment = gP(obj, 'containmentAlreadyCompleted', 'containmentAlreadyCompleted') || [];
+    const gaps = gP(obj, 'materialGaps', 'material Gaps') || [];
+    const rec = gP(obj, 'recommendation') || {};
+
+    const reportedTotal = gP(reportedEvent, 'reportedTotal', 'reported Total') || {};
+    const totalAmt = reportedTotal.amount
+        ? `R${Number(reportedTotal.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`
+        : 'R0.00';
+
+    const knownTimeline = gP(reportedEvent, 'knownTimeline', 'known Timeline') || [];
+    const timelineHtml = knownTimeline.map(item => {
+        const parts = String(item).split(' - ');
+        const time = parts[0] ? parts[0].replace(/.*T(\d{2}:\d{2}).*/, '$1') : '';
+        const text = parts[1] ? parts[1].replace(/\[source:.*\]/, '').trim() : item;
+        return `<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:6px;">
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--purple-700);width:45px;">${time}</div>
+            <div style="font-size:12px;color:var(--text);">${text}</div>
+        </div>`;
+    }).join('<div style="margin-left:15px;color:var(--text-3);margin-bottom:4px;">↓</div>');
+
+    const includedItems = gP(scope, 'includedItems', 'includedItems') || [];
+    const includedItemsHtml = includedItems.map(item => `
+        <tr style="border-bottom:1px solid var(--border-soft);">
+            <td style="font-family:var(--mono);font-weight:700;padding:6px 0;">${gP(item, 'transactionRef', 'transaction Ref') || 'N/A'}</td>
+            <td style="font-weight:700;padding:6px 0;">R${Number(item.amount || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</td>
+            <td style="padding:6px 0;"><span class="badge b-high">Disputed</span></td>
+        </tr>
+    `).join('');
+
+    const excludedItems = gP(scope, 'excludedItems', 'excludedItems') || [];
+    const excludedItemsHtml = excludedItems.map(item => `
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:8px 10px;margin-top:6px;">
+            <div style="font-family:var(--mono);font-weight:700;color:#64748B;font-size:11px;">${gP(item, 'transactionRef', 'transaction Ref') || 'Excluded Item'}</div>
+            <div style="font-size:11px;color:#475569;margin-top:2px;">${item.reason || ''}</div>
+        </div>
+    `).join('');
+
+    const otpMentioned = gP(compromise, 'otpMentioned', 'otpMentioned');
+    const inAppApproval = gP(compromise, 'inAppApprovalMade', 'inAppApproval Made');
+    const phoneWorking = gP(compromise, 'phoneWorkingNormally', 'phone Working Normally');
+    const infoProvided = gP(compromise, 'informationEntered', 'informationEntered') || [];
+
+    return `
+    <div class="agent-report-wrap" style="line-height:1.5;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">🛡️ Case Intake</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-2);">Case ${caseRef} · Customer Ref: ${gP(obj, 'customerRef') || ''}</div>
+            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+                <span class="badge b-low">🟢 Intake Complete</span>
+                <span class="badge b-high">🟣 High Priority</span>
+                <span class="badge b-medium">👤 Human Review Required</span>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+            <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--purple-700);">💰 Reported Exposure</div>
+                <div style="font-size:20px;font-weight:800;color:var(--purple-900);margin-top:2px;">${totalAmt}</div>
+                <div style="font-size:11px;color:var(--text-2);margin-top:4px;">Disputed Items: <b>${gP(reportedEvent, 'reportedCount', 'reported Count') || 0}</b></div>
+            </div>
+            <div style="background:#FFF5F5;border:1px solid #FED7D7;border-radius:10px;padding:12px;">
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--red-700);">🤖 Alert Assessment</div>
+                <div style="font-size:18px;font-weight:800;color:#9B2C2C;margin-top:2px;">Risk Score: ${alert.score ? Number(alert.score).toFixed(2) : 'N/A'} / 1.00</div>
+                <div style="font-family:var(--mono);font-size:10px;color:#C53030;margin-top:4px;">${alert.model || ''}</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:4px;">👤 Customer Profile</div>
+            <div style="font-size:12px;background:#F8FAFC;border:1px solid #E2E8F0;padding:8px 10px;border-radius:8px;">
+                <b>${gP(customer, 'fullName') || 'N/A'}</b> (${gP(customer, 'verifiedContact', 'verified Contact') || ''}) · Card Ending <b>${gP(customer, 'cardEnding') || ''}</b>
+            </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:4px;">🚨 Customer Position Statement</div>
+            <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px;font-size:12px;color:#334155;line-height:1.55;">
+                ${gP(reportedEvent, 'customerPosition', 'customer Position') || 'No customer position statement logged.'}
+            </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">🎣 Suspected Compromise Event</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;">
+                <div style="background:#F1F5F9;padding:6px 8px;border-radius:6px;"><b>OTP Mentioned:</b> ${otpMentioned ? '🟡 Yes' : '🟢 No'}</div>
+                <div style="background:#F1F5F9;padding:6px 8px;border-radius:6px;"><b>In-App Approval:</b> ${inAppApproval ? '🟡 Yes' : '🟢 No'}</div>
+                <div style="background:#F1F5F9;padding:6px 8px;border-radius:6px;"><b>Phone Working:</b> ${phoneWorking ? '🟢 Yes' : '🔴 No'}</div>
+                <div style="background:#F1F5F9;padding:6px 8px;border-radius:6px;"><b>Details Disclosed:</b> ${infoProvided.join(', ') || 'None'}</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">🕒 Incident Timeline</div>
+            <div style="background:#FAF5FF;border:1px solid #E9D8FD;border-radius:10px;padding:10px;">${timelineHtml}</div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">📋 Disputed Case Scope</div>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px;">
+                <thead>
+                    <tr style="border-bottom:1px solid var(--border);text-align:left;color:var(--text-3);font-size:10px;text-transform:uppercase;">
+                        <th style="padding:4px 0;">Reference</th>
+                        <th style="padding:4px 0;">Amount</th>
+                        <th style="padding:4px 0;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>${includedItemsHtml}</tbody>
+            </table>
+            ${excludedItemsHtml}
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">🔒 Containment Actions Already Completed</div>
+            ${containment.map(c => `
+                <div style="display:flex;justify-content:space-between;align-items:center;background:#F0FDF4;border:1px solid #BBF7D0;padding:6px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;color:#166534;">
+                    <span><b>Action:</b> ${c.action}</span>
+                    <span>🟢 Completed</span>
+                </div>
+            `).join('')}
+        </div>
+
+        <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#92400E;">⚠️ Material Gaps & Recommendation</div>
+            <ul style="margin:4px 0 0;padding-left:16px;font-size:12px;color:#78350F;line-height:1.5;">
+                ${gaps.map(g => `<li>${g}</li>`).join('')}
+            </ul>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #FCD34D;font-size:12px;font-weight:700;color:#92400E;">
+                Recommendation: <b>${rec.action || 'Continue'}</b> — ${rec.reason || ''}
+            </div>
+        </div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------
+   2. RECOGNITION CHECK AGENT RENDERER
+   ------------------------------------------------------------ */
+function renderRecognitionCheckReport(obj) {
+    const res = gP(obj, 'recognitionResult', 'recognition Result') || 'N/A';
+    const conf = gP(obj, 'confidence') || {};
+    const window = gP(obj, 'historyWindow', 'historyWindow') || {};
+    const merchantChecks = gP(obj, 'merchantChecks', 'merchant Checks') || [];
+    const rec = gP(obj, 'recommendation') || {};
+    const gaps = gP(obj, 'materialGaps', 'material Gaps') || [];
+
+    const resBadge = res === 'no-match'
+        ? '<span class="badge b-high">🔴 No Match — Unrecognised</span>'
+        : '<span class="badge b-low">🟢 Recognised Subscription</span>';
+
+    return `
+    <div class="agent-report-wrap" style="line-height:1.5;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">🔍 Recognition Check</div>
+            <div style="margin-top:6px;">${resBadge}</div>
+        </div>
+
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:12px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);">Statement History Basis</div>
+            <div style="font-size:12px;color:#334155;margin-top:4px;">${conf.basis || 'N/A'}</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:6px;">
+                Window: <b>${window.from}</b> to <b>${window.to}</b> (${gP(window, 'transactionRowsReviewed', 'transactionRows Reviewed') || 0} rows evaluated)
+            </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Merchant Evaluation Details</div>
+            ${merchantChecks.map(m => {
+        const valComp = gP(m, 'valueComparedWithPriorMaximum', 'valueCompared With PriorMaximum') || {};
+        return `
+                <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;">
+                    <div style="font-size:12px;font-weight:700;">${m.merchant} <span style="font-family:var(--mono);font-size:10px;color:var(--text-3);">(${m.descriptor})</span></div>
+                    <div style="font-size:11.5px;color:var(--text-2);margin-top:4px;">${m.reason}</div>
+                    ${valComp.currentAmount ? `
+                    <div style="font-size:10.5px;color:var(--purple-700);margin-top:4px;">
+                        Current Amount: <b>R${valComp.currentAmount}</b> vs Prior Max: <b>R${valComp.priorMaximum}</b> (${valComp.multiple}x variance)
+                    </div>` : ''}
+                </div>`;
+    }).join('')}
+        </div>
+
+        ${gaps.length ? `
+        <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:10px;margin-bottom:14px;">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#92400E;">Material Gaps</div>
+            <ul style="margin:4px 0 0;padding-left:16px;font-size:11.5px;color:#78350F;">
+                ${gaps.map(g => `<li>${g}</li>`).join('')}
+            </ul>
+        </div>` : ''}
+
+        <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
+            <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;"><b>${rec.action}</b>: ${rec.reason}</div>
+        </div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------
+   3. FRAUD ASSESSMENT AGENT RENDERER
+   ------------------------------------------------------------ */
+function renderFraudAssessmentReport(obj) {
+    const classification = gP(obj, 'classification') || {};
+    const compromise = gP(obj, 'compromiseExtent', 'compromise Extent') || {};
+    const containment = gP(obj, 'containment') || {};
+    const bankControl = gP(obj, 'bankControlAssessment', 'bank ControlAssessment') || 'N/A';
+    const rec = gP(obj, 'recommendation') || {};
+
+    const recActions = gP(containment, 'recommendedActions', 'recommendedActions') || [];
+
+    return `
+    <div class="agent-report-wrap" style="line-height:1.5;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">🚨 Fraud Assessment</div>
+            <div style="font-size:12px;font-weight:700;color:var(--red-700);margin-top:2px;">
+                Type: ${gP(classification, 'fraudType', 'fraudType')} (${gP(classification, 'channel')})
+            </div>
+        </div>
+
+        <div style="background:#FFF5F5;border:1px solid #FED7D7;border-radius:10px;padding:12px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--red-700);">Compromise Extent (${compromise.label || 'Card Credentials'})</div>
+            <div style="font-size:12px;color:#742A2A;margin-top:4px;">${gP(compromise, 'plainEnglish', 'plainEnglish') || 'N/A'}</div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Containment Actions</div>
+            ${recActions.map(a => `
+                <div style="display:flex;justify-content:space-between;background:#F0FDF4;border:1px solid #BBF7D0;padding:6px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;color:#166534;">
+                    <span><b>Action:</b> ${a.action}</span>
+                    <span>🟢 ${a.state}</span>
+                </div>
+            `).join('')}
+        </div>
+
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:12px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--text-3);">Bank Control Assessment</div>
+            <div style="font-size:12px;color:var(--text);margin-top:4px;line-height:1.5;">${bankControl}</div>
+        </div>
+
+        <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
+            <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;"><b>${rec.action}</b>: ${rec.reason}</div>
+        </div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------
+   4. FUNDS TRACE AGENT RENDERER
+   ------------------------------------------------------------ */
+function renderFundsTraceReport(obj) {
+    const items = gP(obj, 'items') || [];
+    const counterparties = gP(obj, 'counterparties') || [];
+    const recPosition = gP(obj, 'recoveryPosition', 'recoveryPosition') || {};
+    const rec = gP(obj, 'recommendation') || {};
+
+    const potentiallyRecoverable = gP(recPosition, 'potentiallyRecoverable', 'potentially Recoverable');
+
+    return `
+    <div class="agent-report-wrap" style="line-height:1.5;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">🌐 Funds Trace</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">
+                Potentially Recoverable: <b>R${Number(potentiallyRecoverable || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })} ${recPosition.currency || 'ZAR'}</b>
+            </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Card Scheme Movement Paths</div>
+            ${items.map(item => {
+        const movPath = gP(item, 'movementPath', 'movementPath') || [];
+        return `
+                <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;">
+                    <div style="font-family:var(--mono);font-size:11px;font-weight:700;">${gP(item, 'transactionRef', 'transaction Ref')} (ARN: ${item.arn || 'N/A'})</div>
+                    <div style="font-size:12px;font-weight:700;color:var(--purple-700);margin-top:2px;">R${Number(item.amount || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</div>
+                    <div style="font-size:11px;color:var(--text-2);margin-top:4px;">
+                        Path: ${movPath.join(' ➔ ')}
+                    </div>
+                </div>`;
+    }).join('')}
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Identified Counterparties</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                ${counterparties.map(c => `
+                    <span style="background:#F1F5F9;border:1px solid #CBD5E1;padding:4px 10px;border-radius:6px;font-size:11.5px;font-weight:600;">
+                        ${c.name} (${c.type})
+                    </span>
+                `).join('')}
+            </div>
+        </div>
+
+        <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
+            <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;"><b>${rec.action}</b>: ${rec.reason}</div>
+        </div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------
+   5. TRANSACTION CLASSIFICATION AGENT RENDERER
+   ------------------------------------------------------------ */
+function renderTransactionClassificationReport(obj) {
+    const rail = gP(obj, 'rail') || 'Visa Card Scheme';
+    const items = gP(obj, 'items') || [];
+    const summary = gP(obj, 'summary') || {};
+    const rec = gP(obj, 'recommendation') || {};
+
+    return `
+    <div class="agent-report-wrap" style="line-height:1.5;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">💳 Transaction Classification</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">
+                Rail: <b>${rail}</b> · Condition: <b>${gP(summary, 'schemeCondition', 'schemeCondition') || 'Visa 10.4'}</b>
+            </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Scheme Rule & ECI Analysis</div>
+            ${items.map(item => {
+        const recData = gP(item, 'recoverability') || {};
+        return `
+                <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-family:var(--mono);font-size:11px;font-weight:700;">${gP(item, 'transactionRef', 'transactionRef')} — ${item.merchant}</span>
+                        <span class="badge b-low">ECI ${gP(item, 'eciPresented', 'eciPresented')}</span>
+                    </div>
+                    <div style="font-size:12px;color:var(--text);margin-top:6px;">${gP(item, 'plainEnglish', 'plainEnglish') || ''}</div>
+                    <div style="font-size:10.5px;color:var(--text-3);margin-top:4px;">
+                        3DS Status: <b>${gP(item, 'threeDSStatus', 'threeDSStatus')}</b> · CAVV Present: <b>${gP(item, 'cavvPresent', 'cavvPresent') ? 'Yes' : 'No'}</b> · Filing Deadline: <b>${gP(recData, 'filingDeadline', 'filing Deadline') || 'N/A'}</b>
+                    </div>
+                </div>`;
+    }).join('')}
+        </div>
+
+        <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
+            <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;"><b>${rec.action}</b>: ${rec.reason}</div>
+        </div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------
+   6. SHADOW CREDIT AGENT RENDERER
+   ------------------------------------------------------------ */
+function renderShadowCreditReport(obj) {
+    const eligibility = gP(obj, 'eligibilityAssessment', 'eligibility Assessment') || {};
+    const valueAuth = gP(obj, 'valueAndAuthority', 'valueAndAuthority') || {};
+    const balance = gP(obj, 'balanceImpact', 'balancelmpact') || {};
+    const rec = gP(obj, 'recommendation') || {};
+    const counterArg = gP(obj, 'counterArgument') || {};
+
+    const grossNegEngaged = gP(eligibility, 'grossNegligenceExclusionEngaged', 'gross Negligence Exclusion Engaged');
+    const grossNegReason = gP(eligibility, 'grossNegligenceReason', 'gross Negligence Rea son');
+
+    return `
+    <div class="agent-report-wrap" style="line-height:1.5;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">🏦 Shadow Credit</div>
+            <div style="font-size:12px;font-weight:700;color:var(--green-700);margin-top:2px;">
+                Refund Decision: ${gP(rec, 'decision') || 'Approve Provisional Refund'} (R${gP(rec, 'refundAmount') ? Number(gP(rec, 'refundAmount')).toLocaleString('en-ZA', { minimumFractionDigits: 2 }) : '0'})
+            </div>
+        </div>
+
+        <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:12px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#166534;">Eligibility Status</div>
+            <div style="font-size:12px;color:#15803D;margin-top:2px;">
+                Eligible: <b>${eligibility.eligible ? 'Yes' : 'No'}</b> · Gross Negligence: <b>${grossNegEngaged ? 'Engaged' : 'Not Engaged'}</b>
+            </div>
+            <div style="font-size:11.5px;color:#166534;margin-top:4px;">${grossNegReason || ''}</div>
+        </div>
+
+        ${counterArg.position ? `
+        <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#92400E;">Counter Argument & Scheme Response</div>
+            <div style="font-size:11.5px;color:#78350F;margin-top:2px;">${counterArg.position}</div>
+            <div style="font-size:11.5px;color:#92400E;margin-top:4px;font-weight:600;">Response: ${counterArg.response || ''}</div>
+        </div>` : ''}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;font-size:11.5px;">
+            <div style="background:#F8FAFC;padding:8px 10px;border-radius:6px;">Balance Before: <b>R${Number(gP(balance, 'balanceBeforeDisputedAuthorisations', 'balanceBefore DisputedAuthorisations') || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</b></div>
+            <div style="background:#F8FAFC;padding:8px 10px;border-radius:6px;">Projected Balance: <b>R${Number(gP(balance, 'projectedBalanceAfterProvisionalRefund', 'projected BalanceAfter Provisional Refund') || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</b></div>
+        </div>
+
+        <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
+            <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Authority & Decision</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">Policy Band ${gP(valueAuth, 'policyBand', 'policyBand') || 1} · Required Role: <b>${gP(valueAuth, 'approvalRole', 'approval Role') || 'Investigator'}</b></div>
+        </div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------
+   7. CHARGEBACK PREPARATION AGENT RENDERER
+   ------------------------------------------------------------ */
+function renderChargebackPreparationReport(obj) {
+    const chargebacks = gP(obj, 'chargebacks') || [];
+    const summary = gP(obj, 'summary') || {};
+    const rec = gP(obj, 'recommendation') || {};
+
+    const chargebackTotal = gP(summary, 'chargebackTotal', 'chargeback Total') || {};
+
+    return `
+    <div class="agent-report-wrap" style="line-height:1.5;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">📋 Chargeback Preparation</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">
+                Packs Prepared: <b>${gP(summary, 'chargebackCount') || 0}</b> · Total Value: <b>R${Number(chargebackTotal.amount || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</b>
+            </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Filing Packs Prepared</div>
+            ${chargebacks.map(cb => `
+                <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-family:var(--mono);font-size:11px;font-weight:700;">${gP(cb, 'chargebackRef', 'chargebackRef')} (${cb.merchant})</span>
+                        <span class="badge b-low">${gP(cb, 'packStatus', 'packStatus') || 'Prepared'}</span>
+                    </div>
+                    <div style="font-size:12px;font-weight:700;color:var(--purple-700);margin-top:2px;">R${Number(cb.amount || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })} (${cb.scheme} ${cb.condition})</div>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:4px;">
+                        Filing Deadline: <b>${gP(cb, 'filingDeadline', 'filing Deadline')}</b> (${gP(cb, 'daysRemainingAtPreparation', 'days RemainingAtPreparati on')} days remaining)
+                    </div>
+                    <div style="margin-top:6px;font-size:11px;">
+                        <b>Evidence Included:</b> ${(gP(cb, 'evidencePack', 'evidencePack') || []).length} required items attached
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+
+        <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
+            <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;"><b>${rec.action}</b>: ${rec.reason}</div>
+        </div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------
+   8. GENERIC FALLBACK RENDERER
+   ------------------------------------------------------------ */
+function renderGenericAgentReport(obj) {
+    const rec = gP(obj, 'recommendation') || {};
+    return `
+    <div class="agent-report-wrap" style="line-height:1.5;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">${obj.agent || 'Agent Output'}</div>
+            <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);">Status: ${obj.status || 'Completed'}</div>
+        </div>
+        <div style="font-size:12.5px;color:var(--text-2);line-height:1.6;">
+            ${rec.reason || obj.desc || JSON.stringify(obj, null, 2)}
+        </div>
+    </div>`;
+}
+
+/* ============================================================
+   APP INITIALIZATION
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+
+    const NAV_ITEMS = [{ id: 'dashboard', label: 'Dashboard', icon: 'grid' }, { id: 'cases', label: 'Cases', icon: 'list', badge: true }, { id: 'live', label: 'Live', icon: 'radio' }, { id: 'settings', label: 'Settings', icon: 'gear' }];
+    document.querySelectorAll('.nav-item').forEach((el, i) => {
+        const meta = NAV_ITEMS[i];
+        el.innerHTML = I(meta.icon, 17) + `<span>${meta.label}</span>` + (meta.badge ? `<span class="nav-badge" id="navCaseBadge"></span>` : '') + (meta.id === 'live' ? `<span class="live-glow"></span>` : '');
+        el.addEventListener('click', () => goto(meta.id));
+    });
+
+    const now = new Date();
+    const todayElem = document.getElementById('todayStr');
+    if (todayElem) todayElem.textContent = now.toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    ['giHitl', 'giPopia', 'giAudit', 'giToken', 'giTip', 'giNoOrch'].forEach((id, idx) => {
+        const icons = ['user', 'shieldcheck', 'filetext', 'card', 'msg', 'trace'];
+        const el = document.getElementById(id); if (el) el.innerHTML = I(icons[idx], 14);
+    });
+
+    renderRoleCards();
+
+    const signinBtn = document.getElementById('signinBtn');
+    if (signinBtn) {
+        signinBtn.addEventListener('click', () => { if (selectedRoleId) signInAs(selectedRoleId); });
+    }
+
+    const userChip = document.getElementById('userChip');
+    if (userChip) {
+        userChip.addEventListener('click', (e) => {
+            const userMenu = document.getElementById('userMenu');
+            if (userMenu) userMenu.classList.toggle('open');
+            e.stopPropagation();
+        });
+    }
+
+    document.addEventListener('click', closeUserMenu);
+
+    const signOutItem = document.getElementById('signOutItem');
+    if (signOutItem) {
+        signOutItem.addEventListener('click', (e) => {
+            e.stopPropagation(); currentUser = null; selectedRoleId = null;
+            const shellRoot = document.getElementById('shellRoot');
+            const pageLogin = document.getElementById('page-login');
+            if (shellRoot) shellRoot.style.display = 'none';
+            if (pageLogin) pageLogin.classList.remove('hidden');
+            document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+            const mockUser = document.getElementById('mockUsername');
+            if (mockUser) mockUser.textContent = '—';
+            if (signinBtn) signinBtn.disabled = true;
+        });
+    }
+
+    document.querySelectorAll('[data-goto]').forEach(el => el.addEventListener('click', () => goto(el.dataset.goto)));
+
+    const threadHeadIco = document.getElementById('threadHeadIco');
+    if (threadHeadIco) threadHeadIco.innerHTML = I('msg', 18);
+
+    const openThreadBtn = document.getElementById('openThreadBtn');
+    if (openThreadBtn) openThreadBtn.addEventListener('click', openThread);
+
+    const closeThreadBtn = document.getElementById('closeThreadBtn');
+    if (closeThreadBtn) closeThreadBtn.addEventListener('click', closeThread);
+
+    const scrimEl = document.getElementById('scrim');
+    if (scrimEl) scrimEl.addEventListener('click', closeThread);
+
+    const amClose = document.getElementById('amClose');
+    if (amClose) amClose.addEventListener('click', closeModals);
+
+    const pmClose = document.getElementById('pmClose');
+    if (pmClose) pmClose.addEventListener('click', closeModals);
+
+    const mscrim = document.getElementById('mscrim');
+    if (mscrim) mscrim.addEventListener('click', closeModals);
+
+    closeThread();
+    renderDashboard();
+});
+
+/* ============================================================
+   FUNCTIONS & ISOLATED WORKSPACE
+   ============================================================ */
+
+function updateLiveNavIndicator() {
+    const anyRunning = PERSONAS.some(p => { const s = state[p.id]; return !s.closed && !s.escalated && Object.keys(s.agentStatus).length > 0; });
+    const liveNav = document.querySelector('.nav-item[data-page="live"]');
+    if (liveNav) liveNav.classList.toggle('has-live', anyRunning);
+}
+
+function goto(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const targetPage = document.getElementById('page-' + pageId);
+    if (targetPage) targetPage.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach((el, i) => {
+        const navMeta = [{ id: 'dashboard' }, { id: 'cases' }, { id: 'live' }, { id: 'settings' }];
+        el.classList.toggle('active', navMeta[i] && navMeta[i].id === pageId);
+    });
+    // The case-detail workspace scrolls internally via .wb-scroll - letting the
+    // outer .main scroll too produced two independent scrollbars. Every other
+    // page has no inner scroll region, so .main scrolling there is correct.
+    const mainEl = document.querySelector('.main');
+    if (mainEl) mainEl.classList.toggle('no-scroll', pageId === 'detail');
+    if (pageId === 'dashboard') renderDashboard();
+    if (pageId === 'cases') renderCases();
+    if (pageId === 'live') renderLive();
+}
+
+function caseCounts() {
+    let notStarted = 0, inProgress = 0, awaitingGate = 0, needsDecision = 0, resolved = 0;
+    PERSONAS.forEach(p => {
+        const s = state[p.id];
+        if (s.closed) resolved++; else if (s.escalated) needsDecision++;
+        else if (Object.keys(s.agentStatus).length === 0) notStarted++; else awaitingGate++;
+    });
+    return { total: PERSONAS.length, notStarted, inProgress, awaitingGate, needsDecision, resolved };
+}
+
+function renderDashboard() {
+    const greeting = document.getElementById('greeting');
+    if (greeting) greeting.textContent = currentUser ? `Good day, ${currentUser.name}` : 'Good day';
+    const c = caseCounts();
+    const navCaseBadge = document.getElementById('navCaseBadge');
+    if (navCaseBadge) navCaseBadge.textContent = PERSONAS.length + FILLER.length;
+
+    const statbar = document.getElementById('statbar');
+    if (statbar) {
+        const stats = [
+            { n: c.total, l: 'Total', cls: '' }, { n: c.notStarted, l: 'Not started', cls: '' }, { n: c.inProgress, l: 'In progress', cls: '' },
+            { n: c.awaitingGate, l: 'Awaiting gate', cls: 'c-amber' }, { n: c.needsDecision, l: 'Needs decision', cls: 'c-amber' }, { n: c.resolved, l: 'Resolved', cls: 'c-green' },
+        ];
+        statbar.innerHTML = stats.map((s, i) => `<div class="stat counting" style="animation-delay:${i * 60}ms;"><div class="stat-num ${s.cls}" id="statnum-${i}">0</div><div class="stat-label">${s.l}</div></div>`).join('');
+        stats.forEach((s, i) => animateCountUp(document.getElementById('statnum-' + i), s.n, 500 + i * 60));
+    }
+
+    let decisions = [];
+    PERSONAS.forEach(p => Object.keys(p.a).forEach(k => { const s = state[p.id]; if (s.agentStatus[k] === 'done' || s.agentStatus[k] === 'blocked') decisions.push({ label: AGENTS[k].label + ' — ' + p.customer, tone: p.a[k].tone }); }));
+
+    const panelAgentDecisions = document.getElementById('panelAgentDecisions');
+    if (panelAgentDecisions) {
+        panelAgentDecisions.innerHTML = decisions.length ? decisions.slice(-6).reverse().map(d => `<div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:${d.tone === 'clean' ? 'var(--green-700)' : d.tone === 'block' ? 'var(--red-700)' : 'var(--amber-700)'}"></span>${d.label}</div></div>`).join('') : '<div class="panel-empty">No agents run yet</div>';
+    }
+
+    let approved = 0, overridden = 0;
+    PERSONAS.forEach(p => state[p.id].gates.forEach(g => { if (g === 'approve') approved++; else if (g === 'override') overridden++; }));
+    const gatesRemaining = PERSONAS.reduce((a, p) => a + state[p.id].gates.filter(g => g === null).length, 0);
+
+    const panelHumanDecisions = document.getElementById('panelHumanDecisions');
+    if (panelHumanDecisions) {
+        panelHumanDecisions.innerHTML = `
+        <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:var(--green-700)"></span>Approved</div><div class="kv-val">${approved}</div></div>
+        <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:var(--amber-700)"></span>Overridden</div><div class="kv-val">${overridden}</div></div>
+        <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:#D7D2E8"></span>Pending</div><div class="kv-val">${gatesRemaining}</div></div>`;
+    }
+
+    let totalTriggers = PERSONAS.reduce((a, p) => a + state[p.id].messages.length, 0);
+    const panelComposer = document.getElementById('panelComposer');
+    if (panelComposer) {
+        panelComposer.innerHTML = `
+        <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:var(--purple-700)"></span>Customer updates sent</div><div class="kv-val">${totalTriggers}</div></div>
+        <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:#D7D2E8"></span>Fires on approval only</div></div>`;
+    }
+
+    const dist = { recognised: 0, recoverable: 0, notrecoverable: 0, mixed: 0, pending: 0 };
+    PERSONAS.forEach(p => { if (p.recognised) dist.recognised++; else if (p.classification === 'recoverable') dist.recoverable++; else if (p.classification === 'not-recoverable') dist.notrecoverable++; else if (p.classification === 'mixed') dist.mixed++; else dist.pending++; });
+    drawDonut([{ v: dist.recognised, c: '#7C3AED', l: 'Recognised — deflected' }, { v: dist.recoverable, c: '#15803D', l: 'Recoverable (CNP)' }, { v: dist.notrecoverable, c: '#B91C1C', l: 'Chase & Repatriate' }, { v: dist.mixed, c: '#B45309', l: 'Mixed rails / Sim Swap' }, { v: dist.pending, c: '#E5E2F0', l: 'Pending' }]);
+}
+
+function drawDonut(segments) {
+    const total = segments.reduce((a, s) => a + s.v, 0) || 1;
+    const r = 50, cx = 60, cy = 60; let angle = -90; let paths = '';
+    segments.forEach(s => {
+        if (s.v <= 0) return;
+        const frac = s.v / total; const sweep = frac * 360;
+        const x1 = cx + r * Math.cos(angle * Math.PI / 180), y1 = cy + r * Math.sin(angle * Math.PI / 180);
+        angle += sweep;
+        const x2 = cx + r * Math.cos(angle * Math.PI / 180), y2 = cy + r * Math.sin(angle * Math.PI / 180);
+        const large = sweep > 180 ? 1 : 0;
+        paths += `<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${s.c}"/>`;
+    });
+    const donutSvg = document.getElementById('donutSvg');
+    if (donutSvg) donutSvg.innerHTML = paths + `<circle cx="60" cy="60" r="30" fill="#fff"/><text x="60" y="56" text-anchor="middle" font-size="18" font-weight="800" fill="#150F26" font-family="Plus Jakarta Sans">${total}</text><text x="60" y="70" text-anchor="middle" font-size="8.5" fill="#9791A8" font-family="Plus Jakarta Sans">total</text>`;
+
+    const donutLegend = document.getElementById('donutLegend');
+    if (donutLegend) donutLegend.innerHTML = segments.map(s => `<div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:${s.c}"></span>${s.l}</div><div class="kv-val">${s.v}</div></div>`).join('');
+}
+
+const FILTERS = ['All', 'Not started', 'In progress', 'Awaiting gate', 'Needs decision', 'Done'];
+let activeFilter = 'All';
+
+function renderFilterbar() {
+    const c = caseCounts();
+    const counts = { All: PERSONAS.length, 'Not started': c.notStarted, 'In progress': c.inProgress, 'Awaiting gate': c.awaitingGate, 'Needs decision': c.needsDecision, 'Done': c.resolved };
+    const filterbar = document.getElementById('filterbar');
+    if (filterbar) {
+        filterbar.innerHTML = FILTERS.map(f => `<button class="fpill ${f === activeFilter ? 'active' : ''}" data-f="${f}">${f} <span class="n">${counts[f]}</span></button>`).join('');
+        filterbar.querySelectorAll('.fpill').forEach(el => el.addEventListener('click', () => { activeFilter = el.dataset.f; renderCases(); }));
+    }
+}
+
+function caseStatusLabel(p) {
+    const s = state[p.id];
+    if (s.closed) return 'Done'; if (s.escalated) return 'Needs decision';
+    if (Object.keys(s.agentStatus).length === 0) return 'Not started'; return 'Awaiting gate';
+}
+
+function renderCases() {
+    updateLiveNavIndicator(); renderFilterbar();
+    const tbody = document.getElementById('casesTbody');
+    if (!tbody) return;
+    let rows = PERSONAS.filter(p => activeFilter === 'All' || caseStatusLabel(p) === activeFilter);
+    tbody.innerHTML = rows.map(p => {
+        const s = state[p.id];
+        const screenLabel = s.closed && p.recognised ? `2 of 2 (Deflected)` : s.closed ? `2 of 2` : `${s.screenIdx + 1} of 6`;
+        const statusLbl = caseStatusLabel(p);
+
+        // Urgency only shows once Case Intake has actually completed - before that,
+        // there is no real urgency.level to show, so the column stays neutral.
+        const intakeDone = s.agentStatus && s.agentStatus.caseIntake === 'done';
+        const urgencyCls = s.urgencyLevel === 'Critical' ? 'b-crit' : s.urgencyLevel === 'High' ? 'b-high' : s.urgencyLevel === 'Medium' ? 'b-medium' : 'b-low';
+        const urgencyCell = intakeDone && s.urgencyLevel ? `<span class="badge ${urgencyCls}">${s.urgencyLevel}</span>` : '<span class="sla-pending">—</span>';
+
+        const sla = slaInfo(p);
+        const slaCell = sla
+            ? `<span class="sla-badge ${sla.overdue ? 'sla-overdue' : sla.remainingMs < 3600000 ? 'sla-warn' : 'sla-ok'}">${formatSlaCountdown(sla.remainingMs)}</span>`
+            : '<span class="sla-pending">—</span>';
+
+        const decidedGates = s.gates.map((g, i) => g ? { i, g, who: s.gateApprover[i] } : null).filter(Boolean);
+        const humanCell = decidedGates.length
+            ? `<span class="badge ${decidedGates.some(d => d.g === 'escalate') ? 'b-high' : 'b-low'}">${decidedGates.length} decided</span> <span class="human-who">${decidedGates[decidedGates.length - 1].who || ''}</span>`
+            : '—';
+
+        return `<tr class="rowlink" data-id="${p.id}">
+      <td><div class="cust-name">${p.customer}</div><div class="cust-ref">${p.id}</div></td>
+      <td>${urgencyCell}</td>
+      <td>${slaCell}</td>
+      <td><span class="badge b-neutral">${statusLbl}</span></td>
+      <td>${screenLabel}</td>
+      <td><button class="btn pill-btn" data-open="${p.id}">${Object.keys(s.agentStatus).length ? 'Open case' : 'Trigger agents'}</button></td>
+      <td>${humanCell}</td>
+    </tr>`;
+    }).join('') + FILLER.map(f => `<tr class="rowlink filler" data-id="${f.ref}">
+      <td><div class="cust-name">${f.name}</div><div class="cust-ref">${f.ref}</div></td>
+      <td><span class="sla-pending">—</span></td>
+      <td><span class="sla-pending">—</span></td>
+      <td><span class="badge b-neutral">Not started</span></td>
+      <td>0 of 6</td>
+      <td><button class="btn pill-btn ghost" data-open="${f.ref}">View</button></td>
+      <td>—</td>
+    </tr>`).join('');
+
+
+    tbody.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); openCase(b.dataset.open); }));
+    tbody.querySelectorAll('tr.rowlink').forEach(r => r.addEventListener('click', () => openCase(r.dataset.id)));
+}
+
+function renderLive() {
+    const running = PERSONAS.filter(p => {
+        const s = state[p.id];
+        return !s.closed && !s.escalated && Object.keys(s.agentStatus).length > 0;
+    });
+
+    const liveSub = document.getElementById('liveSub');
+    if (liveSub) {
+        liveSub.textContent = running.length
+            ? `${running.length} case${running.length > 1 ? 's' : ''} in progress`
+            : 'No cases currently running';
+    }
+
+    const liveBody = document.getElementById('liveBody');
+    if (liveBody) {
+        liveBody.innerHTML = running.length ? running.map(p => {
+            const s = state[p.id];
+            const scr = SCREENS[s.screenIdx];
+            return `
+            <div class="live-ticker" data-id="${p.id}" style="cursor:pointer; justify-content:space-between; transition:transform 0.15s ease, box-shadow 0.15s ease;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span class="live-dot"></span>
+                <div>
+                  <b>${p.customer}</b> · <span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${p.id}</span> — Stage ${scr.n} of 6 · <b>${scr.title}</b>
+                </div>
+              </div>
+              <span class="btn pill-btn" style="font-size:11px; padding:5px 12px; flex-shrink:0;">View case →</span>
+            </div>`;
+        }).join('') : `<div class="live-empty"><b>Live</b>No cases are currently running. Go to <b>Cases</b> to trigger a review.</div>`;
+
+        liveBody.querySelectorAll('.live-ticker[data-id]').forEach(el => {
+            el.addEventListener('click', () => openCase(el.dataset.id));
+
+            el.addEventListener('mouseenter', () => {
+                el.style.transform = 'translateY(-2px)';
+                el.style.borderColor = 'var(--purple-400)';
+            });
+            el.addEventListener('mouseleave', () => {
+                el.style.transform = 'none';
+                el.style.borderColor = 'var(--border)';
+            });
+        });
+    }
+}
+
+function findPersona(id) { return PERSONAS.find(p => p.id === id); }
+
+/* Opens a clean, isolated single-case view (middle panel completely hidden) */
+function openCase(id) {
+    currentCaseId = id;
+    goto('detail');
+
+    const wqSidebar = document.querySelector('.wq-sidebar') || document.getElementById('wqList') || document.querySelector('.workqueue-panel');
+    if (wqSidebar) wqSidebar.style.setProperty('display', 'none', 'important');
+
+    const workspace = document.getElementById('workspace');
+    if (workspace) workspace.classList.add('active');
+    const p = findPersona(id);
+    const filler = !p ? FILLER.find(f => f.ref === id) : null;
+
+    const dCaseRef = document.getElementById('dCaseRef');
+    if (dCaseRef) dCaseRef.textContent = id;
+
+    if (filler) {
+        renderFillerCaseShell(filler);
+        return;
+    }
+    const dCustomer = document.getElementById('dCustomer');
+    if (dCustomer) dCustomer.textContent = p.customer;
+
+    const dPills = document.getElementById('dPills');
+    if (dPills) {
+        const s = state[p.id];
+        const intakeDone = s.agentStatus && s.agentStatus.caseIntake === 'done';
+        const sla = slaInfo(p);
+        dPills.innerHTML = `<span class="tag">${p.tag}</span>` +
+            (intakeDone && s.urgencyLevel
+                ? `<span class="tag tag-urgency-${s.urgencyLevel.toLowerCase()}">${s.urgencyLevel} urgency</span>${sla ? `<span class="tag ${sla.overdue ? 'tag-sla-overdue' : sla.remainingMs < 3600000 ? 'tag-sla-warn' : 'tag-sla-ok'}">SLA: ${formatSlaCountdown(sla.remainingMs)}</span>` : ''}`
+                : `<span class="tag tag-muted">Urgency pending Case Intake</span>`) +
+            (p.vulnerable ? `<span class="tag" style="background:var(--red-100);color:var(--red-700)">Vulnerable (71yo)</span>` : '');
+    }
+
+    const backBtn = document.getElementById('backToCasesBtn');
+    if (backBtn) {
+        backBtn.onclick = (e) => { e.preventDefault(); goto('cases'); };
+    }
+
+    const threadBtn = document.getElementById('openThreadBtn');
+    if (threadBtn) threadBtn.removeAttribute('disabled');
+
+    const dInfoBox = document.getElementById('dInfoBox');
+    if (dInfoBox) {
+        dInfoBox.innerHTML = `
+        <div class="wb-info-item"><div class="il">Disputed amount</div><div class="iv">${p.amount}</div></div>
+        <div class="wb-info-item"><div class="il">Channel</div><div class="iv">${p.channel}</div></div>
+        <div class="wb-info-item"><div class="il">Product</div><div class="iv">${p.product}</div></div>`;
+    }
+
+    closeThread();
+
+    activeWorkspaceTab = 'agents';
+    document.querySelectorAll('.wtab').forEach(x => x.classList.toggle('active', x.dataset.wtab === 'agents'));
+    const wbScrollEl = document.getElementById('wbScroll');
+    if (wbScrollEl) wbScrollEl.style.display = 'block';
+    ['wbReportPanel', 'wbFilesPanel', 'wbCorrPanel'].forEach(pid => { const el = document.getElementById(pid); if (el) el.style.display = 'none'; });
+    wireWorkspaceTabs(p);
+
+    renderStatusBanner(p);
+    renderHorizontalStepper(p);
+    renderActiveStageContent(p);
+    updateProgressRing(p);
+    updateThreadBadge();
+
+    const s = state[id];
+    if (Object.keys(s.agentStatus).length === 0) runScreenAgents(p);
+}
+
+/* ============================================================
+   FILLER CASE SHELL — the 30 queue-filler rows are clickable so
+   the queue feels alive, but they never run the agent pipeline
+   or hit the live API. Read-only, honest placeholder.
+   ============================================================ */
+function renderFillerCaseShell(filler) {
+    const dCustomer = document.getElementById('dCustomer');
+    if (dCustomer) dCustomer.textContent = filler.name;
+
+    const dPills = document.getElementById('dPills');
+    if (dPills) dPills.innerHTML = `<span class="tag tag-muted">${filler.type}</span><span class="tag tag-muted">Not started</span>`;
+
+    const backBtn = document.getElementById('backToCasesBtn');
+    if (backBtn) backBtn.onclick = (e) => { e.preventDefault(); goto('cases'); };
+
+    const dInfoBox = document.getElementById('dInfoBox');
+    if (dInfoBox) {
+        dInfoBox.innerHTML = `
+        <div class="wb-info-item"><div class="il">Disputed amount</div><div class="iv">Not yet reported</div></div>
+        <div class="wb-info-item"><div class="il">Channel</div><div class="iv">—</div></div>
+        <div class="wb-info-item"><div class="il">Product</div><div class="iv">—</div></div>`;
+    }
+
+    const dStatusBanner = document.getElementById('dStatusBanner');
+    if (dStatusBanner) {
+        dStatusBanner.innerHTML = `<div class="filler-notice">${filler.name} is a queued placeholder used to give the case list realistic volume. It doesn't run the agent pipeline — only Sipho, Andile, Nomvula and Thabo do that in this build.</div>`;
+    }
+
+    ['openThreadBtn'].forEach(id => { const el = document.getElementById(id); if (el) el.setAttribute('disabled', 'disabled'); });
+
+    const wbScrollEl = document.getElementById('wbScroll');
+    if (wbScrollEl) { wbScrollEl.style.display = 'block'; wbScrollEl.innerHTML = `<div class="filler-empty">No agent activity for this case.</div>`; }
+    ['wbReportPanel', 'wbFilesPanel', 'wbCorrPanel'].forEach(pid => { const el = document.getElementById(pid); if (el) el.style.display = 'none'; });
+    document.querySelectorAll('.wtab').forEach(t => t.classList.toggle('active', t.dataset.wtab === 'agents'));
+
+    const ringLabel = document.getElementById('ringLabel');
+    if (ringLabel) ringLabel.textContent = '0/6';
+    const ringFill = document.getElementById('ringFill');
+    if (ringFill) ringFill.style.strokeDashoffset = '138.2';
+}
+
+
+function renderStatusBanner(p) {
+    const s = state[p.id];
+    const el = document.getElementById('dStatusBanner');
+    if (!el) return;
+    if (s.closed) { el.className = 'wb-status tone-done'; el.innerHTML = `${I('check', 15)} <b>Closed.</b> Case resolved ${p.recognised ? '(Deflected at Screen 2)' : ''}.`; return; }
+    if (s.escalated) { el.className = 'wb-status tone-stop'; el.innerHTML = `${I('alert', 15)} <b>Escalated at Screen ${SCREENS[s.escalatedAt].n} — ${SCREENS[s.escalatedAt].title}.</b> No orchestrator agent will force this forward.`; return; }
+    const scr = SCREENS[s.screenIdx];
+    el.className = 'wb-status'; el.innerHTML = `<span class="spin"></span> <b>${scr.title} · running</b> — ${scr.sub}`;
+}
+
+/* Horizontal 6-Stage Stepper Header */
+function renderHorizontalStepper(p) {
+    const s = state[p.id];
+    const col = document.getElementById('wbScroll');
+    if (!col) return;
+
+    let stepperHtml = `<div class="horizontal-stepper" style="display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:8px;border-bottom:1px solid #E5E2F0;">`;
+
+    SCREENS.forEach((scr, idx) => {
+        const isCurrent = (idx === s.activeStageTab);
+        const isCompleted = idx < s.screenIdx || (s.closed && idx <= s.screenIdx);
+        const isCurrentRunning = idx === s.screenIdx && !s.closed && !s.escalated;
+
+        let bg = isCurrent ? '#7C3AED' : isCompleted ? '#15803D' : '#F3F0F8';
+        let color = isCurrent || isCompleted ? '#FFFFFF' : '#64748B';
+
+        stepperHtml += `
+        <div class="step-arc-item" data-stage="${idx}" style="flex:1;min-width:130px;padding:10px;background:${bg};color:${color};border-radius:8px;cursor:pointer;transition:all 0.2s ease;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:0.8;">Stage 0${scr.n}</div>
+            <div style="font-size:12px;font-weight:700;margin-top:2px;">${scr.title}</div>
+            <div style="font-size:10px;margin-top:4px;">${isCompleted ? '✓ Done' : isCurrentRunning ? '⚡ Active' : 'Locked'}</div>
+        </div>`;
+    });
+
+    stepperHtml += `</div><div id="stageContentArea"></div>`;
+    col.innerHTML = stepperHtml;
+
+    col.querySelectorAll('.step-arc-item').forEach(el => {
+        el.addEventListener('click', () => {
+            s.activeStageTab = parseInt(el.dataset.stage, 10);
+            renderHorizontalStepper(p);
+            renderActiveStageContent(p);
+        });
+    });
+}
+
+/* Render Selected Stage Content and Agents with Timers */
+function renderActiveStageContent(p) {
+    const s = state[p.id];
+    const container = document.getElementById('stageContentArea');
+    if (!container) return;
+
+    const stageIdx = s.activeStageTab !== undefined ? s.activeStageTab : s.screenIdx;
+    const scr = SCREENS[stageIdx];
+    const complete = stageIdx < s.screenIdx || (s.closed && stageIdx === s.screenIdx);
+    const running = stageIdx === s.screenIdx && !s.closed && !s.escalated;
+
+    // Resolve dynamic reads for the active case
+    const evidence = getCaseEvidence(p);
+    const reads = new Set();
+    scr.agents.forEach(ak => {
+        AGENTS[ak].reads.forEach(r => {
+            if (r === 'Contact Note PDF') {
+                reads.add(evidence.contactNote);
+            } else {
+                reads.add(r);
+            }
+        });
+    });
+
+    let html = `<div class="stage-section active-focus">
+      <div class="stage-section-head">
+        <div class="ssnum">${scr.n}</div>
+        <div><div class="stage-section-title">${p.recognised && stageIdx === 1 ? 'Recognition Review' : scr.title}</div><div class="stage-section-sub">${p.recognised && stageIdx === 1 ? 'Proceed as fraud, or show the customer' : scr.sub}</div></div>
+        <span class="stage-status-pill ${complete ? 'st-complete' : running ? 'st-running' : ''}">${complete ? 'Complete' : running ? 'Running' : ''}</span>
+      </div>
+      <div class="reads-inline" style="margin-bottom:16px;">${Array.from(reads).map(r => { const m = READS_META[r] || { type: 'system' }; return `<span class="read-chip-sm">${r}${m.q ? ' <span class="rq">?</span>' : ''}</span>`; }).join('')}</div>`;
+
+    if (stageIdx === 1 && p.recognised && (complete || stageIdx === s.screenIdx)) {
+        html += `<div class="closed-callout"><div class="cc-title">${I('check', 16)} Case deflected — recognised subscription</div><div class="cc-body">Not fraud. Active mandate verified at R349/mo; price rose to R429 this month. Screens 03–06 never run.</div></div>`;
+    } else {
+        const gridCls = scr.agents.length === 1 ? 'card-grid single-agent' : 'card-grid';
+        html += `<div class="${gridCls}">${scr.agents.map(ak => renderAgentCard(p, ak)).join('')}</div>`;
+    }
+
+    if (stageIdx === s.screenIdx && !s.closed) { html += renderGateOrRecord(p, stageIdx); }
+    else if (stageIdx < s.screenIdx || s.closed) { html += renderGateOrRecord(p, stageIdx); }
+    html += `</div>`;
+
+    container.innerHTML = html;
+    animateEntrance(container, '.agent-card');
+
+    container.querySelectorAll('.agent-card').forEach(el => el.addEventListener('click', () => { if (el.dataset.locked) return; openAgentModal(p, el.dataset.agent); }));
+    container.querySelectorAll('[data-gate]').forEach(el => el.addEventListener('click', () => handleGate(p, parseInt(el.dataset.gate, 10), el.dataset.action)));
+    container.querySelectorAll('[data-policy]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openPolicyModal(p); }));
+
+    // Keep whichever of Report / Case Files / Correspondence is on screen live-updated
+    // as agents complete, without needing the user to re-click the tab.
+    if (activeWorkspaceTab !== 'agents') renderWorkspaceTab(p);
+}
+
+function agentToneClass(tone) { return tone === 'clean' ? 'tone-clean' : tone === 'block' ? 'tone-block' : 'tone-flag'; }
+
+function renderAgentCard(p, agentKey) {
+    const meta = AGENTS[agentKey];
+    const data = p.a[agentKey];
+    const s = state[p.id];
+    const st = s.agentStatus[agentKey] || 'pending';
+    let cardCls = 'agent-card ' + st;
+    if (st === 'done') cardCls += data.tone === 'flag' ? ' flag' : data.tone === 'block' ? ' block' : ' done';
+
+    let pillHtml = st === 'pending' ? `<span class="ac-pill pending">Pending</span>`
+        : st === 'running' ? `<span class="ac-pill running"><span class="spin"></span> Running</span>`
+            : st === 'blocked' ? `<span class="ac-pill block">Gate closed</span>`
+                : `<span class="ac-pill ${data.tone === 'block' ? 'block' : data.tone === 'flag' ? 'flag' : 'done'}">${data.tone === 'block' ? 'Flagged' : data.tone === 'flag' ? 'Flagged' : 'Done'}</span>`;
+
+    const locked = (st === 'pending');
+
+    let timerBadge = '';
+    if (st === 'running') {
+        const liveSec = data.elapsedSeconds || 0;
+        timerBadge = `<span class="agent-timer-badge live">${I('timer', 11)} ${formatLiveClock(liveSec)}</span>`;
+    } else if (st === 'done' && data.elapsedSeconds) {
+        timerBadge = `<span class="agent-timer-badge completed">${I('timer', 11)} Took ${formatDuration(data.elapsedSeconds)}</span>`;
+    }
+
+    const body = (st === 'done' || st === 'blocked') ? `
+    <div class="ac-finding ${agentToneClass(data.tone)}">${data.finding}</div>
+    <div class="ac-desc">${data.desc}</div>
+    <div class="ac-foot">
+        <span class="ac-expand">${I('search', 12)} View entire output</span>
+        ${timerBadge}
+    </div>
+  ` : st === 'running' ? `
+    <div class="ac-desc thinking">Processing agent analysis<span class="dots"></span></div>
+    <div class="thinking-bar"></div>
+    <div class="ac-foot" style="margin-top:12px;">${timerBadge}</div>
+  ` : `<div class="ac-desc">Waiting on upstream stage.</div>`;
+
+    return `<div class="${cardCls}" data-agent="${agentKey}" ${locked ? 'data-locked="1"' : ''}>
+    <div class="ac-top">
+      <div class="ac-id"><div class="ac-ico">${I(meta.icon, 15)}</div><div><div class="ac-name"><span class="tier-dot ${meta.tier}"></span>${meta.label}</div></div></div>
+      ${pillHtml}
+    </div>
+    ${body}
+  </div>`;
+}
+
+function renderGateOrRecord(p, screenIdx) {
+    const scr = SCREENS[screenIdx];
+    const s = state[p.id];
+    const allDone = scr.agents.every(ak => s.agentStatus[ak] === 'done' || s.agentStatus[ak] === 'blocked') || (screenIdx === 1 && p.recognised);
+    if (!allDone) return '';
+
+    if (s.gates[screenIdx]) {
+        const action = s.gates[screenIdx];
+        const approver = s.gateApprover[screenIdx] || 'Unknown';
+        const opts = [
+            { id: 'approve', label: 'Approve', note: 'Proceed as recommended' },
+            { id: 'override', label: 'Override', note: 'Proceed with amendment' },
+            { id: 'escalate', label: 'Escalate', note: 'Route to senior review' },
+        ];
+        return `<div class="decision-record">
+      <div class="dr-head"><div class="dr-title">${I('user', 13)} Human decision — Gate ${screenIdx + 1} resolved</div><div class="dr-meta">${scr.gateRole}</div></div>
+      <div class="dr-options">${opts.map(o => `
+        <div class="dr-opt ${o.id === action ? 'chosen c-' + o.id : ''}">
+          <div class="dro-label"><span class="dro-check">${I('check', 10)}</span>${o.label}</div>
+          <div class="dro-note">${o.id === action ? 'Selected' : o.note}</div>
+        </div>`).join('')}</div>
+      <div class="dr-approver">${I('shieldcheck', 13)} ${action === 'escalate' ? 'Escalated' : action === 'override' ? 'Overridden' : 'Approved'} by <b>${approver}</b></div>
+    </div>`;
+    }
+
+    const minRank = GATE_MIN_RANK[screenIdx];
+    const authorised = currentUser && currentUser.rank >= minRank;
+    if (!authorised) {
+        const needed = minRank >= 3 ? 'Accountable person' : scr.gateRole;
+        return `<div class="gate-card">
+      <div class="gate-head">${I('user', 14)} Human Decision Gate — role required</div>
+      <div class="role-required">${I('alert', 13)} Requires <b>${needed}</b>. Signed in as <b>${currentUser ? currentUser.title : '—'}</b> — approve requires that authority, or escalate.</div>
+      <div class="gate-actions"><button class="gbtn approve" disabled style="opacity:0.4;cursor:not-allowed;">✓ Approve</button><button class="gbtn escalate" data-gate="${screenIdx}" data-action="escalate">Escalate</button></div>
+    </div>`;
+    }
+    return `<div class="gate-card">
+    <div class="gate-head">${I('user', 14)} Human Decision Gate</div>
+    <div class="gate-role">${scr.gateRole}</div>
+    ${scr.gateAuthority ? `<div class="gate-authority">${scr.gateAuthority}</div>` : ''}
+    <div class="gate-context">Context bus: full upstream case history available to this decision. Signed in as <b>${currentUser.name}</b>.</div>
+    <div class="gate-actions">
+      <button class="gbtn approve" data-gate="${screenIdx}" data-action="approve">✓ Approve</button>
+      <button class="gbtn override" data-gate="${screenIdx}" data-action="override">Override</button>
+      <button class="gbtn escalate" data-gate="${screenIdx}" data-action="escalate">Escalate</button>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   RUN SCREEN AGENTS (WITH TIMEOUT FALLBACK & PREREQUISITE GUARD)
+   ============================================================ */
+async function runScreenAgents(p) {
+    const s = state[p.id];
+    const scr = SCREENS[s.screenIdx];
+    if (s.screenIdx === 1 && p.recognised) { renderHorizontalStepper(p); renderActiveStageContent(p); return; }
+
+    let i = 0;
+    function next() {
+        if (i >= scr.agents.length) { renderHorizontalStepper(p); renderActiveStageContent(p); return; }
+        const ak = scr.agents[i];
+
+        // Gather existing outputs
+        const allOutputs = {
+            'CASE_INTAKE_OUTPUT_TEXT': p.a.caseIntake?.rawText || '',
+            'RECOGNITION_CHECK_OUTPUT_TEXT': p.a.recognitionCheck?.rawText || '',
+            'FRAUD_ASSESSMENT_OUTPUT_TEXT': p.a.fraudAssessment?.rawText || '',
+            'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT': p.a.transactionClassification?.rawText || '',
+            'FUNDS_TRACE_OUTPUT_TEXT': p.a.fundsTrace?.rawText || '',
+            'SHADOW_CREDIT_OUTPUT_TEXT': p.a.shadowCredit?.rawText || '',
+            'CHARGEBACK_PREPARATION_OUTPUT_TEXT': p.a.chargebackPreparation?.rawText || '',
+            'RECALL_REPATRIATION_OUTPUT_TEXT': p.a.recallRepatriation?.rawText || ''
+        };
+
+        // Guard Check: Verify mandatory upstream dependencies exist
+        const mandatoryKeys = AGENT_MANDATORY_INPUTS[ak] || [];
+        const missingMandatory = mandatoryKeys.filter(k => !allOutputs[k] || allOutputs[k].trim().length === 0);
+
+        if (missingMandatory.length > 0) {
+            p.a[ak].finding = 'Prerequisite Missing';
+            p.a[ak].desc = `Cannot execute ${AGENTS[ak].label}. Mandatory upstream requirement (${missingMandatory.join(', ')}) was not produced.`;
+            p.a[ak].tone = 'block';
+            s.agentStatus[ak] = 'blocked';
+
+            renderHorizontalStepper(p);
+            renderActiveStageContent(p);
+            renderDashboardIfVisible();
+            return;
+        }
+
+        s.agentStatus[ak] = 'running';
+        p.a[ak].startTime = Date.now();
+        p.a[ak].elapsedSeconds = 0;
+
+        const timerKey = `${p.id}-${ak}`;
+        if (agentTimerIntervals[timerKey]) clearInterval(agentTimerIntervals[timerKey]);
+
+        agentTimerIntervals[timerKey] = setInterval(() => {
+            p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
+            renderActiveStageContent(p);
+        }, 1000);
+
+        renderHorizontalStepper(p);
+        renderActiveStageContent(p);
+
+        // Filter payload to allowed keys only
+        const allowedKeys = AGENT_ALLOWED_INPUTS[ak] || [];
+        const upstreamPayload = {};
+        allowedKeys.forEach(k => {
+            if (allOutputs[k] && allOutputs[k].trim().length > 0) {
+                upstreamPayload[k] = allOutputs[k];
+            }
+        });
+
+        fetch('/api/fraud/run-agent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                caseId: p.id,
+                agentKey: ak,
+                upstreamOutputs: upstreamPayload
+            })
+        })
+            .then(res => res.json())
+            .then(apiRes => {
+                if (agentTimerIntervals[timerKey]) {
+                    clearInterval(agentTimerIntervals[timerKey]);
+                    delete agentTimerIntervals[timerKey];
+                }
+                p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
+
+                if (apiRes.success && apiRes.outputText) {
+                    p.a[ak].rawText = apiRes.outputText;
+                    const parsed = parseAgentJson(apiRes.outputText);
+                    if (parsed && typeof parsed === 'object') {
+                        const formatted = formatAgentData(ak, parsed);
+                        p.a[ak].finding = formatted.finding;
+                        p.a[ak].desc = formatted.desc;
+                        p.a[ak].tone = formatted.tone;
+                        p.a[ak].fullText = formatted.fullText;
+                        if (ak === 'caseIntake') p.a[ak].urgencyLevel = formatted.urgencyLevel;
+                        if (formatted.reasoning && formatted.reasoning.length) {
+                            p.a[ak].reasoning = formatted.reasoning;
+                        }
+                    } else {
+                        p.a[ak].desc = apiRes.outputText.replace(/[\{\}\[\]"]/g, '').trim();
+                        p.a[ak].fullText = apiRes.outputText;
+                        if (ak === 'caseIntake') p.a[ak].urgencyLevel = 'Medium';
+                    }
+                    s.agentStatus[ak] = p.a[ak] && p.a[ak].blocked ? 'blocked' : 'done';
+                } else {
+                    // Visually render error on card and populate local preset so downstream agents can run
+                    p.a[ak].finding = 'Live API Timeout / Fallback Applied';
+                    p.a[ak].desc = apiRes.message || 'Server took longer than 120s to respond.';
+                    p.a[ak].tone = 'flag';
+                    p.a[ak].rawText = JSON.stringify({
+                        status: 'completed',
+                        agent: ak,
+                        recommendation: { action: p.a[ak]?.finding || 'Processed', reason: p.a[ak]?.desc || 'Analysis completed.' }
+                    });
+                    if (ak === 'caseIntake') p.a[ak].urgencyLevel = 'Medium';
+                    s.agentStatus[ak] = 'done';
+                }
+
+                // SLA clock starts the moment Case Intake genuinely finishes (live or fallback) -
+                // never before, and never twice.
+                if (ak === 'caseIntake' && !s.slaStartedAt) {
+                    s.urgencyLevel = (p.a.caseIntake && p.a.caseIntake.urgencyLevel) || 'Medium';
+                    s.slaStartedAt = Date.now();
+                }
+
+                if (ak === 'caseIntake' && s.screenIdx === 0 && s.messages.length === 0) { pushMessage(p, 0); }
+                i++;
+                renderHorizontalStepper(p); renderActiveStageContent(p); renderDashboardIfVisible(); renderCasesIfVisible();
+                next();
+            })
+            .catch(err => {
+                if (agentTimerIntervals[timerKey]) {
+                    clearInterval(agentTimerIntervals[timerKey]);
+                    delete agentTimerIntervals[timerKey];
+                }
+                p.a[ak].finding = 'Connection Error';
+                p.a[ak].desc = err.message || 'Failed to reach local API service.';
+                p.a[ak].tone = 'block';
+                if (ak === 'caseIntake') p.a[ak].urgencyLevel = 'High';
+                s.agentStatus[ak] = 'done';
+                if (ak === 'caseIntake' && !s.slaStartedAt) {
+                    s.urgencyLevel = (p.a.caseIntake && p.a.caseIntake.urgencyLevel) || 'High';
+                    s.slaStartedAt = Date.now();
+                }
+                i++;
+                renderHorizontalStepper(p); renderActiveStageContent(p); renderDashboardIfVisible(); renderCasesIfVisible();
+                next();
+            });
+    }
+    next();
+}
+function handleGate(p, screenIdx, action) {
+    const s = state[p.id];
+    s.gates[screenIdx] = action;
+    s.gateApprover[screenIdx] = currentUser ? `${currentUser.name} (${currentUser.title})` : null;
+
+    const gateLabel = SCREENS[screenIdx] ? SCREENS[screenIdx].title : `Gate ${screenIdx + 1}`;
+    if (action === 'approve') showToast(`${gateLabel} approved`, 'success', 'check');
+    else if (action === 'override') showToast(`${gateLabel} overridden`, 'warn', 'alert');
+    else showToast(`${gateLabel} escalated for senior review`, 'warn', 'alert');
+
+    pushMessage(p, screenIdx + 1);
+
+    if (action === 'escalate') {
+        s.escalated = true; s.escalatedAt = screenIdx;
+        renderStatusBanner(p); renderHorizontalStepper(p); renderActiveStageContent(p); updateProgressRing(p);
+        renderCases(); renderDashboardIfVisible();
+        return;
+    }
+    s.escalated = false;
+
+    if (screenIdx === 1 && p.recognised) {
+        s.closed = true;
+        renderStatusBanner(p); renderHorizontalStepper(p); renderActiveStageContent(p); updateProgressRing(p);
+        renderCases(); renderDashboardIfVisible();
+        return;
+    }
+    if (screenIdx < SCREENS.length - 1) {
+        s.screenIdx = screenIdx + 1;
+        s.activeStageTab = s.screenIdx;
+        renderStatusBanner(p);
+        runScreenAgents(p);
+    } else {
+        s.closed = true;
+        releaseArtefacts(p);
+    }
+    renderStatusBanner(p); renderHorizontalStepper(p); renderActiveStageContent(p); updateProgressRing(p);
+    renderCases(); renderDashboardIfVisible();
+}
+
+function releaseArtefacts(p) {
+    const s = state[p.id];
+    ARTEFACT_DEFS.forEach(def => {
+        let eligible = def.always || (def.needsMule && p.mule) || (def.needsCASP && p.casp) || (def.needsSTR && p.str) || (def.needsChargeback && p.classification !== 'not-recoverable');
+        if (eligible) s.artefacts[def.id] = 'released';
+    });
+}
+
+function renderDashboardIfVisible() { if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard(); }
+function renderCasesIfVisible() { if (document.getElementById('page-cases').classList.contains('active')) renderCases(); }
+
+/* ============================================================
+   SLA POLICY — response-time targets by urgency tier.
+   Countdown starts when Case Intake completes (s.slaStartedAt),
+   never before - matches "urgency only shows once intake is done".
+   ============================================================ */
+const SLA_HOURS = { Critical: 4, High: 24, Medium: 72, Low: 120 }; // Medium/Low expressed as 3 / 5 business days
+function slaInfo(p) {
+    const s = state[p.id];
+    if (!s.slaStartedAt || !s.urgencyLevel) return null;
+    const targetHours = SLA_HOURS[s.urgencyLevel] || SLA_HOURS.Medium;
+    const deadline = s.slaStartedAt + targetHours * 3600 * 1000;
+    const remainingMs = deadline - Date.now();
+    return { level: s.urgencyLevel, deadline, remainingMs, overdue: remainingMs <= 0 };
+}
+function formatSlaCountdown(remainingMs) {
+    const abs = Math.abs(remainingMs);
+    const h = Math.floor(abs / 3600000);
+    const m = Math.floor((abs % 3600000) / 60000);
+    const label = h >= 24 ? `${Math.floor(h / 24)}d ${h % 24}h` : `${h}h ${m}m`;
+    return remainingMs <= 0 ? `Overdue ${label}` : label;
+}
+// Keep the Cases table SLA column ticking while it's on screen.
+setInterval(() => { renderCasesIfVisible(); }, 60000);
+
+
+const RING_CIRC = 138.2;
+function updateProgressRing(p) {
+    const s = state[p.id];
+    const fill = document.getElementById('ringFill'); const label = document.getElementById('ringLabel');
+    if (!fill) return;
+    const denom = p.recognised ? 2 : 6;
+    const num = Math.min(s.screenIdx + (s.closed ? 1 : 0), denom);
+    const frac = Math.min(num / denom, 1);
+    fill.style.strokeDashoffset = (RING_CIRC * (1 - frac)).toFixed(1);
+    if (label) label.textContent = `${num}/${denom}`;
+}
+
+const mscrim = document.getElementById('mscrim');
+const agentModal = document.getElementById('agentModal');
+const policyModal = document.getElementById('policyModal');
+
+function closeModals() {
+    if (mscrim) mscrim.classList.remove('open');
+    if (agentModal) agentModal.classList.remove('open');
+    if (policyModal) policyModal.classList.remove('open');
+}
+
+function openAgentModal(p, agentKey) {
+    const meta = AGENTS[agentKey];
+    const data = p.a[agentKey];
+    if (!data) return;
+
+    const amIco = document.getElementById('amIco');
+    if (amIco) amIco.innerHTML = I(meta.icon, 18);
+
+    const amName = document.getElementById('amName');
+    if (amName) amName.innerHTML = `${meta.label} <span class="tier-dot ${meta.tier}" style="margin-left:2px;"></span>`;
+
+    const amSub = document.getElementById('amSub');
+    if (amSub) amSub.textContent = `${p.customer} · ${p.id} · ${meta.tier === 'reasoning' ? 'Reasoning tier' : 'Standard tier'}`;
+
+    let html = '';
+    if (data.elapsedSeconds) {
+        html += `<div style="display:inline-flex;align-items:center;gap:6px;background:#F1F5F9;color:#334155;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-bottom:12px;">${I('timer', 12)} Agent Response Time: ${formatDuration(data.elapsedSeconds)}</div>`;
+    }
+
+    html += renderRichAgentReport(data.rawText || data.fullText || data, agentKey);
+
+    const amBody = document.getElementById('amBody');
+    if (amBody) amBody.innerHTML = html;
+
+    if (mscrim) mscrim.classList.add('open');
+    if (agentModal) agentModal.classList.add('open');
+}
+
+/* ============================================================
+   WORKSPACE TABS — Report / Case Files / Correspondence
+   All three read live from p.a[agentKey], the same store the
+   Agents tab and the agent detail modal already populate from
+   runScreenAgents(). Nothing here is separately scripted data —
+   if an agent hasn't returned a result yet, its section says so.
+   ============================================================ */
+function wireWorkspaceTabs(p) {
+    document.querySelectorAll('.wtab').forEach(t => {
+        t.onclick = () => {
+            activeWorkspaceTab = t.dataset.wtab;
+            document.querySelectorAll('.wtab').forEach(x => x.classList.toggle('active', x === t));
+            const panels = { agents: 'wbScroll', report: 'wbReportPanel', files: 'wbFilesPanel', corr: 'wbCorrPanel' };
+            Object.entries(panels).forEach(([key, id]) => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = (key === activeWorkspaceTab) ? 'block' : 'none';
+            });
+            renderWorkspaceTab(p);
+        };
+    });
+}
+
+function renderWorkspaceTab(p) {
+    if (activeWorkspaceTab === 'report') renderReportTab(p);
+    else if (activeWorkspaceTab === 'files') renderCaseFilesTab(p);
+    else if (activeWorkspaceTab === 'corr') renderCorrespondenceTab(p);
+}
+
+function agentRunState(p, agentKey) {
+    const s = state[p.id];
+    return s.agentStatus[agentKey] || 'pending';
+}
+
+/* ---- Report tab: builds up as each agent completes ---- */
+function renderReportTab(p) {
+    const panel = document.getElementById('wbReportPanel');
+    if (!panel) return;
+    const s = state[p.id];
+
+    const totalAgents = Object.keys(p.a).length;
+    const doneAgents = Object.keys(p.a).filter(ak => ['done', 'blocked'].includes(agentRunState(p, ak))).length;
+
+    let html = `<div class="report-case-header">
+        <div class="rch-title">${p.customer} — ${p.id}</div>
+        <div class="rch-meta">${p.headline}</div>
+        <div class="rch-meta">Disputed amount: ${p.amount} · ${doneAgents} of ${totalAgents} agents reporting${s.closed ? ' · Case closed' : ''}</div>
+    </div>`;
+
+    if (doneAgents === 0) {
+        html += `<div class="report-empty"><b>No agent output yet</b>The case file builds itself as each agent completes. Switch to the Agents tab to start or continue the run.</div>`;
+        panel.innerHTML = html;
+        return;
+    }
+
+    SCREENS.forEach(scr => {
+        scr.agents.forEach(ak => {
+            if (!p.a[ak]) return;
+            const st = agentRunState(p, ak);
+            if (st !== 'done' && st !== 'blocked') return;
+            const meta = AGENTS[ak];
+            const data = p.a[ak];
+            html += `<div class="report-section">
+                <div class="report-section-head">
+                    <div class="rs-ico">${I(meta.icon, 14)}</div>
+                    <div><div class="rs-title">${meta.label}</div><div class="rs-sub">Screen ${scr.n} · ${scr.title}</div></div>
+                    <span class="rs-status ${st === 'blocked' ? 'blocked' : 'done'}">${st === 'blocked' ? 'Gate closed' : 'Complete'}</span>
+                </div>
+                ${renderRichAgentReport(data.rawText || data.fullText || data, ak)}
+            </div>`;
+        });
+    });
+
+    panel.innerHTML = html;
+}
+
+/* ---- Case Files tab: the actual input evidence, plus any sources an
+       agent's live response reported consulting ---- */
+function renderCaseFilesTab(p) {
+    const panel = document.getElementById('wbFilesPanel');
+    if (!panel) return;
+    const evidence = getCaseEvidence(p);
+
+    const labelFor = { contactNote: 'Contact centre note — read by Case Intake', authLog: 'Authorisation log — read by Transaction Classification', statementHistory: '24-month statement history — read by Recognition Check', profile: 'Customer profile — read by Case Intake, Shadow Credit' };
+
+    let html = `<div class="filesgrid">` + Object.entries(evidence).map(([key, filename]) => `
+        <div class="filecard"><div class="fc-ico">${I('pdf', 16)}</div>
+            <div><div class="fc-name">${filename}</div><div class="fc-used">${labelFor[key] || key}</div></div></div>`).join('') + `</div>`;
+
+    const sourcesFound = [];
+    Object.keys(p.a).forEach(ak => {
+        if (agentRunState(p, ak) !== 'done') return;
+        const parsed = parseAgentJson(p.a[ak].rawText);
+        const src = parsed && (parsed.sources || parsed.Sources || parsed.sourcesConsulted);
+        if (src && (Array.isArray(src) ? src.length : true)) sourcesFound.push({ agent: AGENTS[ak].label, src });
+    });
+    if (sourcesFound.length) {
+        html += sourcesFound.map(sf => `<div class="files-sources-note">${I('check', 12)} <span><b>${sf.agent}</b> additionally reported: ${Array.isArray(sf.src) ? sf.src.join(', ') : sf.src}</span></div>`).join('');
+    } else {
+        html += `<div class="files-sources-note">${I('filetext', 12)} <span>This list is the fixed evidence set for the case. Agents may report additional sources consulted once they run — none have yet.</span></div>`;
+    }
+
+    panel.innerHTML = html;
+}
+
+/* ---- Correspondence tab: Funds Trace (where it went) and
+       Recall & Repatriation (outbound chases + replies), live ---- */
+function renderCorrespondenceTab(p) {
+    const panel = document.getElementById('wbCorrPanel');
+    if (!panel) return;
+    const corrAgents = ['fundsTrace', 'recallRepatriation'];
+    const anyRun = corrAgents.some(ak => ['done', 'blocked'].includes(agentRunState(p, ak)));
+
+    if (!anyRun) {
+        panel.innerHTML = `<div class="corr-empty"><b>No counterparty correspondence yet</b>This becomes available once Funds Trace and Recall &amp; Repatriation have run. If this case turns out to be merchant-only, or is recognised as the customer's own spend, this tab will stay empty — that's expected, not a gap.</div>`;
+        return;
+    }
+
+    let html = `<div class="corr-grid">` + corrAgents.map(ak => {
+        const meta = AGENTS[ak];
+        const st = agentRunState(p, ak);
+        const subtitle = ak === 'fundsTrace' ? 'Where the money went' : 'Outbound recalls, pledges &amp; replies';
+        if (st !== 'done' && st !== 'blocked') {
+            return `<div class="corr-card"><div class="cc-head"><div class="cc-ico">${I(meta.icon, 14)}</div>
+                <div><div class="cc-title">${meta.label}</div><div class="cc-sub">${subtitle}</div></div>
+                <span class="cc-status pending">${st === 'running' ? 'Running' : 'Pending'}</span></div>
+                <div class="report-empty" style="padding:16px 0;">Not yet run.</div></div>`;
+        }
+        const data = p.a[ak];
+        return `<div class="corr-card"><div class="cc-head"><div class="cc-ico">${I(meta.icon, 14)}</div>
+            <div><div class="cc-title">${meta.label}</div><div class="cc-sub">${subtitle}</div></div>
+            <span class="cc-status ${st === 'blocked' ? 'blocked' : 'done'}">${st === 'blocked' ? 'Gate closed' : 'Live'}</span></div>
+            ${renderRichAgentReport(data.rawText || data.fullText || data, ak)}</div>`;
+    }).join('') + `</div>`;
+
+    panel.innerHTML = html;
+}
+
+function openPolicyModal(p) {
+    const pol = POLICY_TEXT[p.id];
+    if (!pol) return;
+
+    const pmIco = document.getElementById('pmIco');
+    if (pmIco) pmIco.innerHTML = I('book', 18);
+
+    const pmSub = document.getElementById('pmSub');
+    if (pmSub) pmSub.textContent = `${p.customer} · ${p.id}`;
+
+    const pmBody = document.getElementById('pmBody');
+    if (pmBody) pmBody.innerHTML = `<div class="policy-clause">${pol.clause}</div><div class="policy-quote">${pol.text}</div><div style="font-size:11px;color:var(--text-3);">Synthetic policy text authored for this demonstration — not an actual bank policy.</div>`;
+
+    if (mscrim) mscrim.classList.add('open');
+    if (policyModal) policyModal.classList.add('open');
+}
+
+/* Explicit Customer Thread Toggle */
+function openThread() {
+    if (!currentCaseId) return;
+    const p = findPersona(currentCaseId);
+
+    const tCust = document.getElementById('threadCustomerName');
+    if (tCust) tCust.textContent = p.customer + ' — customer thread';
+
+    const tRef = document.getElementById('threadCaseRef');
+    if (tRef) tRef.textContent = p.id;
+
+    const chans = Array.from(new Set((MESSAGES[p.id] || []).map(m => m.channel)));
+    const tChanBar = document.getElementById('threadChannelBar');
+    if (tChanBar) tChanBar.innerHTML = chans.map(c => `<span class="channel-chip">${I(CHANNEL_ICON[c] || 'msg', 11)} ${c}</span>`).join('');
+
+    renderThread(p);
+
+    const scrimEl = document.getElementById('scrim') || document.querySelector('.scrim');
+    const drawerEl = document.getElementById('drawer') || document.querySelector('.drawer');
+    if (scrimEl) scrimEl.classList.add('open');
+    if (drawerEl) drawerEl.classList.add('open');
+}
+
+function closeThread() {
+    const scrimEl = document.getElementById('scrim') || document.querySelector('.scrim');
+    const drawerEl = document.getElementById('drawer') || document.querySelector('.drawer');
+    if (scrimEl) scrimEl.classList.remove('open');
+    if (drawerEl) drawerEl.classList.remove('open');
+}
+
+function renderThread(p) {
+    const s = state[p.id];
+    const body = document.getElementById('threadBody');
+    if (!body) return;
+    if (!s.messages.length) { body.innerHTML = `<div class="thread-empty">No messages sent yet. Message Composer fires the first update once Case Intake completes.</div>`; return; }
+    body.innerHTML = s.messages.map(m => `
+    <div class="msg-group">
+      <div class="msg-meta-top"><span class="mchan">${I(CHANNEL_ICON[m.channel] || 'msg', 11)} ${m.channel}</span> · ${m.time}</div>
+      <div class="msg-bubble">${m.text}</div>
+      ${m.suppression ? `<div class="suppression-note">${I('check', 12)} Tipping-off suppression active — regulatory reference withheld</div>` : ''}
+      <div class="msg-status">Delivered <span style="color:var(--purple-500)">✓✓</span> <span class="trigger-badge">trigger ${m.trigger}</span></div>
+    </div>`).join('');
+    body.scrollTop = body.scrollHeight;
+}
+
+function updateThreadBadge() {
+    if (!currentCaseId) return;
+    const s = state[currentCaseId];
+    const badge = document.getElementById('threadBadge');
+    if (badge) badge.textContent = s.messages.length;
+}
+
+function renderRoleCards() {
+    const roleCards = document.getElementById('roleCards');
+    if (!roleCards) return;
+    roleCards.innerHTML = ROLES.map(r => `
+    <div class="role-card" data-role="${r.id}">
+      <div class="avatar">${r.initials}</div>
+      <div class="rc-txt"><div class="rc-name">${r.name}</div><div class="rc-role">${r.title}</div><div class="rc-scope">${r.scope}</div></div>
+      <div class="rc-check">${I('check', 12)}</div>
+    </div>`).join('');
+
+    roleCards.querySelectorAll('.role-card').forEach(el => {
+        el.addEventListener('click', () => {
+            selectedRoleId = el.dataset.role;
+            roleCards.querySelectorAll('.role-card').forEach(c => c.classList.toggle('selected', c === el));
+            const role = ROLES.find(r => r.id === selectedRoleId);
+            const mockUsername = document.getElementById('mockUsername');
+            if (mockUsername) mockUsername.textContent = role.username;
+            const signinBtn = document.getElementById('signinBtn');
+            if (signinBtn) signinBtn.disabled = false;
+        });
+    });
+}
+
+function signInAs(roleId) {
+    currentUser = ROLES.find(r => r.id === roleId);
+    const pageLogin = document.getElementById('page-login');
+    const shellRoot = document.getElementById('shellRoot');
+    if (pageLogin) pageLogin.classList.add('hidden');
+    if (shellRoot) shellRoot.style.display = 'flex';
+    updateUserChip();
+    goto('dashboard');
+}
+
+function updateUserChip() {
+    if (!currentUser) return;
+    const topAvatar = document.getElementById('topAvatar');
+    if (topAvatar) topAvatar.textContent = currentUser.initials;
+
+    const topUserMeta = document.getElementById('topUserMeta');
+    if (topUserMeta) topUserMeta.innerHTML = `<b>${currentUser.name}</b> · ${currentUser.title}`;
+
+    const userMenuList = document.getElementById('userMenuList');
+    if (userMenuList) {
+        userMenuList.innerHTML = ROLES.map(r => `<div class="um-item ${r.id === currentUser.id ? 'current' : ''}" data-switch="${r.id}"><div class="avatar">${r.initials}</div><div>${r.name}<div style="font-size:10.3px;color:var(--text-3);font-weight:400;">${r.title}</div></div></div>`).join('');
+        userMenuList.querySelectorAll('[data-switch]').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                currentUser = ROLES.find(r => r.id === el.dataset.switch);
+                updateUserChip();
+                closeUserMenu();
+                if (currentCaseId) openCase(currentCaseId);
+            });
+        });
+    }
+}
+
+function closeUserMenu() {
+    const userMenu = document.getElementById('userMenu');
+    if (userMenu) userMenu.classList.remove('open');
+}

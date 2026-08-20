@@ -1,0 +1,201 @@
+﻿@page
+@model CardFraudDisputeApp.Pages.IndexModel
+@{
+    ViewData["Title"] = "Card Fraud Dispute Management";
+}
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div id="page-login">
+    <div class="login-left">
+        <div class="login-mesh"></div>
+        <div class="login-brand">
+            <div class="logo-mark">P</div>
+            <div class="logo-word"><b>PURPLE</b><b>FABRIC</b></div>
+        </div>
+        <div class="login-tagline">
+            <h1>Card Fraud Dispute Management</h1>
+            <p>An agentic layer that reasons over every card fraud report — distinguishing genuine fraud from legitimate but unrecognised transactions, tracing and recalling funds, and preparing the filings a case owes — while a person confirms every decision that affects a customer.</p>
+        </div>
+    </div>
+    <div class="login-right">
+        <div class="login-card">
+            <h2>Sign in</h2>
+            <div class="lc-sub">Select your role to continue</div>
+            <div id="roleCards"></div>
+            <div class="login-form-fields">
+                <div class="field-mock"><label>Username</label><div class="fm-input" id="mockUsername">—</div></div>
+                <div class="field-mock"><label>Password</label><div class="fm-input">••••••••••</div></div>
+            </div>
+            <button class="btn primary signin-btn" id="signinBtn" disabled>Sign in</button>
+            <div class="login-note">Demo environment — authentication is illustrative only.</div>
+        </div>
+    </div>
+</div>
+
+<div class="shell" id="shellRoot" style="display:none;">
+    <header class="topbar">
+        <div class="logo-mark">P</div>
+        <div class="logo-word"><b>PURPLE</b><b>FABRIC</b></div>
+        <div class="divider-v"></div>
+        <div class="product-name">Card Fraud Dispute Management</div>
+        <div class="topbar-spacer"></div>
+        <div class="env-tag"><span class="liveping"></span>SYNTHETIC DATA · ARCH v2.1</div>
+        <div class="user-chip" id="userChip">
+            <div class="avatar" id="topAvatar">—</div>
+            <div class="user-meta" id="topUserMeta">—</div>
+            <div class="user-menu" id="userMenu">
+                <div class="um-label">Switch role</div>
+                <div id="userMenuList"></div>
+                <div class="um-sep"></div>
+                <div class="um-item um-signout" id="signOutItem">Sign out</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="body-row">
+        <nav class="sidebar">
+            <div class="nav-eyebrow">Navigation</div>
+            <div class="nav-item active" data-page="dashboard"></div>
+            <div class="nav-item" data-page="cases"></div>
+            <div class="nav-item" data-page="live"></div>
+            <div class="nav-item" data-page="settings"></div>
+        </nav>
+
+        <main class="main">
+
+            <section class="page active" id="page-dashboard">
+                <div class="page-head">
+                    <div><div class="page-title" id="greeting">Good day</div><div class="page-sub">Card Fraud Dispute Management · <span id="todayStr"></span></div></div>
+                    <button class="btn primary pill-btn" data-goto="cases">View all cases →</button>
+                </div>
+                <div class="statbar" id="statbar"></div>
+                <div class="grid-3">
+                    <div class="panel"><div class="panel-sub">Recommendations so far</div><div class="panel-title" style="margin-bottom:10px;">Agent decisions</div><div id="panelAgentDecisions"><div class="panel-empty">No agents run yet</div></div></div>
+                    <div class="panel"><div class="panel-sub">Investigator confirmations</div><div class="panel-title" style="margin-bottom:10px;">Human decisions</div><div id="panelHumanDecisions"></div></div>
+                    <div class="panel"><div class="panel-sub">Customer &amp; artefact triggers</div><div class="panel-title" style="margin-bottom:10px;">Message Composer</div><div id="panelComposer"></div></div>
+                </div>
+                <div class="panel" style="max-width:520px;">
+                    <div class="panel-sub">Queue composition</div><div class="panel-title" style="margin-bottom:14px;">Recoverability distribution</div>
+                    <div class="donut-wrap"><svg width="118" height="118" viewBox="0 0 120 120" id="donutSvg"></svg><div class="donut-legend" id="donutLegend"></div></div>
+                </div>
+            </section>
+
+            <section class="page" id="page-cases">
+                <div class="page-head"><div><div class="page-title">Cases</div><div class="page-sub">Card fraud queue — synthetic demonstration data</div></div></div>
+                <div class="filterbar" id="filterbar"></div>
+                <div class="tablecard"><table><thead><tr><th>Customer</th><th>Urgency</th><th>SLA</th><th>Progress</th><th>Screen</th><th>Agent decision</th><th>Human decision</th></tr></thead><tbody id="casesTbody"></tbody></table></div>
+            </section>
+
+            <!-- CASE WORKSPACE -->
+            <section class="page" id="page-detail">
+                <div class="workspace" id="workspace">
+                    <div class="ws-body">
+                        <aside class="wq">
+                            <div class="wq-head">
+                                <div class="wq-title"><div class="wq-ico" id="wqIco"></div>Card Fraud<br>Dispute Management</div>
+                                <div class="wq-tabs">
+                                    <div class="wq-tab active" data-wf="signoff">Requires Sign-off</div>
+                                    <div class="wq-tab" data-wf="signedoff">Signed Off</div>
+                                </div>
+                            </div>
+                            <div class="wq-list" id="wqList"></div>
+                        </aside>
+                        <div class="wb">
+                            <div class="wb-header">
+                                <div class="wb-breadcrumb">
+                                    <a href="#" id="backToCasesBtn">← Back to Cases</a>
+                                    <span class="wb-breadcrumb-sep">/</span>
+                                    <span class="wb-breadcrumb-ref" id="dCaseRef">—</span>
+                                </div>
+                                <div class="wb-h-top">
+                                    <div class="wb-h-left">
+                                        <div class="ring-wrap">
+                                            <svg width="52" height="52" viewBox="0 0 52 52">
+                                                <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#8B4FF0" /><stop offset="100%" stop-color="#2A0A50" /></linearGradient></defs>
+                                                <circle class="ring-track" cx="26" cy="26" r="22" fill="none" stroke-width="4" />
+                                                <circle class="ring-fill" id="ringFill" cx="26" cy="26" r="22" fill="none" stroke-width="4" stroke-dasharray="138.2" stroke-dashoffset="138.2" />
+                                            </svg>
+                                            <div class="ring-label" id="ringLabel">0/6</div>
+                                        </div>
+                                        <div><div class="wb-title" id="dCustomer">—</div><div class="wb-pills" id="dPills"></div></div>
+                                    </div>
+                                    <div class="wb-h-actions">
+                                        <button class="thread-btn" id="openThreadBtn">💬 Customer thread <span class="tb-badge" id="threadBadge">0</span></button>
+                                        <button class="btn danger pill-btn">■ Stop</button>
+                                    </div>
+                                </div>
+                                <div class="wb-info" id="dInfoBox"></div>
+                                <div class="wb-status" id="dStatusBanner"></div>
+                                <div class="wtabs">
+                                    <div class="wtab active" data-wtab="agents">Agents</div>
+                                    <div class="wtab" data-wtab="report">Report</div>
+                                    <div class="wtab" data-wtab="files">Case Files</div>
+                                    <div class="wtab" data-wtab="corr">Correspondence</div>
+                                </div>
+                            </div>
+                            <div class="wb-scroll" id="wbScroll"></div>
+                            <div class="wb-scroll" id="wbReportPanel" style="display:none;"></div>
+                            <div class="wb-scroll" id="wbFilesPanel" style="display:none;"></div>
+                            <div class="wb-scroll" id="wbCorrPanel" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-live">
+                <div class="page-head"><div><div class="page-title">Live</div><div class="page-sub" id="liveSub">No cases currently running</div></div></div>
+                <div id="liveBody"></div>
+            </section>
+
+            <section class="page" id="page-settings">
+                <div class="page-head"><div><div class="page-title">Settings</div><div class="page-sub">Gate timeouts and regulatory clocks for real case reviews.</div></div></div>
+                <div class="settings-card">
+                    <div class="setting-row"><label>Standard tier agents</label><div class="sdesc">Case Intake, Chargeback Preparation, Document Generator, Message Composer</div><div class="setting-input"><input type="text" value="60"><span>seconds</span></div></div>
+                    <div class="setting-row"><label>Reasoning tier agents</label><div class="sdesc">Recognition Check, Fraud Assessment, Transaction Classification, Funds Trace, Shadow Credit, Recall &amp; Repatriation, Obligation Check</div><div class="setting-input"><input type="text" value="120"><span>seconds</span></div></div>
+                    <button class="btn primary" style="margin-top:4px;">Save changes</button>
+                    <button class="btn ghost">Reset to defaults</button>
+                    <div class="howbox">
+                        <b>Statutory clocks — read-only, not configurable</b>
+                        <div class="clockrow"><span>Suspicious transaction report</span><span class="cv">15 days</span></div>
+                        <div class="clockrow"><span>Cyber offence report</span><span class="cv">72 hours</span></div>
+                        <div class="clockrow"><span>Material cyber incident</span><span class="cv">24 hours</span></div>
+                        <div class="clockrow" style="border-bottom:none;"><span>Internal dispute resolution</span><span class="cv">20 days</span></div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+    <footer class="app-footer">
+        <div class="footer-left"><div class="logo-mark">P</div><b>PURPLE FABRIC</b></div>
+        <div class="footer-mid">
+            <a href="#">Documentation</a>
+            <a href="#">Governance overlay</a>
+            <a href="#">Model &amp; data policy</a>
+            <a href="#">Support</a>
+        </div>
+        <div class="footer-right">Card Fraud Dispute Management · Synthetic data · v1.4</div>
+    </footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="thread-drawer" id="threadDrawer">
+    <div class="thread-head"><div class="thread-head-ico" id="threadHeadIco"></div><div class="thread-head-txt"><div class="th1" id="threadCustomerName">Customer thread</div><div class="th2" id="threadCaseRef">—</div></div><button class="thread-close" id="closeThreadBtn">✕</button></div>
+    <div class="thread-channel-bar" id="threadChannelBar"></div>
+    <div class="thread-body" id="threadBody"></div>
+    <div class="thread-foot"><div class="thread-input-mock">✎ Customer replies are not enabled in this demonstration</div><div class="thread-foot-note">Message Composer · one stateless agent, seven triggers, one voice.</div></div>
+</aside>
+
+<div class="mscrim" id="mscrim"></div>
+<div class="modal" id="agentModal">
+    <div class="modal-head"><div class="mh-ico" id="amIco"></div><div class="mh-txt"><div class="mh1" id="amName">—</div><div class="mh2" id="amSub">—</div></div><button class="modal-close" id="amClose">✕</button></div>
+    <div class="modal-body" id="amBody"></div>
+</div>
+<div class="modal" id="policyModal" style="width:460px;">
+    <div class="modal-head"><div class="mh-ico" id="pmIco"></div><div class="mh-txt"><div class="mh1">Policy logic</div><div class="mh2" id="pmSub">—</div></div><button class="modal-close" id="pmClose">✕</button></div>
+    <div class="modal-body" id="pmBody"></div>
+</div>
+
+
