@@ -25,6 +25,7 @@ function I(name, size) {
         book: `<path d="M4 4.5A2.5 2.5 0 016.5 2H20v17H6.5A2.5 2.5 0 004 16.5z"/><path d="M4 16.5A2.5 2.5 0 016.5 19H20"/>`,
         arrowLeft: `<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>`,
         arrowRight: `<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>`,
+        download: `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>`,
         timer: `<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>`
     };
     return `<svg ${s}>${paths[name] || ''}</svg>`;
@@ -82,7 +83,8 @@ const AGENT_ALLOWED_INPUTS = {
     shadowCredit: ['CASE_INTAKE_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT'],
     chargebackPreparation: ['FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT'],
     recallRepatriation: ['TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT'],
-    obligationCheck: ['CASE_INTAKE_OUTPUT_TEXT', 'RECOGNITION_CHECK_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT', 'RECALL_REPATRIATION_OUTPUT_TEXT']
+    obligationCheck: ['CASE_INTAKE_OUTPUT_TEXT', 'RECOGNITION_CHECK_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT', 'RECALL_REPATRIATION_OUTPUT_TEXT'],
+    documentGenerator: ['CASE_INTAKE_OUTPUT_TEXT', 'RECOGNITION_CHECK_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT', 'RECALL_REPATRIATION_OUTPUT_TEXT', 'OBLIGATION_CHECK_OUTPUT_TEXT']
 };
 
 // Strict mandatory inputs that must exist before calling an agent - see note above,
@@ -96,7 +98,8 @@ const AGENT_MANDATORY_INPUTS = {
     shadowCredit: ['CASE_INTAKE_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT'],
     chargebackPreparation: ['FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT'],
     recallRepatriation: ['TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT'],
-    obligationCheck: ['CASE_INTAKE_OUTPUT_TEXT', 'RECOGNITION_CHECK_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT', 'RECALL_REPATRIATION_OUTPUT_TEXT']
+    obligationCheck: ['CASE_INTAKE_OUTPUT_TEXT', 'RECOGNITION_CHECK_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT', 'RECALL_REPATRIATION_OUTPUT_TEXT'],
+    documentGenerator: ['CASE_INTAKE_OUTPUT_TEXT', 'RECOGNITION_CHECK_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT', 'RECALL_REPATRIATION_OUTPUT_TEXT', 'OBLIGATION_CHECK_OUTPUT_TEXT']
 };
 
 const READS_META = {
@@ -247,7 +250,7 @@ function generateFillerCases(count) {
     }
     return out;
 }
-const FILLER = generateFillerCases(1000);
+const FILLER = generateFillerCases(146);
 const FILLER_PAGE_SIZE = 30;
 let fillerPage = 0;
 
@@ -382,6 +385,29 @@ function formatWallClock(isoString) {
     const datePart = d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' });
     const timePart = d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', hour12: false });
     return `${datePart}, ${timePart}`;
+}
+
+// South African date/time convention (DD Mon YYYY, 24h time) - used for
+// incident-timeline entries, which can span multiple days so need the full
+// date, unlike formatWallClock's shorter "just now-ish" style.
+function formatSATimestamp(isoString) {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return '';
+    const datePart = d.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timePart = d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return `${datePart} ${timePart}`;
+}
+
+// Splits a long run-on statement into readable paragraphs at sentence
+// boundaries, without breaking on decimal points in amounts (e.g. "R48,000.00
+// at 19:30" should not split after "00"). Requires the character after the
+// sentence-ending punctuation to be a capital letter, which decimals never are.
+function formatAsParagraphs(text) {
+    if (!text) return '';
+    const sentences = text.match(/[\s\S]+?[.!?](?=\s+[A-Z]|\s*$)/g);
+    if (!sentences || sentences.length < 2) return text;
+    return sentences.map(s => `<p style="margin:0 0 8px;">${s.trim()}</p>`).join('');
 }
 
 /* ============================================================
@@ -659,28 +685,41 @@ function gP(o, ...keys) {
    1. CASE INTAKE AGENT RENDERER
    ------------------------------------------------------------ */
 function renderCaseIntakeReport(obj) {
-    const caseRef = gP(obj, 'caseRef', 'caseRef') || 'N/A';
+    const caseRef = gP(obj, 'caseRef', 'caseRef');
+    const customerRef = gP(obj, 'customerRef', 'customer Ref');
     const customer = gP(obj, 'customer') || {};
-    const alert = gP(obj, 'alert') || {};
     const reportedEvent = gP(obj, 'reportedEvent', 'reported Event') || {};
-    const compromise = gP(reportedEvent, 'compromiseDisclosure', 'compromise Disclosure') || {};
+    const compromise = gP(reportedEvent, 'compromiseDisclosure', 'compromise Disclosure', 'suspectedCompromiseEvent', 'compromiseEvent') || {};
     const scope = gP(obj, 'caseScope', 'caseScope') || {};
     const containment = gP(obj, 'containmentAlreadyCompleted', 'containmentAlreadyCompleted') || [];
     const gaps = gP(obj, 'materialGaps', 'material Gaps') || [];
     const rec = gP(obj, 'recommendation') || {};
+    const urgency = gP(obj, 'urgency') || {};
+    const humanGate = gP(obj, 'humanGate') || {};
 
     const reportedTotal = gP(reportedEvent, 'reportedTotal', 'reported Total') || {};
     const totalAmt = reportedTotal.amount
         ? `R${Number(reportedTotal.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`
         : 'R0.00';
 
+    // Real timeline entries look like "2026-08-12T19:47:00+02:00 — Customer opened
+    // the link... [source: file.pdf]" - note the EM DASH separator, not a hyphen.
+    // The old code split on ' - ' (hyphen), which never matched, so the whole
+    // string (including the raw ISO timestamp) fell straight into the displayed
+    // text - hence the redundant timestamp. Also reformats the time badge into a
+    // South African date/time convention instead of a bare 24h clock.
     const knownTimeline = gP(reportedEvent, 'knownTimeline', 'known Timeline') || [];
     const timelineHtml = knownTimeline.map(item => {
-        const parts = String(item).split(' - ');
-        const time = parts[0] ? parts[0].replace(/.*T(\d{2}:\d{2}).*/, '$1') : '';
-        const text = parts[1] ? parts[1].replace(/\[source:.*\]/, '').trim() : item;
+        const str = String(item);
+        const dashSplit = str.split(/\s+[—-]\s+/); // matches either an em dash or a hyphen, whichever the data actually uses
+        const isoMatch = str.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
+        const dateLabel = isoMatch ? formatSATimestamp(isoMatch[0]) : '';
+        const text = (dashSplit.length > 1 ? dashSplit.slice(1).join(' — ') : str)
+            .replace(isoMatch ? isoMatch[0] : '', '')
+            .replace(/\[source:.*\]/, '')
+            .trim();
         return `<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:6px;">
-            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--purple-700);width:45px;">${time}</div>
+            <div style="font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--purple-700);width:90px;flex-shrink:0;">${dateLabel}</div>
             <div style="font-size:12px;color:var(--text);">${text}</div>
         </div>`;
     }).join('<div style="margin-left:15px;color:var(--text-3);margin-bottom:4px;">↓</div>');
@@ -702,33 +741,35 @@ function renderCaseIntakeReport(obj) {
         </div>
     `).join('');
 
-    const otpMentioned = gP(compromise, 'otpMentioned', 'otpMentioned');
-    const inAppApproval = gP(compromise, 'inAppApprovalMade', 'inAppApproval Made');
-    const phoneWorking = gP(compromise, 'phoneWorkingNormally', 'phone Working Normally');
-    const infoProvided = gP(compromise, 'informationEntered', 'informationEntered') || [];
+    const otpMentioned = gP(compromise, 'otpMentioned', 'otpMentioned', 'otp Mentioned');
+    const inAppApproval = gP(compromise, 'inAppApprovalMade', 'inAppApproval Made', 'inAppApproval');
+    const phoneWorking = gP(compromise, 'phoneWorkingNormally', 'phone Working Normally', 'phoneWorking');
+    const infoProvided = gP(compromise, 'informationEntered', 'informationEntered', 'informationDisclosed', 'detailsDisclosed') || [];
+    const hasCompromiseData = otpMentioned !== undefined || inAppApproval !== undefined || phoneWorking !== undefined || (infoProvided && infoProvided.length);
+
+    // Badges were previously static text regardless of what the case actually
+    // says - now genuinely derived from the real status/urgency/humanGate fields.
+    const intakeComplete = obj.status === 'completed' || obj.status === 'complete';
+    const urgencyLabel = urgency.level ? `${urgency.level.charAt(0).toUpperCase()}${urgency.level.slice(1)} Priority` : null;
+    const reviewRequired = humanGate.required !== false; // default to showing it unless explicitly false
 
     return `
     <div class="agent-report-wrap" style="line-height:1.5;">
         <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
             <div style="font-size:16px;font-weight:800;color:var(--purple-800);">🛡️ Case Intake</div>
-            <div style="font-family:var(--mono);font-size:11px;color:var(--text-2);">Case ${caseRef} · Customer Ref: ${gP(obj, 'customerRef') || ''}</div>
+            ${(caseRef || customerRef) ? `<div style="font-family:var(--mono);font-size:11px;color:var(--text-2);">${caseRef ? `Case ${caseRef}` : ''}${caseRef && customerRef ? ' · ' : ''}${customerRef ? `Customer Ref: ${customerRef}` : ''}</div>` : ''}
             <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
-                <span class="badge b-low">🟢 Intake Complete</span>
-                <span class="badge b-high">🟣 High Priority</span>
-                <span class="badge b-medium">👤 Human Review Required</span>
+                ${intakeComplete ? '<span class="badge b-low">🟢 Intake Complete</span>' : ''}
+                ${urgencyLabel ? `<span class="badge ${urgency.level === 'high' ? 'b-high' : urgency.level === 'medium' ? 'b-medium' : 'b-low'}">🟣 ${urgencyLabel}</span>` : ''}
+                ${reviewRequired ? '<span class="badge b-medium">👤 Human Review Required</span>' : ''}
             </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div style="margin-bottom:14px;">
             <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
                 <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--purple-700);">💰 Reported Exposure</div>
                 <div style="font-size:20px;font-weight:800;color:var(--purple-900);margin-top:2px;">${totalAmt}</div>
                 <div style="font-size:11px;color:var(--text-2);margin-top:4px;">Disputed Items: <b>${gP(reportedEvent, 'reportedCount', 'reported Count') || 0}</b></div>
-            </div>
-            <div style="background:#FFF5F5;border:1px solid #FED7D7;border-radius:10px;padding:12px;">
-                <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--red-700);">🤖 Alert Assessment</div>
-                <div style="font-size:18px;font-weight:800;color:#9B2C2C;margin-top:2px;">Risk Score: ${alert.score ? Number(alert.score).toFixed(2) : 'N/A'} / 1.00</div>
-                <div style="font-family:var(--mono);font-size:10px;color:#C53030;margin-top:4px;">${alert.model || ''}</div>
             </div>
         </div>
 
@@ -742,24 +783,26 @@ function renderCaseIntakeReport(obj) {
         <div style="margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:4px;">🚨 Customer Position Statement</div>
             <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px;font-size:12px;color:#334155;line-height:1.55;">
-                ${gP(reportedEvent, 'customerPosition', 'customer Position') || 'No customer position statement logged.'}
+                ${formatAsParagraphs(gP(reportedEvent, 'customerPosition', 'customer Position')) || 'No customer position statement logged.'}
             </div>
         </div>
 
+        ${hasCompromiseData ? `
         <div style="margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">🎣 Suspected Compromise Event</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;">
                 <div style="background:#F1F5F9;padding:6px 8px;border-radius:6px;"><b>OTP Mentioned:</b> ${otpMentioned ? '🟡 Yes' : '🟢 No'}</div>
                 <div style="background:#F1F5F9;padding:6px 8px;border-radius:6px;"><b>In-App Approval:</b> ${inAppApproval ? '🟡 Yes' : '🟢 No'}</div>
                 <div style="background:#F1F5F9;padding:6px 8px;border-radius:6px;"><b>Phone Working:</b> ${phoneWorking ? '🟢 Yes' : '🔴 No'}</div>
-                <div style="background:#F1F5F9;padding:6px 8px;border-radius:6px;"><b>Details Disclosed:</b> ${infoProvided.join(', ') || 'None'}</div>
+                <div style="background:#F1F5F9;padding:6px 8px;border-radius:6px;"><b>Details Disclosed:</b> ${infoProvided.length ? infoProvided.join(', ') : 'None'}</div>
             </div>
-        </div>
+        </div>` : ''}
 
+        ${knownTimeline.length ? `
         <div style="margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">🕒 Incident Timeline</div>
             <div style="background:#FAF5FF;border:1px solid #E9D8FD;border-radius:10px;padding:10px;">${timelineHtml}</div>
-        </div>
+        </div>` : ''}
 
         <div style="margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">📋 Disputed Case Scope</div>
@@ -802,16 +845,27 @@ function renderCaseIntakeReport(obj) {
    2. RECOGNITION CHECK AGENT RENDERER
    ------------------------------------------------------------ */
 function renderRecognitionCheckReport(obj) {
-    const res = gP(obj, 'recognitionResult', 'recognition Result') || 'N/A';
+    const res = gP(obj, 'recognitionResult', 'recognition Result');
     const conf = gP(obj, 'confidence') || {};
     const window = gP(obj, 'historyWindow', 'historyWindow') || {};
     const merchantChecks = gP(obj, 'merchantChecks', 'merchant Checks') || [];
     const rec = gP(obj, 'recommendation') || {};
     const gaps = gP(obj, 'materialGaps', 'material Gaps') || [];
 
-    const resBadge = res === 'no-match'
-        ? '<span class="badge b-high">🔴 No Match — Unrecognised</span>'
-        : '<span class="badge b-low">🟢 Recognised Subscription</span>';
+    // Previously a binary check that treated ANYTHING other than the exact
+    // string 'no-match' as "Recognised Subscription" - including a genuinely
+    // missing/indeterminate result, which silently claimed a positive match
+    // the agent never actually made. Now maps every real value explicitly and
+    // falls back to a visibly-uncertain state instead of a false "Recognised".
+    const resBadge = res === 'recognised' || res === 'recognized' || res === 'match'
+        ? '<span class="badge b-low">🟢 Recognised Subscription</span>'
+        : res === 'no-match'
+            ? '<span class="badge b-high">🔴 No Match — Unrecognised</span>'
+            : res
+                ? `<span class="badge b-medium">🟡 ${String(res).replace(/-/g, ' ')}</span>`
+                : '<span class="badge b-medium">🟡 Result not yet determined</span>';
+
+    const hasWindow = window.from || window.to || gP(window, 'transactionRowsReviewed', 'transactionRows Reviewed');
 
     return `
     <div class="agent-report-wrap" style="line-height:1.5;">
@@ -823,9 +877,10 @@ function renderRecognitionCheckReport(obj) {
         <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:12px;margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);">Statement History Basis</div>
             <div style="font-size:12px;color:#334155;margin-top:4px;">${conf.basis || 'N/A'}</div>
+            ${hasWindow ? `
             <div style="font-size:11px;color:var(--text-3);margin-top:6px;">
-                Window: <b>${window.from}</b> to <b>${window.to}</b> (${gP(window, 'transactionRowsReviewed', 'transactionRows Reviewed') || 0} rows evaluated)
-            </div>
+                Window: <b>${window.from || '—'}</b> to <b>${window.to || '—'}</b> (${gP(window, 'transactionRowsReviewed', 'transactionRows Reviewed') || 0} rows evaluated)
+            </div>` : ''}
         </div>
 
         <div style="margin-bottom:14px;">
@@ -1043,7 +1098,6 @@ function renderTransactionClassificationReport(obj) {
 function renderShadowCreditReport(obj) {
     const eligibility = gP(obj, 'eligibilityAssessment', 'eligibility Assessment') || {};
     const valueAuth = gP(obj, 'valueAndAuthority', 'valueAndAuthority') || {};
-    const balance = gP(obj, 'balanceImpact', 'balancelmpact') || {};
     const rec = gP(obj, 'recommendation') || {};
     const counterArg = gP(obj, 'counterArgument') || {};
 
@@ -1073,11 +1127,6 @@ function renderShadowCreditReport(obj) {
             <div style="font-size:11.5px;color:#78350F;margin-top:2px;">${counterArg.position}</div>
             <div style="font-size:11.5px;color:#92400E;margin-top:4px;font-weight:600;">Response: ${counterArg.response || ''}</div>
         </div>` : ''}
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;font-size:11.5px;">
-            <div style="background:#F8FAFC;padding:8px 10px;border-radius:6px;">Balance Before: <b>R${Number(gP(balance, 'balanceBeforeDisputedAuthorisations', 'balanceBefore DisputedAuthorisations') || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</b></div>
-            <div style="background:#F8FAFC;padding:8px 10px;border-radius:6px;">Projected Balance: <b>R${Number(gP(balance, 'projectedBalanceAfterProvisionalRefund', 'projected BalanceAfter Provisional Refund') || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</b></div>
-        </div>
 
         <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
             <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Authority & Decision</div>
@@ -1617,6 +1666,21 @@ function caseStatusLabel(p) {
     if (Object.keys(s.agentStatus).length === 0) return 'Not started'; return 'Awaiting gate';
 }
 
+// Walks the screen/agent order backwards to find the last agent that actually
+// completed for this case - used for the Cases table's "Agent Recommendation"
+// column, which stays empty until the case is closed.
+function lastAgentFinding(p) {
+    const s = state[p.id];
+    for (let i = SCREENS.length - 1; i >= 0; i--) {
+        const agents = SCREENS[i].agents;
+        for (let j = agents.length - 1; j >= 0; j--) {
+            const ak = agents[j];
+            if (s.agentStatus[ak] === 'done' && p.a[ak] && p.a[ak].finding) return p.a[ak].finding;
+        }
+    }
+    return null;
+}
+
 function renderCases() {
     updateLiveNavIndicator(); renderFilterbar();
     const tbody = document.getElementById('casesTbody');
@@ -1624,7 +1688,8 @@ function renderCases() {
     let rows = PERSONAS.filter(p => activeFilter === 'All' || caseStatusLabel(p) === activeFilter);
     tbody.innerHTML = rows.map(p => {
         const s = state[p.id];
-        const screenLabel = s.closed && p.recognised ? `2 of 2 (Deflected)` : s.closed ? `2 of 2` : `${s.screenIdx + 1} of 6`;
+        const started = Object.keys(s.agentStatus).length > 0;
+        const screenLabel = s.closed && p.recognised ? `2 of 2 (Deflected)` : s.closed ? `2 of 2` : started ? `${s.screenIdx + 1} of 6` : `0 of 6`;
         const statusLbl = caseStatusLabel(p);
 
         // Urgency only shows once Case Intake has actually completed - before that,
@@ -1638,6 +1703,11 @@ function renderCases() {
             ? `<span class="sla-badge ${sla.overdue ? 'sla-overdue' : sla.remainingMs < 3600000 ? 'sla-warn' : 'sla-ok'}">${formatSlaCountdown(sla.remainingMs)}</span>`
             : '<span class="sla-pending">—</span>';
 
+        // Agent Recommendation stays empty until the case has genuinely finished
+        // running (closed) - it then shows the last agent that actually
+        // completed for this case, not a generic placeholder.
+        const recommendationCell = s.closed ? (lastAgentFinding(p) || '—') : '<span class="sla-pending">—</span>';
+
         const decidedGates = s.gates.map((g, i) => g ? { i, g, who: s.gateApprover[i] } : null).filter(Boolean);
         const humanCell = decidedGates.length
             ? `<span class="badge ${decidedGates.some(d => d.g === 'escalate') ? 'b-high' : 'b-low'}">${decidedGates.length} decided</span> <span class="human-who">${decidedGates[decidedGates.length - 1].who || ''}</span>`
@@ -1649,7 +1719,7 @@ function renderCases() {
       <td>${slaCell}</td>
       <td><span class="badge b-neutral">${statusLbl}</span></td>
       <td>${screenLabel}</td>
-      <td><button class="btn pill-btn" data-open="${p.id}">${Object.keys(s.agentStatus).length ? 'Open case' : 'Trigger agents'}</button></td>
+      <td>${recommendationCell}</td>
       <td>${humanCell}</td>
     </tr>`;
     }).join('') + FILLER.slice(fillerPage * FILLER_PAGE_SIZE, (fillerPage + 1) * FILLER_PAGE_SIZE).map(f => `<tr class="rowlink filler" data-id="${f.ref}">
@@ -1938,7 +2008,11 @@ function renderActiveStageContent(p) {
     container.innerHTML = html;
     animateEntrance(container, '.agent-card');
 
-    container.querySelectorAll('.agent-card').forEach(el => el.addEventListener('click', () => { if (el.dataset.locked) return; openAgentModal(p, el.dataset.agent); }));
+    container.querySelectorAll('.agent-card').forEach(el => el.addEventListener('click', () => {
+        if (el.dataset.locked) return;
+        if (el.dataset.agent === 'documentGenerator') { downloadDocumentGeneratorPdf(p); return; }
+        openAgentModal(p, el.dataset.agent);
+    }));
     container.querySelectorAll('[data-gate]').forEach(el => el.addEventListener('click', () => openGateReasonModal(p, parseInt(el.dataset.gate, 10), el.dataset.action)));
     container.querySelectorAll('[data-policy]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openPolicyModal(p); }));
 
@@ -1954,13 +2028,15 @@ function renderAgentCard(p, agentKey) {
     const data = p.a[agentKey];
     const s = state[p.id];
     const st = s.agentStatus[agentKey] || 'pending';
+    const isDocGen = agentKey === 'documentGenerator';
     let cardCls = 'agent-card ' + st;
     if (st === 'done') cardCls += data.tone === 'flag' ? ' flag' : data.tone === 'block' ? ' block' : ' done';
 
     let pillHtml = st === 'pending' ? `<span class="ac-pill pending">Pending</span>`
-        : st === 'running' ? `<span class="ac-pill running"><span class="spin"></span> Running</span>`
+        : st === 'running' ? `<span class="ac-pill running"><span class="spin"></span> ${isDocGen ? 'Generating' : 'Running'}</span>`
             : st === 'blocked' ? `<span class="ac-pill block">Gate closed</span>`
-                : `<span class="ac-pill ${data.tone === 'block' ? 'block' : data.tone === 'flag' ? 'flag' : 'done'}">${data.tone === 'block' ? 'Flagged' : data.tone === 'flag' ? 'Flagged' : 'Done'}</span>`;
+                : isDocGen ? `<span class="ac-pill done">Ready</span>`
+                    : `<span class="ac-pill ${data.tone === 'block' ? 'block' : data.tone === 'flag' ? 'flag' : 'done'}">${data.tone === 'block' ? 'Flagged' : data.tone === 'flag' ? 'Flagged' : 'Done'}</span>`;
 
     const locked = (st === 'pending');
 
@@ -1975,7 +2051,21 @@ function renderAgentCard(p, agentKey) {
         }
     }
 
-    const body = (st === 'done' || st === 'blocked') ? `
+    // Document Generator doesn't produce a finding/desc to read on screen like
+    // every other agent - its output is a document package, so the card just
+    // offers a download instead of a "View entire output" drill-down.
+    const body = isDocGen && (st === 'done' || st === 'blocked') ? `
+    <div class="ac-finding tone-clean">Document package ready</div>
+    <div class="ac-desc">The case filings and written determination have been drafted and are ready to download.</div>
+    <div class="ac-foot">
+        <span class="ac-expand doc-download">${I('download', 12)} Download PDF</span>
+        ${timerBadge}
+    </div>
+  ` : isDocGen && st === 'running' ? `
+    <div class="ac-desc thinking">Generating document<span class="dots"></span></div>
+    <div class="thinking-bar"></div>
+    <div class="ac-foot" style="margin-top:12px;">${timerBadge}</div>
+  ` : (st === 'done' || st === 'blocked') ? `
     <div class="ac-finding ${agentToneClass(data.tone)}">${data.finding}</div>
     <div class="ac-desc">${data.desc}</div>
     <div class="ac-foot">
@@ -2088,7 +2178,8 @@ async function runScreenAgents(p) {
             'FUNDS_TRACE_OUTPUT_TEXT': p.a.fundsTrace?.rawText || '',
             'SHADOW_CREDIT_OUTPUT_TEXT': p.a.shadowCredit?.rawText || '',
             'CHARGEBACK_PREPARATION_OUTPUT_TEXT': p.a.chargebackPreparation?.rawText || '',
-            'RECALL_REPATRIATION_OUTPUT_TEXT': p.a.recallRepatriation?.rawText || ''
+            'RECALL_REPATRIATION_OUTPUT_TEXT': p.a.recallRepatriation?.rawText || '',
+            'OBLIGATION_CHECK_OUTPUT_TEXT': p.a.obligationCheck?.rawText || ''
         };
 
         // Guard Check: Verify mandatory upstream dependencies exist
@@ -2428,43 +2519,182 @@ function agentRunState(p, agentKey) {
 function renderReportTab(p) {
     const panel = document.getElementById('wbReportPanel');
     if (!panel) return;
-    const s = state[p.id];
 
+    panel.innerHTML = buildCaseFileHtml(p);
+
+    const btnPdf = document.getElementById('reportDownloadPdf');
+    if (btnPdf) btnPdf.onclick = () => downloadReportAsPdf(p);
+    const btnDocx = document.getElementById('reportDownloadDocx');
+    if (btnDocx) btnDocx.onclick = () => downloadReportAsDocx(p);
+}
+
+/* ---- Structured case-file summary, styled after the CDD case-file reference:
+       identity block, case overview, a scannable agent-findings list, and a
+       decision summary - all pulled from real case/agent/gate state, nothing
+       hand-written per case. Shared by the on-screen Report tab and both the
+       PDF and DOCX export paths, so what you download matches what you see. ---- */
+function buildCaseFileHtml(p, forExport) {
+    const s = state[p.id];
     const totalAgents = Object.keys(p.a).length;
     const doneAgents = Object.keys(p.a).filter(ak => ['done', 'blocked'].includes(agentRunState(p, ak))).length;
+    const statusPill = s.closed ? 'Closed' : s.escalated ? 'Escalated' : doneAgents === 0 ? 'Awaiting agents…' : 'In progress';
+    const statusCls = s.closed ? 'clean' : s.escalated ? 'block' : 'flag';
 
-    let html = `<div class="report-case-header">
-        <div class="rch-title">${p.customer} — ${p.id}</div>
-        <div class="rch-meta">${p.headline}</div>
-        <div class="rch-meta">Disputed amount: ${p.amount} · ${doneAgents} of ${totalAgents} agents reporting${s.closed ? ' · Case closed' : ''}</div>
-    </div>`;
+    const intakeDone = s.agentStatus && s.agentStatus.caseIntake === 'done';
+    const sla = slaInfo(p);
 
-    if (doneAgents === 0) {
-        html += `<div class="report-empty"><b>No agent output yet</b>The case file builds itself as each agent completes. Switch to the Agents tab to start or continue the run.</div>`;
-        panel.innerHTML = html;
+    // Vulnerability: prefer what Case Intake actually flagged live, fall back
+    // to the case's narrative default only if the agent hasn't run yet.
+    const caseIntakeRaw = p.a.caseIntake && p.a.caseIntake.rawText ? parseAgentJson(p.a.caseIntake.rawText) : null;
+    const liveVulnerable = caseIntakeRaw && caseIntakeRaw.vulnerability ? !!caseIntakeRaw.vulnerability.flagged : null;
+    const vulnerable = liveVulnerable !== null ? liveVulnerable : p.vulnerable;
+
+    // Current classification mirrors the dashboard donut's live-gated logic -
+    // a case only shows a real classification once it has actually reached
+    // that point, not from the moment the app loads.
+    const classified = s.agentStatus && s.agentStatus.transactionClassification === 'done';
+    const currentBucket = s.closed && p.recognised ? 'Recognised — deflected'
+        : classified ? { recoverable: 'Recoverable (CNP)', 'not-recoverable': 'Chase & Repatriate', mixed: 'Mixed rails / Sim Swap' }[p.classification] || 'Pending'
+            : 'Pending';
+
+    const decidedGates = SCREENS.map((scr, i) => s.gates[i] ? { i, scr, action: s.gates[i], approver: s.gateApprover[i], reason: s.gateReason[i], decidedAt: s.gateDecidedAt[i] } : null).filter(Boolean);
+
+    return `
+    <div class="case-file-header">
+        <div class="cf-header-top">
+            <div>
+                <div class="cf-title">Card Fraud Case File</div>
+                <div class="cf-meta">${p.id} · ${p.customer} — ${doneAgents}/${totalAgents} agents complete <span class="cf-dot"></span></div>
+            </div>
+            <div class="cf-actions">
+                ${forExport ? '' : `<button class="btn ghost pill-btn" id="reportDownloadPdf">${I('download', 13)} PDF</button>
+                <button class="btn ghost pill-btn" id="reportDownloadDocx">${I('download', 13)} DOCX</button>`}
+                <span class="cf-status-pill ${statusCls}">${statusPill}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="cf-section-label">Customer &amp; Case Identity</div>
+    <div class="cf-grid">
+        <div><div class="cf-label">Full name</div><div class="cf-value">${p.customer}</div><div class="cf-subvalue">${p.id}</div></div>
+        <div><div class="cf-label">Tag · Channel</div><div class="cf-value">${p.tag} · ${p.channel}</div></div>
+        <div><div class="cf-label">Product</div><div class="cf-value">${p.product}</div></div>
+        <div><div class="cf-label">Disputed amount</div><div class="cf-value">${p.amount}</div></div>
+        <div><div class="cf-label">Urgency</div><div class="cf-value">${intakeDone && s.urgencyLevel ? s.urgencyLevel : '—'}</div></div>
+        <div><div class="cf-label">SLA</div><div class="cf-value">${sla ? formatSlaCountdown(sla.remainingMs) : '—'}</div></div>
+    </div>
+
+    <div class="cf-section-label">Case Overview</div>
+    <div class="cf-grid">
+        <div class="cf-span2"><div class="cf-label">Trigger</div><div class="cf-value">${p.headline}</div></div>
+        <div><div class="cf-label">Current classification</div><div class="cf-value">${currentBucket}</div></div>
+        <div><div class="cf-label">Vulnerability</div><div class="cf-value">${vulnerable ? 'Vulnerable customer' : 'Not vulnerable'}</div></div>
+    </div>
+
+    <div class="cf-section-label">Agent Findings</div>
+    <div class="cf-findings">
+        ${SCREENS.map(scr => scr.agents.map(ak => {
+        const meta = AGENTS[ak];
+        const st = agentRunState(p, ak);
+        const data = p.a[ak];
+        const done = st === 'done' || st === 'blocked';
+        return `<div class="cf-finding-row">
+            <span class="kv-dot" style="background:${!done ? '#D7D2E8' : data.tone === 'clean' ? 'var(--green-700)' : data.tone === 'block' ? 'var(--red-700)' : 'var(--amber-700)'}"></span>
+            <span class="cf-finding-label">${meta.label}</span>
+            <span class="cf-finding-text">${done ? (data.finding || '—') : 'Not yet run'}</span>
+        </div>`;
+    }).join('')).join('')}
+    </div>
+
+    <div class="cf-section-label">Decision Summary</div>
+    ${decidedGates.length ? `
+    <div class="cf-decisions">
+        ${decidedGates.map(g => `
+        <div class="cf-decision-row">
+            <div class="cf-decision-head">
+                <span class="badge ${g.action === 'escalate' ? 'b-high' : g.action === 'override' ? 'b-medium' : 'b-low'}">${g.action === 'approve' ? 'Approved' : g.action === 'override' ? 'Overridden' : 'Escalated'}</span>
+                <span class="cf-finding-label">${g.scr.title} (Gate ${g.i + 1})</span>
+                <span class="cf-decision-time">${g.decidedAt ? formatWallClock(g.decidedAt) : ''}</span>
+            </div>
+            <div class="cf-decision-meta">Decided by ${g.approver || 'Unknown approver'}${g.reason ? ` — "${g.reason}"` : ''}</div>
+        </div>`).join('')}
+    </div>` : `<div class="report-empty"><b>No decision yet</b>Progress the case through its gates in the Agents tab to record a decision here.</div>`}
+    `;
+}
+
+/* ---- PDF export: opens a print-styled window and hands off to the browser's
+       native print dialog, where "Save as PDF" is a standard destination -
+       genuinely produces a real PDF with zero external dependencies. ---- */
+function downloadReportAsPdf(p) {
+    const win = window.open('', '_blank');
+    if (!win) { showToast('Pop-up blocked - allow pop-ups to export PDF.', 'flag', 'flag'); return; }
+    win.document.write(`<!DOCTYPE html><html><head><title>${p.id} — Case File</title>
+        <style>
+            body { font-family: 'Plus Jakarta Sans', Arial, sans-serif; color: #150F26; padding: 32px; max-width: 900px; margin: 0 auto; }
+            * { box-sizing: border-box; }
+            @media print { .cf-actions { display: none !important; } }
+        </style>
+    </head><body>${buildCaseFileHtml(p, true)}</body></html>`);
+    win.document.close();
+    win.onload = () => { win.focus(); win.print(); };
+}
+
+/* ---- DOCX export: Word (and LibreOffice) will open an HTML file saved with
+       a .doc extension - a well-established lightweight technique that needs
+       no server-side conversion library. Not a true OOXML .docx, but opens
+       correctly as an editable Word document, which is what matters here. ---- */
+function downloadReportAsDocx(p) {
+    const htmlContent = `<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="utf-8"><title>${p.id} — Case File</title>
+        <style>body { font-family: Calibri, Arial, sans-serif; color: #150F26; } * { box-sizing: border-box; }</style>
+        </head><body>${buildCaseFileHtml(p, true)}</body></html>`;
+    const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${p.id}-case-file.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Case file downloaded as .doc', 'msg', 'msg');
+}
+
+/* ---- Document Generator doesn't have a "reply" the way other agents do -
+       its real output is a structured document package description, not
+       something a person reads on screen. Instead of an inline card/modal,
+       its result becomes a downloadable PDF - same print-based technique as
+       the case file export, so it needs no server-side PDF library either. ---- */
+function downloadDocumentGeneratorPdf(p) {
+    const data = p.a.documentGenerator;
+    if (!data || (!data.rawText && !data.finding)) {
+        showToast('Document is still generating - try again once it completes.', 'flag', 'flag');
         return;
     }
+    const win = window.open('', '_blank');
+    if (!win) { showToast('Pop-up blocked - allow pop-ups to download the document.', 'flag', 'flag'); return; }
 
-    SCREENS.forEach(scr => {
-        scr.agents.forEach(ak => {
-            if (!p.a[ak]) return;
-            const st = agentRunState(p, ak);
-            if (st !== 'done' && st !== 'blocked') return;
-            const meta = AGENTS[ak];
-            const data = p.a[ak];
-            html += `<div class="report-section">
-                <div class="report-section-head">
-                    <div class="rs-ico">${I(meta.icon, 14)}</div>
-                    <div><div class="rs-title">${meta.label}</div><div class="rs-sub">Screen ${scr.n} · ${scr.title}</div></div>
-                    <span class="rs-status ${st === 'blocked' ? 'blocked' : 'done'}">${st === 'blocked' ? 'Gate closed' : 'Complete'}</span>
-                </div>
-                ${renderRichAgentReport(data.rawText || data.fullText || data, ak)}
-            </div>`;
-        });
-    });
+    const parsed = data.rawText ? parseAgentJson(data.rawText) : null;
+    const bodyHtml = parsed
+        ? renderRichAgentReport(parsed, 'documentGenerator')
+        : `<div style="font-size:13px;line-height:1.6;"><b>${data.finding || ''}</b><p style="margin-top:8px;color:#5E5771;">${data.desc || ''}</p></div>`;
 
-    panel.innerHTML = html;
+    win.document.write(`<!DOCTYPE html><html><head><title>${p.id} — Generated Documents</title>
+        <style>
+            body { font-family: 'Plus Jakarta Sans', Arial, sans-serif; color: #150F26; padding: 32px; max-width: 900px; margin: 0 auto; }
+            * { box-sizing: border-box; }
+        </style>
+    </head><body>
+        <div style="border-bottom:2px solid #EFEDF7;padding-bottom:12px;margin-bottom:20px;">
+            <div style="font-size:20px;font-weight:800;">Generated Case Documents</div>
+            <div style="font-size:12px;color:#5E5771;margin-top:4px;">${p.id} · ${p.customer} · ${formatWallClock(data.completedAt) || ''}</div>
+        </div>
+        ${bodyHtml}
+    </body></html>`);
+    win.document.close();
+    win.onload = () => { win.focus(); win.print(); };
 }
+
 
 /* ---- Case Files tab: the actual input evidence, plus any sources an
        agent's live response reported consulting ---- */

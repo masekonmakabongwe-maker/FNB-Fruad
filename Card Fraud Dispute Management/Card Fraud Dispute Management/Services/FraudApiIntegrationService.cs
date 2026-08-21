@@ -31,7 +31,8 @@ namespace CardFraudDisputeApp.Services
             ["shadowCredit"] = "baa98bb4-bb5a-405a-a04b-72fe1e01e7df",
             ["chargebackPreparation"] = "b87bdd53-de89-47f9-b384-697c4db1823e",
             ["recallRepatriation"] = "a58999c2-653d-45e6-8fda-de4d372aea82",
-            ["obligationCheck"] = "f4c01899-68de-4f7c-aca6-ad6d1cee0cbd"
+            ["obligationCheck"] = "f4c01899-68de-4f7c-aca6-ad6d1cee0cbd",
+            ["documentGenerator"] = "61c626f8-2379-48fc-8b7f-02df67d7f22e"
         };
 
         public FraudApiIntegrationService(HttpClient httpClient, ILogger<FraudApiIntegrationService> logger)
