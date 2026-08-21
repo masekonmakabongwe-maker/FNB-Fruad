@@ -24,6 +24,7 @@ function I(name, size) {
         user: `<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>`,
         book: `<path d="M4 4.5A2.5 2.5 0 016.5 2H20v17H6.5A2.5 2.5 0 004 16.5z"/><path d="M4 16.5A2.5 2.5 0 016.5 19H20"/>`,
         arrowLeft: `<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>`,
+        arrowRight: `<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>`,
         timer: `<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>`
     };
     return `<svg ${s}>${paths[name] || ''}</svg>`;
@@ -33,9 +34,7 @@ function I(name, size) {
    USERS / ROLES
    ============================================================ */
 const ROLES = [
-    { id: 'investigator', name: 'N. Dlamini', title: 'Fraud Investigator', initials: 'ND', rank: 1, scope: 'Approves gates 1, 2, 3, 4, 5', username: 'n.dlamini@cfd-demo.bank' },
-    { id: 'fraudmanager', name: 'T. Naidoo', title: 'Fraud Manager', initials: 'TN', rank: 2, scope: 'Approves gates 1–5, senior authority', username: 't.naidoo@cfd-demo.bank' },
-    { id: 'accountable', name: 'K. Adebayo', title: 'Accountable Person', initials: 'KA', rank: 3, scope: 'Approves all gates, incl. Closure', username: 'k.adebayo@cfd-demo.bank' },
+    { id: 'accountable', name: 'K. Adebayo', title: 'Accountable Person', initials: 'KA', rank: 3, scope: 'Approves every gate for every case', username: 'k.adebayo@cfddemo.bank' },
 ];
 const GATE_MIN_RANK = [1, 1, 1, 1, 1, 3];
 let currentUser = null;
@@ -213,38 +212,44 @@ const MESSAGES = {
 };
 const CHANNEL_ICON = { 'App push': 'radio', 'SMS': 'send', 'Email': 'filetext', 'Voice call': 'user' };
 
-const FILLER = [
-    { name: 'Karabo Sithole', ref: 'CFD-51002', type: 'Card-not-present' },
-    { name: 'Johan van Wyk', ref: 'CFD-50877', type: 'Lost & stolen' },
-    { name: 'Amahle Ngcobo', ref: 'CFD-49930', type: 'ATM' },
-    { name: 'Thandeka Zulu', ref: 'CFD-49812', type: 'Counterfeit card' },
-    { name: 'Pieter Botha', ref: 'CFD-49755', type: 'Card skimming' },
-    { name: 'Lindiwe Mahlangu', ref: 'CFD-49690', type: 'Online subscription dispute' },
-    { name: 'Riaan Fourie', ref: 'CFD-49604', type: 'Card-not-present' },
-    { name: 'Nomsa Dube', ref: 'CFD-49551', type: 'Duplicate billing' },
-    { name: 'Werner Kruger', ref: 'CFD-49487', type: 'Chip-and-PIN fraud' },
-    { name: 'Palesa Moloi', ref: 'CFD-49402', type: 'Lost & stolen' },
-    { name: 'Willem Pretorius', ref: 'CFD-49338', type: 'ATM' },
-    { name: 'Zanele Khumalo', ref: 'CFD-49271', type: 'Card-not-present' },
-    { name: 'Andre Nel', ref: 'CFD-49190', type: 'Counterfeit card' },
-    { name: 'Busisiwe Ndlovu', ref: 'CFD-49122', type: 'Card skimming' },
-    { name: 'Francois du Plessis', ref: 'CFD-49055', type: 'Online subscription dispute' },
-    { name: 'Refilwe Sekhukhune', ref: 'CFD-48981', type: 'Duplicate billing' },
-    { name: 'Johannes Meyer', ref: 'CFD-48904', type: 'Card-not-present' },
-    { name: 'Nokuthula Cele', ref: 'CFD-48830', type: 'Chip-and-PIN fraud' },
-    { name: 'Christiaan Marais', ref: 'CFD-48762', type: 'Lost & stolen' },
-    { name: 'Thabo Radebe', ref: 'CFD-48693', type: 'ATM' },
-    { name: 'Susan van der Merwe', ref: 'CFD-48611', type: 'Counterfeit card' },
-    { name: 'Bongani Mkhize', ref: 'CFD-48548', type: 'Card-not-present' },
-    { name: 'Elmarie Joubert', ref: 'CFD-48470', type: 'Card skimming' },
-    { name: 'Kagiso Mokwena', ref: 'CFD-48399', type: 'Duplicate billing' },
-    { name: 'Deon Coetzee', ref: 'CFD-48321', type: 'Online subscription dispute' },
-    { name: 'Nonhlanhla Buthelezi', ref: 'CFD-48254', type: 'Card-not-present' },
-    { name: 'Stefan Venter', ref: 'CFD-48180', type: 'Chip-and-PIN fraud' },
-    { name: 'Precious Maluleke', ref: 'CFD-48103', type: 'Lost & stolen' },
-    { name: 'Gideon Human', ref: 'CFD-48027', type: 'ATM' },
-    { name: 'Ayanda Gumede', ref: 'CFD-47958', type: 'Counterfeit card' },
+// Filler cases exist purely to give the queue realistic volume - they never run
+// agents (see renderFillerCaseShell). Generated deterministically from two name
+// pools so every entry is guaranteed unique with no hand-written repetition:
+// 34 first names x 30 last names = 1020 possible pairs, well over the 1000 needed.
+const FILLER_FIRST_NAMES = [
+    'Karabo', 'Johan', 'Amahle', 'Thandeka', 'Pieter', 'Lindiwe', 'Riaan', 'Nomsa', 'Werner', 'Palesa',
+    'Willem', 'Zanele', 'Andre', 'Busisiwe', 'Francois', 'Refilwe', 'Johannes', 'Nokuthula', 'Christiaan', 'Thabo',
+    'Susan', 'Bongani', 'Elmarie', 'Kagiso', 'Deon', 'Nonhlanhla', 'Stefan', 'Precious', 'Gideon', 'Ayanda',
+    'Lerato', 'Hendrik', 'Zodwa', 'Marius'
 ];
+const FILLER_LAST_NAMES = [
+    'Sithole', 'van Wyk', 'Ngcobo', 'Zulu', 'Botha', 'Mahlangu', 'Fourie', 'Dube', 'Kruger', 'Moloi',
+    'Pretorius', 'Khumalo', 'Nel', 'Ndlovu', 'du Plessis', 'Sekhukhune', 'Meyer', 'Cele', 'Marais', 'Radebe',
+    'van der Merwe', 'Mkhize', 'Joubert', 'Mokwena', 'Coetzee', 'Buthelezi', 'Venter', 'Maluleke', 'Human', 'Gumede'
+];
+const FILLER_CASE_TYPES = [
+    'Card-not-present', 'Lost & stolen', 'ATM', 'Counterfeit card', 'Card skimming',
+    'Online subscription dispute', 'Duplicate billing', 'Chip-and-PIN fraud'
+];
+function generateFillerCases(count) {
+    const out = [];
+    let refCounter = 47958; // continues downward from the original hand-written set, never collides with a real PERSONAS ref (51204/51890/52377/53042)
+    outer:
+    for (let f = 0; f < FILLER_FIRST_NAMES.length; f++) {
+        for (let l = 0; l < FILLER_LAST_NAMES.length; l++) {
+            if (out.length >= count) break outer;
+            out.push({
+                name: `${FILLER_FIRST_NAMES[f]} ${FILLER_LAST_NAMES[l]}`,
+                ref: `CFD-${refCounter--}`,
+                type: FILLER_CASE_TYPES[out.length % FILLER_CASE_TYPES.length]
+            });
+        }
+    }
+    return out;
+}
+const FILLER = generateFillerCases(1000);
+const FILLER_PAGE_SIZE = 30;
+let fillerPage = 0;
 
 /* ============================================================
    STATE ENGINE & TIMER TRACKING
@@ -1406,7 +1411,13 @@ function caseCounts() {
         if (s.closed) resolved++; else if (s.escalated) needsDecision++;
         else if (Object.keys(s.agentStatus).length === 0) notStarted++; else awaitingGate++;
     });
-    return { total: PERSONAS.length, notStarted, inProgress, awaitingGate, needsDecision, resolved };
+    // Filler cases have no real state (they never run agents), but they are
+    // genuinely "not started" - the dashboard's Total/Not started previously
+    // only counted the 4 real cases, while the sidebar badge counted all of
+    // them, so the two numbers never matched. Folding filler into both here
+    // keeps every case-count on screen consistent with the same source of truth.
+    notStarted += FILLER.length;
+    return { total: PERSONAS.length + FILLER.length, notStarted, inProgress, awaitingGate, needsDecision, resolved };
 }
 
 function renderDashboard() {
@@ -1441,9 +1452,10 @@ function renderDashboard() {
     const panelHumanDecisions = document.getElementById('panelHumanDecisions');
     if (panelHumanDecisions) {
         panelHumanDecisions.innerHTML = `
-        <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:var(--green-700)"></span>Approved</div><div class="kv-val">${approved}</div></div>
-        <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:var(--amber-700)"></span>Overridden</div><div class="kv-val">${overridden}</div></div>
-        <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:#D7D2E8"></span>Pending</div><div class="kv-val">${gatesRemaining}</div></div>`;
+        <div class="kv-row kv-clickable" data-goto="cases"><div class="kv-left"><span class="kv-dot" style="background:var(--green-700)"></span>Approved</div><div class="kv-val">${approved}</div></div>
+        <div class="kv-row kv-clickable" data-goto="cases"><div class="kv-left"><span class="kv-dot" style="background:var(--amber-700)"></span>Overridden</div><div class="kv-val">${overridden}</div></div>
+        <div class="kv-row kv-clickable" data-goto="cases"><div class="kv-left"><span class="kv-dot" style="background:#D7D2E8"></span>Pending</div><div class="kv-val">${gatesRemaining}</div></div>`;
+        panelHumanDecisions.querySelectorAll('[data-goto]').forEach(row => row.addEventListener('click', () => goto(row.dataset.goto)));
     }
 
     let totalTriggers = PERSONAS.reduce((a, p) => a + state[p.id].messages.length, 0);
@@ -1454,9 +1466,112 @@ function renderDashboard() {
         <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:#D7D2E8"></span>Fires on approval only</div></div>`;
     }
 
+    // Recoverability distribution reflects real progress, not just each case's
+    // static narrative outcome - a case only counts toward its eventual category
+    // once the case has actually reached that point (recognised only counts once
+    // truly closed via the deflection path; recoverable/not-recoverable/mixed only
+    // count once Transaction Classification has actually run). Anything earlier
+    // than that stays "Pending", which is what makes this genuinely reflect what
+    // has happened rather than a fixed label decided in advance. Each bucket also
+    // tracks which case it came from, so the legend can open that case directly.
     const dist = { recognised: 0, recoverable: 0, notrecoverable: 0, mixed: 0, pending: 0 };
-    PERSONAS.forEach(p => { if (p.recognised) dist.recognised++; else if (p.classification === 'recoverable') dist.recoverable++; else if (p.classification === 'not-recoverable') dist.notrecoverable++; else if (p.classification === 'mixed') dist.mixed++; else dist.pending++; });
-    drawDonut([{ v: dist.recognised, c: '#7C3AED', l: 'Recognised — deflected' }, { v: dist.recoverable, c: '#15803D', l: 'Recoverable (CNP)' }, { v: dist.notrecoverable, c: '#B91C1C', l: 'Chase & Repatriate' }, { v: dist.mixed, c: '#B45309', l: 'Mixed rails / Sim Swap' }, { v: dist.pending, c: '#E5E2F0', l: 'Pending' }]);
+    const distCase = { recognised: null, recoverable: null, notrecoverable: null, mixed: null };
+    PERSONAS.forEach(p => {
+        const s = state[p.id];
+        const classified = s.agentStatus && s.agentStatus.transactionClassification === 'done';
+        if (s.closed && p.recognised) { dist.recognised++; distCase.recognised = p.id; }
+        else if (classified && p.classification === 'recoverable') { dist.recoverable++; distCase.recoverable = p.id; }
+        else if (classified && p.classification === 'not-recoverable') { dist.notrecoverable++; distCase.notrecoverable = p.id; }
+        else if (classified && p.classification === 'mixed') { dist.mixed++; distCase.mixed = p.id; }
+        else dist.pending++;
+    });
+    drawDonut([
+        { v: dist.recognised, c: '#7C3AED', l: 'Recognised — deflected', caseId: distCase.recognised },
+        { v: dist.recoverable, c: '#15803D', l: 'Recoverable (CNP)', caseId: distCase.recoverable },
+        { v: dist.notrecoverable, c: '#B91C1C', l: 'Chase & Repatriate', caseId: distCase.notrecoverable },
+        { v: dist.mixed, c: '#B45309', l: 'Mixed rails / Sim Swap', caseId: distCase.mixed },
+        { v: dist.pending, c: '#E5E2F0', l: 'Pending' },
+    ]);
+
+    renderActivityFeed();
+    renderRegClocks();
+}
+
+/* ---- Live activity feed - a rolling, cross-case version of the per-case
+       Summary tab: every completed agent and every human gate decision,
+       merged and sorted by real timestamp, most recent first. ---- */
+function renderActivityFeed() {
+    const panel = document.getElementById('panelActivityFeed');
+    if (!panel) return;
+
+    let items = [];
+    PERSONAS.forEach(p => {
+        const s = state[p.id];
+        Object.keys(p.a).forEach(ak => {
+            const st = s.agentStatus[ak];
+            if (st !== 'done' && st !== 'blocked') return;
+            const data = p.a[ak];
+            if (!data.completedAt) return;
+            const meta = AGENTS[ak];
+            items.push({
+                ts: data.completedAt,
+                html: `<div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:${data.tone === 'clean' ? 'var(--green-700)' : data.tone === 'block' ? 'var(--red-700)' : 'var(--amber-700)'}"></span>${meta.label} — ${p.customer}</div><div class="kv-val" style="font-family:var(--mono);font-size:10px;color:var(--text-3);">${formatWallClock(data.completedAt)}</div></div>`
+            });
+        });
+        s.gates.forEach((g, i) => {
+            if (!g || !s.gateDecidedAt[i]) return;
+            const actionLabel = g === 'approve' ? 'Approved' : g === 'override' ? 'Overridden' : g === 'escalate' ? 'Escalated' : g;
+            const scr = SCREENS[i];
+            items.push({
+                ts: s.gateDecidedAt[i],
+                html: `<div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:var(--purple-700)"></span>${actionLabel} — ${scr ? scr.title : 'Gate ' + (i + 1)} · ${p.customer}</div><div class="kv-val" style="font-family:var(--mono);font-size:10px;color:var(--text-3);">${formatWallClock(s.gateDecidedAt[i])}</div></div>`
+            });
+        });
+    });
+
+    if (!items.length) { panel.innerHTML = '<div class="panel-empty">Nothing has happened yet</div>'; return; }
+
+    items.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+    panel.innerHTML = items.slice(0, 10).map(it => it.html).join('');
+}
+
+/* ---- Regulatory clocks, live - the four statutory clocks (Settings page
+       shows these as static reference text) computed against every real
+       case's Case Intake completion time, showing which case is genuinely
+       closest to which deadline. ---- */
+const REGULATORY_CLOCKS = [
+    { label: 'Suspicious transaction report', hours: 15 * 24 },
+    { label: 'Cyber offence report', hours: 72 },
+    { label: 'Material cyber incident', hours: 24 },
+    { label: 'Internal dispute resolution', hours: 20 * 24 },
+];
+function renderRegClocks() {
+    const panel = document.getElementById('panelRegClocks');
+    if (!panel) return;
+
+    let rows = [];
+    PERSONAS.forEach(p => {
+        const s = state[p.id];
+        if (!s.slaStartedAt || s.closed) return; // no clock start yet, or already resolved - nothing pending
+        REGULATORY_CLOCKS.forEach(clock => {
+            const deadline = new Date(s.slaStartedAt).getTime() + clock.hours * 3600 * 1000;
+            const remainingMs = deadline - Date.now();
+            rows.push({ customer: p.customer, id: p.id, label: clock.label, remainingMs });
+        });
+    });
+
+    if (!rows.length) { panel.innerHTML = '<div class="panel-empty">No live clocks yet</div>'; return; }
+
+    // Closest deadline per case only, so one urgent case doesn't crowd out the others
+    const byCase = {};
+    rows.forEach(r => { if (!byCase[r.id] || r.remainingMs < byCase[r.id].remainingMs) byCase[r.id] = r; });
+    const closest = Object.values(byCase).sort((a, b) => a.remainingMs - b.remainingMs).slice(0, 6);
+
+    panel.innerHTML = closest.map(r => `
+        <div class="kv-row">
+            <div class="kv-left"><span class="kv-dot" style="background:${r.remainingMs <= 0 ? 'var(--red-700)' : r.remainingMs < 4 * 3600000 ? 'var(--amber-700)' : 'var(--green-700)'}"></span>${r.label} — ${r.customer}</div>
+            <div class="kv-val" style="font-family:var(--mono);font-size:10.5px;">${formatSlaCountdown(r.remainingMs)}</div>
+        </div>`).join('');
 }
 
 function drawDonut(segments) {
@@ -1475,7 +1590,12 @@ function drawDonut(segments) {
     if (donutSvg) donutSvg.innerHTML = paths + `<circle cx="60" cy="60" r="30" fill="#fff"/><text x="60" y="56" text-anchor="middle" font-size="18" font-weight="800" fill="#150F26" font-family="Plus Jakarta Sans">${total}</text><text x="60" y="70" text-anchor="middle" font-size="8.5" fill="#9791A8" font-family="Plus Jakarta Sans">total</text>`;
 
     const donutLegend = document.getElementById('donutLegend');
-    if (donutLegend) donutLegend.innerHTML = segments.map(s => `<div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:${s.c}"></span>${s.l}</div><div class="kv-val">${s.v}</div></div>`).join('');
+    if (donutLegend) {
+        donutLegend.innerHTML = segments.map((s, i) => `<div class="kv-row${s.caseId ? ' kv-clickable' : ''}" ${s.caseId ? `data-case="${s.caseId}"` : ''}><div class="kv-left"><span class="kv-dot" style="background:${s.c}"></span>${s.l}</div><div class="kv-val">${s.v}</div></div>`).join('');
+        donutLegend.querySelectorAll('.kv-clickable').forEach(row => {
+            row.addEventListener('click', () => openCase(row.dataset.case));
+        });
+    }
 }
 
 const FILTERS = ['All', 'Not started', 'In progress', 'Awaiting gate', 'Needs decision', 'Done'];
@@ -1532,7 +1652,7 @@ function renderCases() {
       <td><button class="btn pill-btn" data-open="${p.id}">${Object.keys(s.agentStatus).length ? 'Open case' : 'Trigger agents'}</button></td>
       <td>${humanCell}</td>
     </tr>`;
-    }).join('') + FILLER.map(f => `<tr class="rowlink filler" data-id="${f.ref}">
+    }).join('') + FILLER.slice(fillerPage * FILLER_PAGE_SIZE, (fillerPage + 1) * FILLER_PAGE_SIZE).map(f => `<tr class="rowlink filler" data-id="${f.ref}">
       <td><div class="cust-name">${f.name}</div><div class="cust-ref">${f.ref}</div></td>
       <td><span class="sla-pending">—</span></td>
       <td><span class="sla-pending">—</span></td>
@@ -1542,6 +1662,23 @@ function renderCases() {
       <td>—</td>
     </tr>`).join('');
 
+    const totalFillerPages = Math.max(1, Math.ceil(FILLER.length / FILLER_PAGE_SIZE));
+    const pag = document.getElementById('fillerPagination');
+    if (pag) {
+        const rangeStart = fillerPage * FILLER_PAGE_SIZE + 1;
+        const rangeEnd = Math.min((fillerPage + 1) * FILLER_PAGE_SIZE, FILLER.length);
+        pag.innerHTML = `
+        <span class="fp-range">Showing ${rangeStart}–${rangeEnd} of ${FILLER.length} additional queued cases</span>
+        <div class="fp-controls">
+            <button class="btn ghost pill-btn" id="fpPrev" ${fillerPage === 0 ? 'disabled' : ''}>${I('arrowLeft', 13)} Prev</button>
+            <span class="fp-page">Page ${fillerPage + 1} of ${totalFillerPages}</span>
+            <button class="btn ghost pill-btn" id="fpNext" ${fillerPage >= totalFillerPages - 1 ? 'disabled' : ''}>Next ${I('arrowRight', 13)}</button>
+        </div>`;
+        const fpPrev = document.getElementById('fpPrev');
+        if (fpPrev) fpPrev.addEventListener('click', () => { if (fillerPage > 0) { fillerPage--; renderCases(); } });
+        const fpNext = document.getElementById('fpNext');
+        if (fpNext) fpNext.addEventListener('click', () => { if (fillerPage < totalFillerPages - 1) { fillerPage++; renderCases(); } });
+    }
 
     tbody.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); openCase(b.dataset.open); }));
     tbody.querySelectorAll('tr.rowlink').forEach(r => r.addEventListener('click', () => openCase(r.dataset.id)));

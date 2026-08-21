@@ -42,6 +42,18 @@
 html, body {
     height: 100%;
     margin: 0;
+    overflow: hidden; /* the whole page must never scroll - every screen has its
+                          own designated internal scroll container (.main for
+                          general pages, .wb-scroll for the case-detail tabs).
+                          Without this, if ANY content anywhere is a fraction
+                          taller than the viewport, the page itself starts
+                          scrolling instead, which is what caused both the grey
+                          strip below the fixed footer (position:fixed is
+                          anchored to body here, since body has `perspective`
+                          set below, which makes body the containing block -
+                          so if body grows taller than the viewport, the footer
+                          drifts with it) and the Summary/Report tabs appearing
+                          to cut off content that should have scrolled */
 }
 
 body {
@@ -138,10 +150,13 @@ svg {
     overflow: hidden; /* forces overflow to be contained within .main's own scroll,
                           not the page - otherwise the footer can get pushed below
                           the viewport instead of staying pinned at the bottom */
-    padding-bottom: 46px; /* reserves room for the fixed .app-footer (now in
-                              _Layout.cshtml, so no longer a flex child here) so
-                              page content doesn't render underneath it - box-sizing:
-                              border-box means this eats into the 100vh, not adds to it */
+    padding-bottom: 44px; /* must match .app-footer's fixed height exactly (see
+                              below) - a mismatch here is what left a visible grey
+                              strip of the body's own background between the page
+                              content and the footer bar */
+    background: var(--bg); /* fills that reserved strip with the same tone as the
+                               rest of the app instead of the raw body mesh showing
+                               through, in case of any sub-pixel rounding gap */
 }
 
 .topbar {
@@ -473,6 +488,19 @@ svg {
         display: block;
     }
 
+/* #page-detail is the one page that needs its own internal scroll (per-tab,
+   via .wb-scroll) instead of relying on .main's scroll like every other page.
+   That only works if the height chain underneath it is actually bounded -
+   .workspace relies on `height: 100%` from its parent, but .page.active never
+   had a height at all, so .workspace (and everything below it) just grew to
+   fit its content instead of being constrained. This was invisible before
+   because an unrelated bug let the whole page scroll to compensate; fixing
+   that bug exposed this one, so it needs fixing too. */
+#page-detail.active {
+    height: 100%;
+    overflow: hidden;
+}
+
 .page-head {
     display: flex;
     align-items: flex-end;
@@ -649,7 +677,9 @@ svg {
     font-size: 12px;
     font-style: italic;
     padding: 14px 0;
-    text-align: center;
+    text-align: left; /* was centered - looked fine in the narrow grid-3 panels,
+                          but floated disconnectedly far from the left-aligned
+                          header in the wider grid-2 / full-width panels */
 }
 
 .kv-row {
@@ -664,6 +694,18 @@ svg {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.kv-clickable {
+    cursor: pointer;
+    border-radius: 8px;
+    margin: 0 -8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    transition: background .15s;
+}
+.kv-clickable:hover {
+    background: var(--purple-50);
 }
 
 .kv-dot {
@@ -791,7 +833,8 @@ tr.rowlink {
     }
 
 tr.filler {
-    opacity: 0.5;
+    /* previously opacity:0.5 - removed now that filler rows are genuinely
+       clickable, so they shouldn't look disabled */
 }
 
 .cust-name {
@@ -975,6 +1018,11 @@ tr.filler {
     flex: 1;
     width: 100%;
     min-width: 0;
+    min-height: 0; /* without this, .wb can grow to fit tall content (Summary
+                       timeline, long reports, many agent cards) instead of
+                       staying bounded - which starves .wb-scroll's own
+                       overflow:auto of any reason to kick in, so content just
+                       gets clipped with no way to scroll to the rest */
     display: flex;
     flex-direction: column;
 }
@@ -3070,8 +3118,13 @@ tr.filler {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    flex-wrap: wrap;
-    padding: 12px 26px;
+    flex-wrap: nowrap; /* wrapping would make the real height taller than the
+                           44px reserved in .shell, causing overlap instead of
+                           a gap - the footer-mid links truncate/scroll before
+                           that happens instead (see .footer-mid overflow below) */
+    height: 44px; /* fixed, must match .shell's padding-bottom exactly */
+    box-sizing: border-box;
+    padding: 0 26px;
     border-top: 1px solid var(--border);
     background: rgba(255,255,255,0.92);
     backdrop-filter: blur(10px);
@@ -3103,9 +3156,12 @@ tr.filler {
 .app-footer .footer-mid {
     display: flex;
     gap: 18px;
+    overflow: hidden; /* nowrap parent means these just clip gracefully on very
+                          narrow viewports instead of wrapping to a second row */
 }
 .app-footer .footer-mid a {
     font-size: 11px;
+    white-space: nowrap;
     color: var(--text-2);
     font-weight: 600;
     text-decoration: none;
@@ -3242,4 +3298,37 @@ tr.filler {
     margin-top: 4px;
     font-style: italic;
     color: var(--text);
+}
+
+/* ============================================================
+   FILLER PAGINATION
+   ============================================================ */
+.filler-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 4px;
+    flex-wrap: wrap;
+}
+.fp-range {
+    font-size: 11.5px;
+    color: var(--text-3);
+}
+.fp-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.fp-page {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text-2);
+    font-family: var(--mono);
+    min-width: 90px;
+    text-align: center;
+}
+.fp-controls .btn[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
 }

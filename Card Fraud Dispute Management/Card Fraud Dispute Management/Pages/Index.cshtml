@@ -16,7 +16,7 @@
         </div>
         <div class="login-tagline">
             <h1>Card Fraud Dispute Management</h1>
-            <p>An agentic layer that reasons over every card fraud report — distinguishing genuine fraud from legitimate but unrecognised transactions, tracing and recalling funds, and preparing the filings a case owes — while a person confirms every decision that affects a customer.</p>
+            <p>An agentic layer that reasons over every card fraud report, distinguishing genuine fraud from legitimate but unrecognised transactions, tracing and recalling funds, and preparing the filings a case owes, while a person confirms every decision that affects a customer.</p>
         </div>
     </div>
     <div class="login-right">
@@ -76,9 +76,19 @@
                     <div class="panel"><div class="panel-sub">Investigator confirmations</div><div class="panel-title" style="margin-bottom:10px;">Human decisions</div><div id="panelHumanDecisions"></div></div>
                     <div class="panel"><div class="panel-sub">Customer &amp; artefact triggers</div><div class="panel-title" style="margin-bottom:10px;">Message Composer</div><div id="panelComposer"></div></div>
                 </div>
-                <div class="panel" style="max-width:520px;">
-                    <div class="panel-sub">Queue composition</div><div class="panel-title" style="margin-bottom:14px;">Recoverability distribution</div>
-                    <div class="donut-wrap"><svg width="118" height="118" viewBox="0 0 120 120" id="donutSvg"></svg><div class="donut-legend" id="donutLegend"></div></div>
+                <div class="grid-2">
+                    <div class="panel">
+                        <div class="panel-sub">Queue composition</div><div class="panel-title" style="margin-bottom:14px;">Recoverability distribution</div>
+                        <div class="donut-wrap"><svg width="118" height="118" viewBox="0 0 120 120" id="donutSvg"></svg><div class="donut-legend" id="donutLegend"></div></div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-sub">Regulatory clocks</div><div class="panel-title" style="margin-bottom:10px;">Closest deadlines</div>
+                        <div id="panelRegClocks"><div class="panel-empty">No live clocks yet</div></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-sub">Across all cases</div><div class="panel-title" style="margin-bottom:10px;">Live activity</div>
+                    <div id="panelActivityFeed"><div class="panel-empty">Nothing has happened yet</div></div>
                 </div>
             </section>
 
@@ -86,6 +96,7 @@
                 <div class="page-head"><div><div class="page-title">Cases</div><div class="page-sub">Card fraud queue — synthetic demonstration data</div></div></div>
                 <div class="filterbar" id="filterbar"></div>
                 <div class="tablecard"><table><thead><tr><th>Customer</th><th>Urgency</th><th>SLA</th><th>Progress</th><th>Screen</th><th>Agent decision</th><th>Human decision</th></tr></thead><tbody id="casesTbody"></tbody></table></div>
+                <div class="filler-pagination" id="fillerPagination"></div>
             </section>
 
             <!-- CASE WORKSPACE -->
