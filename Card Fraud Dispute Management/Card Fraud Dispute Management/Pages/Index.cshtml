@@ -169,16 +169,6 @@
 
         </main>
     </div>
-    <footer class="app-footer">
-        <div class="footer-left"><div class="logo-mark">P</div><b>PURPLE FABRIC</b></div>
-        <div class="footer-mid">
-            <a href="#">Documentation</a>
-            <a href="#">Governance overlay</a>
-            <a href="#">Model &amp; data policy</a>
-            <a href="#">Support</a>
-        </div>
-        <div class="footer-right">Card Fraud Dispute Management · Synthetic data · v1.4</div>
-    </footer>
 </div>
 
 <div class="scrim" id="scrim"></div>
@@ -198,5 +188,18 @@
     <div class="modal-head"><div class="mh-ico" id="pmIco"></div><div class="mh-txt"><div class="mh1">Policy logic</div><div class="mh2" id="pmSub">—</div></div><button class="modal-close" id="pmClose">✕</button></div>
     <div class="modal-body" id="pmBody"></div>
 </div>
+<div class="modal" id="gateReasonModal" style="width:440px;">
+    <div class="modal-head"><div class="mh-ico" id="grIco"></div><div class="mh-txt"><div class="mh1" id="grTitle">—</div><div class="mh2" id="grSub">—</div></div><button class="modal-close" id="grClose">✕</button></div>
+    <div class="modal-body">
+        <label for="grReasonInput" class="gr-label">Reason for this decision</label>
+        <textarea id="grReasonInput" class="gr-textarea" rows="4" placeholder="e.g. Evidence in the contact note supports the customer's account, containment already confirmed complete."></textarea>
+        <div class="gr-error" id="grError" style="display:none;">A reason is required before this decision can be recorded.</div>
+        <div class="gr-actions">
+            <button class="btn ghost" id="grCancel">Cancel</button>
+            <button class="btn primary" id="grConfirm">Confirm decision</button>
+        </div>
+    </div>
+</div>
+
 
 

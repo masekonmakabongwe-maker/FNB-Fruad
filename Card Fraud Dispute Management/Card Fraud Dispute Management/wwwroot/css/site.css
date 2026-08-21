@@ -138,6 +138,10 @@ svg {
     overflow: hidden; /* forces overflow to be contained within .main's own scroll,
                           not the page - otherwise the footer can get pushed below
                           the viewport instead of staying pinned at the bottom */
+    padding-bottom: 46px; /* reserves room for the fixed .app-footer (now in
+                              _Layout.cshtml, so no longer a flex child here) so
+                              page content doesn't render underneath it - box-sizing:
+                              border-box means this eats into the 100vh, not adds to it */
 }
 
 .topbar {
@@ -3062,16 +3066,22 @@ tr.filler {
 
 /* footer */
 .app-footer {
-    display: flex;
+    display: none; /* toggled to flex by JS once signed in - see signInAs()/signOutItem in site.js */
     align-items: center;
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
-    padding: 16px 26px;
+    padding: 12px 26px;
     border-top: 1px solid var(--border);
     background: rgba(255,255,255,0.92);
     backdrop-filter: blur(10px);
-    flex-shrink: 0; /* never let the footer get squeezed out by taller content above it */
+    position: fixed; /* now lives in _Layout.cshtml, outside .shell's flex column,
+                         so it can no longer be a flex child pinned to the bottom -
+                         fixed positioning keeps it pinned to the viewport instead */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
 }
 .app-footer .footer-left {
     display: flex;
@@ -3186,4 +3196,50 @@ tr.filler {
     color: var(--text-2);
     margin-top: 3px;
     line-height: 1.5;
+}
+
+/* ============================================================
+   GATE REASON MODAL
+   ============================================================ */
+.gr-label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text-2);
+    margin-bottom: 6px;
+}
+.gr-textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: var(--font);
+    font-size: 12.5px;
+    color: var(--text);
+    resize: vertical;
+    min-height: 80px;
+}
+.gr-textarea:focus {
+    outline: none;
+    border-color: var(--purple-400);
+    box-shadow: 0 0 0 3px var(--purple-100);
+}
+.gr-error {
+    font-size: 11px;
+    color: var(--red-700);
+    margin-top: 6px;
+    font-weight: 600;
+}
+.gr-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.summary-entry-reason {
+    display: block;
+    margin-top: 4px;
+    font-style: italic;
+    color: var(--text);
 }

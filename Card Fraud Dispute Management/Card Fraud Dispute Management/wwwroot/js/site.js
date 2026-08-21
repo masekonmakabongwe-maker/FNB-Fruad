@@ -259,6 +259,7 @@ function freshState(p) {
         gates: [null, null, null, null, null, null],
         gateApprover: [null, null, null, null, null, null],
         gateDecidedAt: [null, null, null, null, null, null],
+        gateReason: [null, null, null, null, null, null],
         closed: false,
         escalated: false,
         escalatedAt: null,
@@ -1326,6 +1327,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const shellRoot = document.getElementById('shellRoot');
             const pageLogin = document.getElementById('page-login');
             if (shellRoot) shellRoot.style.display = 'none';
+            const appFooterEl = document.getElementById('appFooter');
+            if (appFooterEl) appFooterEl.style.display = 'none';
             if (pageLogin) pageLogin.classList.remove('hidden');
             document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
             const mockUser = document.getElementById('mockUsername');
@@ -1353,6 +1356,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const pmClose = document.getElementById('pmClose');
     if (pmClose) pmClose.addEventListener('click', closeModals);
+
+    const grClose = document.getElementById('grClose');
+    if (grClose) grClose.addEventListener('click', () => { pendingGateDecision = null; closeModals(); });
+    const grCancel = document.getElementById('grCancel');
+    if (grCancel) grCancel.addEventListener('click', () => { pendingGateDecision = null; closeModals(); });
+    const grConfirm = document.getElementById('grConfirm');
+    if (grConfirm) grConfirm.addEventListener('click', confirmGateReason);
 
     const mscrim = document.getElementById('mscrim');
     if (mscrim) mscrim.addEventListener('click', closeModals);
@@ -1697,6 +1707,7 @@ function renderFillerCaseShell(filler) {
 
 
 function renderStatusBanner(p) {
+    if (p.id !== currentCaseId) return; // stale async callback from a case that's no longer open - don't let it paint over what's on screen now
     const s = state[p.id];
     const el = document.getElementById('dStatusBanner');
     if (!el) return;
@@ -1708,6 +1719,7 @@ function renderStatusBanner(p) {
 
 /* Horizontal 6-Stage Stepper Header */
 function renderHorizontalStepper(p) {
+    if (p.id !== currentCaseId) return; // see renderStatusBanner - same stale-callback guard
     const s = state[p.id];
     const col = document.getElementById('wbScroll');
     if (!col) return;
@@ -1744,6 +1756,7 @@ function renderHorizontalStepper(p) {
 
 /* Render Selected Stage Content and Agents with Timers */
 function renderActiveStageContent(p) {
+    if (p.id !== currentCaseId) return; // see renderStatusBanner - same stale-callback guard
     const s = state[p.id];
     const container = document.getElementById('stageContentArea');
     if (!container) return;
@@ -1789,7 +1802,7 @@ function renderActiveStageContent(p) {
     animateEntrance(container, '.agent-card');
 
     container.querySelectorAll('.agent-card').forEach(el => el.addEventListener('click', () => { if (el.dataset.locked) return; openAgentModal(p, el.dataset.agent); }));
-    container.querySelectorAll('[data-gate]').forEach(el => el.addEventListener('click', () => handleGate(p, parseInt(el.dataset.gate, 10), el.dataset.action)));
+    container.querySelectorAll('[data-gate]').forEach(el => el.addEventListener('click', () => openGateReasonModal(p, parseInt(el.dataset.gate, 10), el.dataset.action)));
     container.querySelectorAll('[data-policy]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openPolicyModal(p); }));
 
     // Keep whichever of Report / Case Files / Correspondence is on screen live-updated
@@ -1927,7 +1940,7 @@ async function runScreenAgents(p) {
                 : gate1Action === 'override' ? 'OVERRIDDEN — proceed with amendment'
                 : gate1Action === 'escalate' ? 'ESCALATED — routed to senior review'
                 : gate1Action.toUpperCase();
-            recognitionCheckText += `\n\n---\nHUMAN GATE DECISION (Screen 1 - Case Summary, Gate 1)\nDecision: ${decisionLabel}\nDecided by: ${approver}\nDecided at: ${s.gateDecidedAt[0] || new Date().toISOString()}\n---`;
+            recognitionCheckText += `\n\n---\nHUMAN GATE DECISION (Screen 1 - Case Summary, Gate 1)\nDecision: ${decisionLabel}\nDecided by: ${approver}\nDecided at: ${s.gateDecidedAt[0] || new Date().toISOString()}\nReason: ${s.gateReason[0] || 'Not recorded'}\n---`;
         }
 
         const allOutputs = {
@@ -2067,11 +2080,12 @@ async function runScreenAgents(p) {
     }
     next();
 }
-function handleGate(p, screenIdx, action) {
+function handleGate(p, screenIdx, action, reason) {
     const s = state[p.id];
     s.gates[screenIdx] = action;
     s.gateApprover[screenIdx] = currentUser ? `${currentUser.name} (${currentUser.title})` : null;
     s.gateDecidedAt[screenIdx] = new Date().toISOString();
+    s.gateReason[screenIdx] = reason || null;
 
     const gateLabel = SCREENS[screenIdx] ? SCREENS[screenIdx].title : `Gate ${screenIdx + 1}`;
     if (action === 'approve') showToast(`${gateLabel} approved`, 'success', 'check');
@@ -2145,6 +2159,7 @@ setInterval(() => { renderCasesIfVisible(); }, 60000);
 
 const RING_CIRC = 138.2;
 function updateProgressRing(p) {
+    if (p.id !== currentCaseId) return; // see renderStatusBanner - same stale-callback guard
     const s = state[p.id];
     const fill = document.getElementById('ringFill'); const label = document.getElementById('ringLabel');
     if (!fill) return;
@@ -2158,12 +2173,57 @@ function updateProgressRing(p) {
 const mscrim = document.getElementById('mscrim');
 const agentModal = document.getElementById('agentModal');
 const policyModal = document.getElementById('policyModal');
+const gateReasonModal = document.getElementById('gateReasonModal');
 
 function closeModals() {
     if (mscrim) mscrim.classList.remove('open');
     if (agentModal) agentModal.classList.remove('open');
     if (policyModal) policyModal.classList.remove('open');
+    if (gateReasonModal) gateReasonModal.classList.remove('open');
 }
+
+let pendingGateDecision = null; // { p, screenIdx, action } - set while the reason modal is open
+
+function openGateReasonModal(p, screenIdx, action) {
+    pendingGateDecision = { p, screenIdx, action };
+    const scr = SCREENS[screenIdx];
+    const actionLabel = action === 'approve' ? 'Approve' : action === 'override' ? 'Override' : action === 'escalate' ? 'Escalate' : action;
+
+    const grIco = document.getElementById('grIco');
+    if (grIco) grIco.innerHTML = I('check', 18);
+    const grTitle = document.getElementById('grTitle');
+    if (grTitle) grTitle.textContent = `${actionLabel} — Gate ${screenIdx + 1}`;
+    const grSub = document.getElementById('grSub');
+    if (grSub) grSub.textContent = `${scr ? scr.title : ''} · ${p.customer}`;
+
+    const grInput = document.getElementById('grReasonInput');
+    if (grInput) { grInput.value = ''; }
+    const grError = document.getElementById('grError');
+    if (grError) grError.style.display = 'none';
+
+    if (mscrim) mscrim.classList.add('open');
+    if (gateReasonModal) gateReasonModal.classList.add('open');
+    if (grInput) setTimeout(() => grInput.focus(), 50);
+}
+
+function confirmGateReason() {
+    if (!pendingGateDecision) return;
+    const grInput = document.getElementById('grReasonInput');
+    const reason = grInput ? grInput.value.trim() : '';
+    const grError = document.getElementById('grError');
+
+    if (!reason) {
+        if (grError) grError.style.display = 'block';
+        if (grInput) grInput.focus();
+        return;
+    }
+
+    const { p, screenIdx, action } = pendingGateDecision;
+    pendingGateDecision = null;
+    closeModals();
+    handleGate(p, screenIdx, action, reason);
+}
+
 
 function openAgentModal(p, agentKey) {
     const meta = AGENTS[agentKey];
@@ -2386,7 +2446,7 @@ function renderSummaryTab(p) {
                             <span class="summary-entry-time">${s.gateDecidedAt[screenIdx] ? formatWallClock(s.gateDecidedAt[screenIdx]) : ''}</span>
                         </div>
                         <div class="summary-entry-finding ${agentToneClass(action === 'escalate' || action === 'override' ? 'flag' : 'clean')}">${actionLabel}</div>
-                        <div class="summary-entry-desc">Decided by ${s.gateApprover[screenIdx] || 'Unknown approver'}.</div>
+                        <div class="summary-entry-desc">Decided by ${s.gateApprover[screenIdx] || 'Unknown approver'}.${s.gateReason[screenIdx] ? ` <span class="summary-entry-reason">"${s.gateReason[screenIdx]}"</span>` : ''}</div>
                     </div>
                 </div>`
             });
@@ -2499,6 +2559,8 @@ function signInAs(roleId) {
     const shellRoot = document.getElementById('shellRoot');
     if (pageLogin) pageLogin.classList.add('hidden');
     if (shellRoot) shellRoot.style.display = 'flex';
+    const appFooterEl = document.getElementById('appFooter');
+    if (appFooterEl) appFooterEl.style.display = 'flex';
     updateUserChip();
     goto('dashboard');
 }
