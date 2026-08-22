@@ -207,12 +207,40 @@ const PERSONAS = [
     },
 ];
 
-const MESSAGES = {
-    'FNB-51204': [{ channel: 'SMS', text: 'Hi Sipho, thanks for reporting this — we’re on it.' }, { channel: 'App push', text: 'We’ve confirmed this wasn’t a payment you made. Your card has been blocked and replaced.' }, { channel: 'Email', text: 'We’ve credited your account for this transaction while we recover the funds via chargeback.' }],
-    'FNB-51890': [{ channel: 'SMS', text: 'Hi Andile, thanks for flagging this — we’re reviewing it now.' }, { channel: 'App push', text: 'Your profile has been locked and secured.' }, { channel: 'Email', text: 'We’ve reimbursed this transaction in full and are actively tracing the funds.' }],
-    'FNB-52377': [{ channel: 'App push', text: 'Hi Nomvula, we’ve reviewed your report on the R429 debit.' }, { channel: 'App push', text: 'We’ve matched this to your FitHub Wellness gym subscription — your introductory rate ended this month.' }],
-    'FNB-53042': [{ channel: 'Voice call', text: 'Hi Mr Mokoena, we’ve received your report and are securing your accounts.' }, { channel: 'Email', text: 'We’ve credited your account in full while recovery continues.', suppression: true }],
-};
+// Written as a function of the real case, not static per-case text, so every
+// message actually cites the disputed amount, product and channel on file
+// rather than speaking in vague generalities that happen to fit any case.
+// Each message names the gate whose approval should actually trigger it
+// (afterGate: the screenIdx, 0-based, matching SCREENS) - not a generic
+// "one message per gate" formula, since what a message says needs to match
+// what's actually been decided by that point. The reimbursement/credit
+// message, for instance, can't fire before the Customer Position screen
+// (Shadow Credit) has actually decided a credit - message index 0 is the
+// exception, fired separately at Case Intake, not through a gate at all.
+function MESSAGES(p) {
+    const amt = p.amount.replace(/\s*\(.*\)\s*$/, ''); // strip internal-only annotations like "(Mixed rails)" before this reaches customer-facing text
+    switch (p.id) {
+        case 'FNB-51204': return [
+            { channel: 'SMS', text: `Hi ${p.customer.split(' ')[0]}, thanks for reporting the ${amt} card-not-present transaction — we're on it.`, afterGate: null },
+            { channel: 'App push', text: `We've confirmed the ${amt} charge on your ${p.product.split('·')[1]?.trim() || 'card'} wasn't authorised by you. Your card has been blocked and replaced.`, afterGate: 1 },
+            { channel: 'Email', text: `We've credited ${amt} to your account while we recover the funds via chargeback.`, afterGate: 3 },
+        ];
+        case 'FNB-51890': return [
+            { channel: 'SMS', text: `Hi ${p.customer.split(' ')[0]}, thanks for flagging the ${amt} disputed activity on your account — we're reviewing it now.`, afterGate: null },
+            { channel: 'App push', text: `Your profile has been locked and secured following the malicious app install on your device.`, afterGate: 1 },
+            { channel: 'Email', text: `We've reimbursed the full ${amt} and are actively tracing where the funds moved.`, afterGate: 3 },
+        ];
+        case 'FNB-52377': return [
+            { channel: 'App push', text: `Hi ${p.customer.split(' ')[0]}, we've reviewed your report on the ${amt} debit.`, afterGate: null },
+            { channel: 'App push', text: `We've matched this to your recurring card mandate — your introductory rate ended this billing cycle, which is why the amount changed.`, afterGate: 1 },
+        ];
+        case 'FNB-53042': return [
+            { channel: 'Voice call', text: `Hi Mr ${p.customer.split(' ')[1]}, we've received your report of ${amt} in disputed activity following the SIM swap and are securing your accounts.`, afterGate: null },
+            { channel: 'Email', text: `We've credited the full ${amt} to your account while recovery continues.`, suppression: true, afterGate: 3 },
+        ];
+        default: return [];
+    }
+}
 const CHANNEL_ICON = { 'App push': 'radio', 'SMS': 'send', 'Email': 'filetext', 'Voice call': 'user' };
 
 // Filler cases exist purely to give the queue realistic volume - they never run
@@ -284,9 +312,10 @@ let currentCaseId = null;
 let activeWorkspaceTab = 'agents'; // which of Agents/Report/Case Files/Correspondence is on screen
 
 function pushMessage(p, triggerIndex) {
-    const templates = MESSAGES[p.id];
+    const templates = MESSAGES(p);
     if (!templates || triggerIndex >= templates.length) return;
     const s = state[p.id];
+    if (s.messages.some(m => m.trigger === triggerIndex + 1)) return; // already sent - gates are one-shot but this guards against any repeat call
     const tmpl = templates[triggerIndex];
     const t = new Date();
     s.messages.push({ text: tmpl.text, channel: tmpl.channel, suppression: !!tmpl.suppression, time: t.toTimeString().slice(0, 5), trigger: triggerIndex + 1 });
@@ -294,6 +323,16 @@ function pushMessage(p, triggerIndex) {
     flashBadge();
     if (currentCaseId === p.id) renderThread(p);
     showToast(`Customer notified via ${tmpl.channel}`, 'msg', 'msg');
+}
+
+// Fires every message whose afterGate matches the screen whose gate was just
+// decided - a screen can trigger more than one message, or none at all.
+function pushMessagesForGate(p, screenIdx) {
+    const templates = MESSAGES(p);
+    if (!templates) return;
+    templates.forEach((tmpl, i) => {
+        if (tmpl.afterGate === screenIdx) pushMessage(p, i);
+    });
 }
 
 /* ============================================================
@@ -1338,6 +1377,30 @@ function renderGenericAgentReport(obj) {
 /* ============================================================
    APP INITIALIZATION
    ============================================================ */
+function initThemeToggle() {
+    const lightBtn = document.getElementById('themeLightBtn');
+    const darkBtn = document.getElementById('themeDarkBtn');
+    if (!lightBtn || !darkBtn) return;
+
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+        }
+        lightBtn.classList.toggle('active', theme !== 'dark');
+        darkBtn.classList.toggle('active', theme === 'dark');
+        try { localStorage.setItem('cfd-theme', theme); } catch (e) { }
+    }
+
+    let saved = 'light';
+    try { saved = localStorage.getItem('cfd-theme') || 'light'; } catch (e) { }
+    applyTheme(saved);
+
+    lightBtn.addEventListener('click', () => applyTheme('light'));
+    darkBtn.addEventListener('click', () => applyTheme('dark'));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 
     const NAV_ITEMS = [{ id: 'dashboard', label: 'Dashboard', icon: 'grid' }, { id: 'cases', label: 'Cases', icon: 'list', badge: true }, { id: 'live', label: 'Live', icon: 'radio' }, { id: 'settings', label: 'Settings', icon: 'gear' }];
@@ -1346,6 +1409,8 @@ document.addEventListener('DOMContentLoaded', () => {
         el.innerHTML = I(meta.icon, 17) + `<span>${meta.label}</span>` + (meta.badge ? `<span class="nav-badge" id="navCaseBadge"></span>` : '') + (meta.id === 'live' ? `<span class="live-glow"></span>` : '');
         el.addEventListener('click', () => goto(meta.id));
     });
+
+    initThemeToggle();
 
     const now = new Date();
     const todayElem = document.getElementById('todayStr');
@@ -1456,9 +1521,12 @@ function goto(pageId) {
 function caseCounts() {
     let notStarted = 0, inProgress = 0, awaitingGate = 0, needsDecision = 0, resolved = 0;
     PERSONAS.forEach(p => {
-        const s = state[p.id];
-        if (s.closed) resolved++; else if (s.escalated) needsDecision++;
-        else if (Object.keys(s.agentStatus).length === 0) notStarted++; else awaitingGate++;
+        const label = caseStatusLabel(p);
+        if (label === 'Done') resolved++;
+        else if (label === 'Needs decision') needsDecision++;
+        else if (label === 'Not started') notStarted++;
+        else if (label === 'In progress') inProgress++;
+        else awaitingGate++;
     });
     // Filler cases have no real state (they never run agents), but they are
     // genuinely "not started" - the dashboard's Total/Not started previously
@@ -1652,18 +1720,35 @@ let activeFilter = 'All';
 
 function renderFilterbar() {
     const c = caseCounts();
-    const counts = { All: PERSONAS.length, 'Not started': c.notStarted, 'In progress': c.inProgress, 'Awaiting gate': c.awaitingGate, 'Needs decision': c.needsDecision, 'Done': c.resolved };
+    const counts = { All: PERSONAS.length + FILLER.length, 'Not started': c.notStarted, 'In progress': c.inProgress, 'Awaiting gate': c.awaitingGate, 'Needs decision': c.needsDecision, 'Done': c.resolved };
     const filterbar = document.getElementById('filterbar');
     if (filterbar) {
-        filterbar.innerHTML = FILTERS.map(f => `<button class="fpill ${f === activeFilter ? 'active' : ''}" data-f="${f}">${f} <span class="n">${counts[f]}</span></button>`).join('');
+        // "Needs decision" only appears once something genuinely needs one -
+        // an empty filter pill sitting there permanently just reads as clutter.
+        const visibleFilters = FILTERS.filter(f => f !== 'Needs decision' || counts[f] > 0);
+        filterbar.innerHTML = visibleFilters.map(f => `<button class="fpill ${f === activeFilter ? 'active' : ''}" data-f="${f}">${f} <span class="n">${counts[f]}</span></button>`).join('');
         filterbar.querySelectorAll('.fpill').forEach(el => el.addEventListener('click', () => { activeFilter = el.dataset.f; renderCases(); }));
+        // If the active filter just disappeared (its count dropped to zero),
+        // fall back to "All" rather than leaving the table showing a filter
+        // that no longer has a visible button.
+        if (activeFilter === 'Needs decision' && counts['Needs decision'] === 0) {
+            activeFilter = 'All';
+        }
     }
 }
 
 function caseStatusLabel(p) {
     const s = state[p.id];
-    if (s.closed) return 'Done'; if (s.escalated) return 'Needs decision';
-    if (Object.keys(s.agentStatus).length === 0) return 'Not started'; return 'Awaiting gate';
+    if (s.closed) return 'Done';
+    if (s.escalated) return 'Needs decision';
+    if (Object.keys(s.agentStatus).length === 0) return 'Not started';
+    // "In progress" vs "Awaiting gate" was previously collapsed into one bucket -
+    // this genuinely distinguishes them: if the current screen's agents are
+    // still running, the case is actively in progress; once they've all
+    // finished and it's just waiting on a human decision, it's awaiting gate.
+    const scr = SCREENS[s.screenIdx];
+    const allCurrentDone = scr && scr.agents.every(ak => s.agentStatus[ak] === 'done' || s.agentStatus[ak] === 'blocked');
+    return allCurrentDone ? 'Awaiting gate' : 'In progress';
 }
 
 // Walks the screen/agent order backwards to find the last agent that actually
@@ -1802,6 +1887,24 @@ function renderLive() {
 function findPersona(id) { return PERSONAS.find(p => p.id === id); }
 
 /* Opens a clean, isolated single-case view (middle panel completely hidden) */
+// Pulled out of openCase() so agent-completion callbacks can refresh the
+// header pills too - previously urgency/SLA only appeared once you navigated
+// away and back, because nothing re-rendered them the moment Case Intake
+// actually finished.
+function renderCaseHeaderPills(p) {
+    if (p.id !== currentCaseId) return; // stale async callback - see renderStatusBanner
+    const dPills = document.getElementById('dPills');
+    if (!dPills) return;
+    const s = state[p.id];
+    const intakeDone = s.agentStatus && s.agentStatus.caseIntake === 'done';
+    const sla = slaInfo(p);
+    dPills.innerHTML =
+        (intakeDone && s.urgencyLevel
+            ? `<span class="tag tag-urgency-${s.urgencyLevel.toLowerCase()}">${s.urgencyLevel} urgency</span>${sla ? `<span class="tag ${sla.overdue ? 'tag-sla-overdue' : sla.remainingMs < 3600000 ? 'tag-sla-warn' : 'tag-sla-ok'}">SLA: ${formatSlaCountdown(sla.remainingMs)}</span>` : ''}`
+            : `<span class="tag tag-muted">Urgency pending Case Intake</span>`) +
+        (p.vulnerable ? `<span class="tag" style="background:var(--red-100);color:var(--red-700)">Vulnerable (71yo)</span>` : '');
+}
+
 function openCase(id) {
     currentCaseId = id;
     goto('detail');
@@ -1825,16 +1928,7 @@ function openCase(id) {
     if (dCustomer) dCustomer.textContent = p.customer;
 
     const dPills = document.getElementById('dPills');
-    if (dPills) {
-        const s = state[p.id];
-        const intakeDone = s.agentStatus && s.agentStatus.caseIntake === 'done';
-        const sla = slaInfo(p);
-        dPills.innerHTML = `<span class="tag">${p.tag}</span>` +
-            (intakeDone && s.urgencyLevel
-                ? `<span class="tag tag-urgency-${s.urgencyLevel.toLowerCase()}">${s.urgencyLevel} urgency</span>${sla ? `<span class="tag ${sla.overdue ? 'tag-sla-overdue' : sla.remainingMs < 3600000 ? 'tag-sla-warn' : 'tag-sla-ok'}">SLA: ${formatSlaCountdown(sla.remainingMs)}</span>` : ''}`
-                : `<span class="tag tag-muted">Urgency pending Case Intake</span>`) +
-            (p.vulnerable ? `<span class="tag" style="background:var(--red-100);color:var(--red-700)">Vulnerable (71yo)</span>` : '');
-    }
+    if (dPills) renderCaseHeaderPills(p);
 
     const backBtn = document.getElementById('backToCasesBtn');
     if (backBtn) {
@@ -1858,7 +1952,7 @@ function openCase(id) {
     document.querySelectorAll('.wtab').forEach(x => x.classList.toggle('active', x.dataset.wtab === 'agents'));
     const wbScrollEl = document.getElementById('wbScroll');
     if (wbScrollEl) wbScrollEl.style.display = 'block';
-    ['wbReportPanel', 'wbFilesPanel', 'wbCorrPanel', 'wbSummaryPanel'].forEach(pid => { const el = document.getElementById(pid); if (el) el.style.display = 'none'; });
+    ['wbReportPanel', 'wbCorrPanel', 'wbSummaryPanel'].forEach(pid => { const el = document.getElementById(pid); if (el) el.style.display = 'none'; });
     wireWorkspaceTabs(p);
 
     renderStatusBanner(p);
@@ -1903,7 +1997,7 @@ function renderFillerCaseShell(filler) {
 
     const wbScrollEl = document.getElementById('wbScroll');
     if (wbScrollEl) { wbScrollEl.style.display = 'block'; wbScrollEl.innerHTML = `<div class="filler-empty">No agent activity for this case.</div>`; }
-    ['wbReportPanel', 'wbFilesPanel', 'wbCorrPanel', 'wbSummaryPanel'].forEach(pid => { const el = document.getElementById(pid); if (el) el.style.display = 'none'; });
+    ['wbReportPanel', 'wbCorrPanel', 'wbSummaryPanel'].forEach(pid => { const el = document.getElementById(pid); if (el) el.style.display = 'none'; });
     document.querySelectorAll('.wtab').forEach(t => t.classList.toggle('active', t.dataset.wtab === 'agents'));
 
     const ringLabel = document.getElementById('ringLabel');
@@ -2282,7 +2376,7 @@ async function runScreenAgents(p) {
 
                 if (ak === 'caseIntake' && s.screenIdx === 0 && s.messages.length === 0) { pushMessage(p, 0); }
                 i++;
-                renderHorizontalStepper(p); renderActiveStageContent(p); renderDashboardIfVisible(); renderCasesIfVisible();
+                renderHorizontalStepper(p); renderActiveStageContent(p); renderCaseHeaderPills(p); renderDashboardIfVisible(); renderCasesIfVisible();
                 next();
             })
             .catch(err => {
@@ -2302,7 +2396,7 @@ async function runScreenAgents(p) {
                     s.slaStartedAt = Date.now();
                 }
                 i++;
-                renderHorizontalStepper(p); renderActiveStageContent(p); renderDashboardIfVisible(); renderCasesIfVisible();
+                renderHorizontalStepper(p); renderActiveStageContent(p); renderCaseHeaderPills(p); renderDashboardIfVisible(); renderCasesIfVisible();
                 next();
             });
     }
@@ -2320,7 +2414,7 @@ function handleGate(p, screenIdx, action, reason) {
     else if (action === 'override') showToast(`${gateLabel} overridden`, 'warn', 'alert');
     else showToast(`${gateLabel} escalated for senior review`, 'warn', 'alert');
 
-    pushMessage(p, screenIdx + 1);
+    pushMessagesForGate(p, screenIdx);
 
     if (action === 'escalate') {
         s.escalated = true; s.escalatedAt = screenIdx;
@@ -2493,7 +2587,7 @@ function wireWorkspaceTabs(p) {
         t.onclick = () => {
             activeWorkspaceTab = t.dataset.wtab;
             document.querySelectorAll('.wtab').forEach(x => x.classList.toggle('active', x === t));
-            const panels = { agents: 'wbScroll', report: 'wbReportPanel', files: 'wbFilesPanel', corr: 'wbCorrPanel', summary: 'wbSummaryPanel' };
+            const panels = { agents: 'wbScroll', report: 'wbReportPanel', corr: 'wbCorrPanel', summary: 'wbSummaryPanel' };
             Object.entries(panels).forEach(([key, id]) => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = (key === activeWorkspaceTab) ? 'block' : 'none';
@@ -2505,7 +2599,6 @@ function wireWorkspaceTabs(p) {
 
 function renderWorkspaceTab(p) {
     if (activeWorkspaceTab === 'report') renderReportTab(p);
-    else if (activeWorkspaceTab === 'files') renderCaseFilesTab(p);
     else if (activeWorkspaceTab === 'corr') renderCorrespondenceTab(p);
     else if (activeWorkspaceTab === 'summary') renderSummaryTab(p);
 }
@@ -2696,35 +2789,6 @@ function downloadDocumentGeneratorPdf(p) {
 }
 
 
-/* ---- Case Files tab: the actual input evidence, plus any sources an
-       agent's live response reported consulting ---- */
-function renderCaseFilesTab(p) {
-    const panel = document.getElementById('wbFilesPanel');
-    if (!panel) return;
-    const evidence = getCaseEvidence(p);
-
-    const labelFor = { contactNote: 'Contact centre note — read by Case Intake', authLog: 'Authorisation log — read by Transaction Classification', statementHistory: '24-month statement history — read by Recognition Check', profile: 'Customer profile — read by Case Intake, Shadow Credit' };
-
-    let html = `<div class="filesgrid">` + Object.entries(evidence).map(([key, filename]) => `
-        <div class="filecard"><div class="fc-ico">${I('pdf', 16)}</div>
-            <div><div class="fc-name">${filename}</div><div class="fc-used">${labelFor[key] || key}</div></div></div>`).join('') + `</div>`;
-
-    const sourcesFound = [];
-    Object.keys(p.a).forEach(ak => {
-        if (agentRunState(p, ak) !== 'done') return;
-        const parsed = parseAgentJson(p.a[ak].rawText);
-        const src = parsed && (parsed.sources || parsed.Sources || parsed.sourcesConsulted);
-        if (src && (Array.isArray(src) ? src.length : true)) sourcesFound.push({ agent: AGENTS[ak].label, src });
-    });
-    if (sourcesFound.length) {
-        html += sourcesFound.map(sf => `<div class="files-sources-note">${I('check', 12)} <span><b>${sf.agent}</b> additionally reported: ${Array.isArray(sf.src) ? sf.src.join(', ') : sf.src}</span></div>`).join('');
-    } else {
-        html += `<div class="files-sources-note">${I('filetext', 12)} <span>This list is the fixed evidence set for the case. Agents may report additional sources consulted once they run — none have yet.</span></div>`;
-    }
-
-    panel.innerHTML = html;
-}
-
 /* ---- Correspondence tab: Funds Trace (where it went) and
        Recall & Repatriation (outbound chases + replies), live ---- */
 function renderCorrespondenceTab(p) {
@@ -2856,7 +2920,7 @@ function openThread() {
     const tRef = document.getElementById('threadCaseRef');
     if (tRef) tRef.textContent = p.id;
 
-    const chans = Array.from(new Set((MESSAGES[p.id] || []).map(m => m.channel)));
+    const chans = Array.from(new Set((MESSAGES(p) || []).map(m => m.channel)));
     const tChanBar = document.getElementById('threadChannelBar');
     if (tChanBar) tChanBar.innerHTML = chans.map(c => `<span class="channel-chip">${I(CHANNEL_ICON[c] || 'msg', 11)} ${c}</span>`).join('');
 

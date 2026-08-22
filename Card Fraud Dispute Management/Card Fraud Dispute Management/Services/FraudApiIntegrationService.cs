@@ -32,7 +32,7 @@ namespace CardFraudDisputeApp.Services
             ["chargebackPreparation"] = "b87bdd53-de89-47f9-b384-697c4db1823e",
             ["recallRepatriation"] = "a58999c2-653d-45e6-8fda-de4d372aea82",
             ["obligationCheck"] = "f4c01899-68de-4f7c-aca6-ad6d1cee0cbd",
-            ["documentGenerator"] = "61c626f8-2379-48fc-8b7f-02df67d7f22e"
+            ["documentGenerator"] = "2f2a88df-fbbe-4f5a-8d25-9fd1a6e765ee"
         };
 
         public FraudApiIntegrationService(HttpClient httpClient, ILogger<FraudApiIntegrationService> logger)

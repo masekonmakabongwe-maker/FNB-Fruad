@@ -29,7 +29,7 @@
                 <div class="field-mock"><label>Password</label><div class="fm-input">••••••••••</div></div>
             </div>
             <button class="btn primary signin-btn" id="signinBtn" disabled>Sign in</button>
-            <div class="login-note">Demo environment — authentication is illustrative only.</div>
+           
         </div>
     </div>
 </div>
@@ -41,7 +41,7 @@
         <div class="divider-v"></div>
         <div class="product-name">Card Fraud Dispute Management</div>
         <div class="topbar-spacer"></div>
-        <div class="env-tag"><span class="liveping"></span>SYNTHETIC DATA · ARCH v2.1</div>
+        <div class="env-tag"><span class="liveping"></span>Powered by Purple Fabric </div>
         <div class="user-chip" id="userChip">
             <div class="avatar" id="topAvatar">—</div>
             <div class="user-meta" id="topUserMeta">—</div>
@@ -141,14 +141,12 @@
                                 <div class="wtabs">
                                     <div class="wtab active" data-wtab="agents">Agents</div>
                                     <div class="wtab" data-wtab="report">Report</div>
-                                    <div class="wtab" data-wtab="files">Case Files</div>
                                     <div class="wtab" data-wtab="corr">Correspondence</div>
                                     <div class="wtab" data-wtab="summary">Summary</div>
                                 </div>
                             </div>
                             <div class="wb-scroll" id="wbScroll"></div>
                             <div class="wb-scroll" id="wbReportPanel" style="display:none;"></div>
-                            <div class="wb-scroll" id="wbFilesPanel" style="display:none;"></div>
                             <div class="wb-scroll" id="wbCorrPanel" style="display:none;"></div>
                             <div class="wb-scroll" id="wbSummaryPanel" style="display:none;"></div>
                         </div>
@@ -174,6 +172,16 @@
                         <div class="clockrow"><span>Cyber offence report</span><span class="cv">72 hours</span></div>
                         <div class="clockrow"><span>Material cyber incident</span><span class="cv">24 hours</span></div>
                         <div class="clockrow" style="border-bottom:none;"><span>Internal dispute resolution</span><span class="cv">20 days</span></div>
+                    </div>
+                </div>
+                <div class="settings-card" style="margin-top:16px;">
+                    <div class="setting-row">
+                        <label>Appearance</label>
+                        <div class="sdesc">Switch between light and dark mode. Saved to this browser.</div>
+                        <div class="theme-toggle-wrap" id="themeToggleWrap">
+                            <button class="theme-toggle-btn" id="themeLightBtn" data-theme-choice="light">☀️ Light</button>
+                            <button class="theme-toggle-btn" id="themeDarkBtn" data-theme-choice="dark">🌙 Dark</button>
+                        </div>
                     </div>
                 </div>
             </section>

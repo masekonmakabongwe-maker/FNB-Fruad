@@ -35,6 +35,44 @@
     --mono: 'JetBrains Mono',ui-monospace,monospace;
 }
 
+/* ============================================================
+   DARK THEME - overrides the surface/text/border tokens and the
+   light "tinted" badge backgrounds. Accent colors (purple-500
+   through purple-900, used for buttons, gradients, and brand
+   elements) are left as-is, since a purple accent palette reads
+   fine on a dark background without adjustment. Known gap: some
+   agent-report content deeper in the app was built with hardcoded
+   hex colors rather than these variables, for practical speed at
+   the time - that content may not fully adapt to dark mode yet.
+   ============================================================ */
+[data-theme="dark"] {
+    --bg: #100B1E;
+    --white: #1B1530;
+    --border: #332B54;
+    --border-soft: #251E3D;
+    --text: #F2EFFA;
+    --text-2: #B4ACD4;
+    --text-3: #8079A0;
+    --purple-50: #211A3D;
+    --purple-100: #2C2350;
+    --purple-700: #B49AEE;
+    --purple-800: #C9B8F5;
+    --purple-900: #E8DFFC;
+    --green-100: #113322;
+    --amber-100: #3D2E0A;
+    --red-100: #3D1414;
+    --blue-100: #172C52;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.2), 0 10px 26px -14px rgba(0,0,0,0.5);
+    --shadow-card-hover: 0 4px 10px rgba(0,0,0,0.25), 0 24px 46px -18px rgba(0,0,0,0.6);
+    --grad-mesh: radial-gradient(1200px 620px at 100% -10%, rgba(139,79,240,0.08), transparent),radial-gradient(900px 520px at -8% 12%, rgba(93,33,182,0.08), transparent),radial-gradient(700px 500px at 50% 120%, rgba(124,58,237,0.05), transparent);
+}
+[data-theme="dark"] body {
+    background: var(--grad-mesh), var(--bg);
+}
+[data-theme="dark"] .app-footer {
+    background: rgba(27,21,48,0.92);
+}
+
 * {
     box-sizing: border-box;
 }
@@ -3494,4 +3532,34 @@ tr.filler {
 .fp-controls .btn[disabled] {
     opacity: 0.4;
     cursor: not-allowed;
+}
+
+/* ============================================================
+   THEME TOGGLE (Settings)
+   ============================================================ */
+.theme-toggle-wrap {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    background: var(--border-soft);
+    padding: 4px;
+    border-radius: 999px;
+    width: fit-content;
+}
+.theme-toggle-btn {
+    border: none;
+    background: transparent;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 700;
+    font-family: var(--font);
+    color: var(--text-2);
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.theme-toggle-btn.active {
+    background: var(--white);
+    color: var(--purple-700);
+    box-shadow: var(--shadow-card);
 }
