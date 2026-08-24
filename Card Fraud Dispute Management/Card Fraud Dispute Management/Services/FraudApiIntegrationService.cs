@@ -31,7 +31,7 @@ namespace CardFraudDisputeApp.Services
             ["shadowCredit"] = "baa98bb4-bb5a-405a-a04b-72fe1e01e7df",
             ["chargebackPreparation"] = "b87bdd53-de89-47f9-b384-697c4db1823e",
             ["recallRepatriation"] = "a58999c2-653d-45e6-8fda-de4d372aea82",
-            ["obligationCheck"] = "f4c01899-68de-4f7c-aca6-ad6d1cee0cbd",
+            ["obligationCheck"] = "ab3666f2-9f29-4f10-9d78-d7ae27f173f0",
             ["documentGenerator"] = "2f2a88df-fbbe-4f5a-8d25-9fd1a6e765ee"
         };
 
@@ -68,8 +68,7 @@ namespace CardFraudDisputeApp.Services
         public async Task<object> InvokeAgentAsync(
             string agentKey,
             Dictionary<string, string> upstreamOutputs,
-            byte[] fileBytes,
-            string pdfFileName,
+            List<(byte[] Bytes, string FileName)> caseFiles,
             string apiKey,
             string username,
             string password)
@@ -100,13 +99,24 @@ namespace CardFraudDisputeApp.Services
                     }
                 }
 
-                // Add PDF binary file
-                if (fileBytes != null && fileBytes.Length > 0)
+                // Add case files — real cases need several documents per agent
+                // (auth log, contact note, customer profile, etc.), not just one.
+                // HTTP multipart form-data supports multiple parts under the same
+                // field name, exactly like a browser file input with "multiple" set,
+                // so each file is added as its own part, all under CASE_FILES_TEXT.
+                if (caseFiles != null)
                 {
-                    var fileContent = new ByteArrayContent(fileBytes);
-                    fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
-                    content.Add(fileContent, "CASE_FILES_TEXT", pdfFileName);
-                    _logger.LogInformation("📄 Attaching PDF entity: 'CASE_FILES_TEXT' ({FileName}, {Size} bytes)", pdfFileName, fileBytes.Length);
+                    foreach (var file in caseFiles)
+                    {
+                        if (file.Bytes == null || file.Bytes.Length == 0) continue;
+                        var fileContent = new ByteArrayContent(file.Bytes);
+                        var contentType = file.FileName.EndsWith(".docx", StringComparison.OrdinalIgnoreCase)
+                            ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            : "application/pdf";
+                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+                        content.Add(fileContent, "CASE_FILES_TEXT", file.FileName);
+                        _logger.LogInformation("📄 Attaching file entity: 'CASE_FILES_TEXT' ({FileName}, {Size} bytes)", file.FileName, file.Bytes.Length);
+                    }
                 }
 
                 // 3. Initiate agent execution

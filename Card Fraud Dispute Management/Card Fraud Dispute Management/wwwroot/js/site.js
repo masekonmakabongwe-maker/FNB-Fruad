@@ -664,6 +664,8 @@ function renderRichAgentReport(data, fallbackAgentKey) {
             return renderRecallRepatriationReport(obj);
         case 'obligationcheck':
             return renderObligationCheckReport(obj);
+        case 'documentgenerator':
+            return renderDocumentGeneratorReport(obj);
         default:
             return renderGenericAgentReport(obj);
     }
@@ -1360,16 +1362,186 @@ function renderObligationCheckReport(obj) {
 /* ------------------------------------------------------------
    8. GENERIC FALLBACK RENDERER
    ------------------------------------------------------------ */
+// Converts camelCase / kebab-case / snake_case keys into readable labels,
+// e.g. "mandatoryDeponentFields" -> "Mandatory Deponent Fields".
+function humanizeKey(key) {
+    return key
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function formatLeafValue(val) {
+    if (val === null || val === undefined || val === '') return '—';
+    if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+    if (typeof val === 'number') return val.toLocaleString('en-ZA');
+    return String(val);
+}
+
+// Used when a raw value is being pulled out to serve as a section header
+// (see renderJsonAsProse below). If it already reads as prose (has spaces),
+// leave it alone - only code-identifier-shaped values ("caseRef") get the
+// camelCase/kebab/snake -> "Title Case" treatment.
+function humanizeValue(val) {
+    const str = String(val);
+    if (/\s/.test(str)) return str;
+    return humanizeKey(str);
+}
+
+// Recursively turns an arbitrary JSON object into readable, hierarchical
+// prose - section headers from key names, bullet lists for simple arrays,
+// repeated cards for arrays of objects, nested subsections for nested
+// objects. Used wherever an agent's real output doesn't match a bespoke
+// renderer's expected fields, so the fallback is never raw JSON syntax,
+// regardless of what shape a given agent's live response actually turns
+// out to have.
+function renderJsonAsProse(obj, depth) {
+    depth = depth || 0;
+    if (obj === null || obj === undefined) return '';
+    if (typeof obj !== 'object') return `<p style="font-size:12.5px;margin:0 0 6px;">${formatLeafValue(obj)}</p>`;
+
+    if (Array.isArray(obj)) {
+        if (obj.length === 0) return '<p style="color:var(--text-3);font-style:italic;font-size:12px;">None recorded.</p>';
+        const allPrimitive = obj.every(v => v === null || typeof v !== 'object');
+        if (allPrimitive) {
+            return `<ul style="margin:4px 0 12px;padding-left:20px;">${obj.map(v => `<li style="font-size:12.5px;margin-bottom:3px;color:var(--text-2);">${formatLeafValue(v)}</li>`).join('')}</ul>`;
+        }
+        return obj.map((item) => {
+            // Prefer a real label drawn from the object's own content over a
+            // meaningless "Item N" counter - most structured records name
+            // themselves one way or another.
+            const labelKey = ['title', 'name', 'label', 'field', 'id', 'ref', 'type'].find(k => item && item[k] && typeof item[k] !== 'object');
+            const header = labelKey ? humanizeValue(item[labelKey]) : null;
+            const rest = labelKey ? Object.fromEntries(Object.entries(item).filter(([k]) => k !== labelKey)) : item;
+            return `
+            <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+                ${header ? `<div style="font-size:11.5px;font-weight:800;color:var(--purple-700);margin-bottom:4px;">${header}</div>` : ''}
+                ${renderJsonAsProse(rest, depth + 1)}
+            </div>`;
+        }).join('');
+    }
+
+    const entries = Object.entries(obj).filter(([, v]) => v !== null && v !== undefined && v !== '');
+    if (entries.length === 0) return '<p style="color:var(--text-3);font-style:italic;font-size:12px;">No further detail recorded.</p>';
+
+    return entries.map(([key, val]) => {
+        const label = humanizeKey(key);
+        if (typeof val === 'object') {
+            return `
+                <div style="margin-bottom:${depth === 0 ? 14 : 10}px;">
+                    <div style="font-size:${depth === 0 ? '13px' : '12px'};font-weight:800;color:var(--text);margin-bottom:4px;">${label}</div>
+                    ${renderJsonAsProse(val, depth + 1)}
+                </div>`;
+        }
+        return `<p style="font-size:12.5px;margin:0 0 6px;color:var(--text-2);"><b style="color:var(--text);">${label}:</b> ${formatLeafValue(val)}</p>`;
+    }).join('');
+}
+
+// Document Generator - verified against a real completed response (24 Aug,
+// FNB-53042). Each document gets its own real title/template name as the
+// section header, not a generic counter; each binding renders as a plain
+// Field: Value row using the real field name, not another "Item N".
+function renderDocumentGeneratorReport(obj) {
+    const documents = gP(obj, 'documents') || [];
+    const summary = gP(obj, 'summary') || {};
+    const gaps = gP(summary, 'openPolicyGaps', 'open Policy Gaps') || [];
+
+    const statusBadge = (status) => {
+        const map = {
+            'ready-for-human-review': { cls: 'b-medium', label: 'Ready for human review' },
+            'blocked': { cls: 'b-high', label: 'Blocked' },
+            'completed': { cls: 'b-low', label: 'Completed' },
+        };
+        const m = map[status] || { cls: 'b-neutral', label: status ? String(status).replace(/-/g, ' ') : 'Unknown' };
+        return `<span class="badge ${m.cls}">${m.label}</span>`;
+    };
+
+    return `
+    <div class="agent-report-wrap" style="line-height:1.5;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">📑 Document Generator</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:4px;">${summary.documentCount != null ? summary.documentCount : documents.length} documents drafted · ${summary.readyCount || 0} ready · ${summary.blockedCount || 0} blocked</div>
+        </div>
+
+        ${documents.map(doc => {
+        const bindings = gP(doc, 'bindings') || [];
+        const sourceRefs = gP(doc, 'sourceRefs', 'source Refs') || [];
+        const unknownFields = gP(doc, 'unknownFields', 'unknown Fields') || [];
+        const blockReasons = gP(doc, 'blockReasons', 'block Reasons') || [];
+        const template = gP(doc, 'template') || {};
+        const docLabel = doc.title || template.name || gP(doc, 'documentRef', 'document Ref') || 'Document';
+
+        return `
+            <div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                    <div>
+                        <div style="font-size:13px;font-weight:800;">${docLabel}</div>
+                        <div style="font-size:10.5px;font-family:var(--mono);color:var(--text-3);margin-top:2px;">${gP(doc, 'documentRef', 'document Ref') || ''}${template.id ? ` · ${template.id}` : ''}${template.name ? ` · ${template.name}` : ''}</div>
+                    </div>
+                    ${statusBadge(doc.status)}
+                </div>
+
+                <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--text-2);">
+                    ${doc.submissionChannel ? `<span>📤 ${doc.submissionChannel}</span>` : ''}
+                    ${doc.requiresSignatory ? `<span>✍️ Signatory required</span>` : ''}
+                    ${gP(doc, 'requiresCommissionerOfOaths', 'requiresCommissionerOfOaths') ? `<span>⚖️ Commissioner of Oaths required</span>` : ''}
+                </div>
+
+                ${bindings.length ? `
+                <table style="width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px;">
+                    <tbody>
+                    ${bindings.map(b => {
+            const isUnknown = b.value === 'UNKNOWN' || b.value === undefined || b.value === null;
+            return `
+                        <tr style="border-top:1px solid var(--border-soft);">
+                            <td style="padding:5px 8px 5px 0;font-weight:700;color:var(--text);width:34%;vertical-align:top;">${humanizeKey(b.field || '')}</td>
+                            <td style="padding:5px 0;vertical-align:top;color:${isUnknown ? 'var(--amber-700)' : 'var(--text-2)'};font-weight:${isUnknown ? '700' : '400'};">${isUnknown ? 'Unknown' : b.value}</td>
+                        </tr>`;
+        }).join('')}
+                    </tbody>
+                </table>` : ''}
+
+                ${unknownFields.length ? `<div style="margin-top:8px;font-size:11px;color:var(--amber-700);"><b>Unknown fields:</b> ${unknownFields.map(humanizeKey).join(', ')}</div>` : ''}
+
+                ${blockReasons.length ? `
+                <div style="background:#FFF5F5;border:1px solid #FED7D7;border-radius:8px;padding:8px 10px;margin-top:8px;">
+                    <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--red-700);">Blocked because</div>
+                    <ul style="margin:4px 0 0;padding-left:16px;">${blockReasons.map(r => `<li style="font-size:11px;color:#742A2A;line-height:1.5;">${r}</li>`).join('')}</ul>
+                </div>` : ''}
+
+                ${sourceRefs.length ? `<div style="margin-top:8px;font-size:10px;color:var(--text-3);">Sources: ${sourceRefs.join(', ')}</div>` : ''}
+            </div>`;
+    }).join('')}
+
+        ${gaps.length ? `
+        <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px;margin-top:6px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#92400E;">Open Policy Gaps</div>
+            <ul style="margin:4px 0 0;padding-left:16px;">${gaps.map(g => `<li style="font-size:12px;color:#78350F;line-height:1.5;">${g}</li>`).join('')}</ul>
+        </div>` : ''}
+
+        ${summary.humanReviewRequired ? `<div style="margin-top:10px;font-size:12px;font-weight:700;color:var(--red-700);">⚠️ Human review required before any external use.</div>` : ''}
+    </div>`;
+}
+
 function renderGenericAgentReport(obj) {
     const rec = gP(obj, 'recommendation') || {};
+    // Exclude fields already shown in the header/recommendation so they
+    // don't get repeated in the prose body below.
+    const { agent, status, recommendation, ...rest } = obj;
     return `
     <div class="agent-report-wrap" style="line-height:1.5;">
         <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
             <div style="font-size:16px;font-weight:800;color:var(--purple-800);">${obj.agent || 'Agent Output'}</div>
             <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);">Status: ${obj.status || 'Completed'}</div>
         </div>
-        <div style="font-size:12.5px;color:var(--text-2);line-height:1.6;">
-            ${rec.reason || obj.desc || JSON.stringify(obj, null, 2)}
+        ${rec.reason ? `<div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;color:var(--purple-800);">Recommendation</div>
+            <div style="font-size:12.5px;color:var(--text-2);margin-top:2px;">${rec.action ? `<b>${String(rec.action).replace(/-/g, ' ')}</b>: ` : ''}${rec.reason}</div>
+        </div>` : ''}
+        <div style="font-size:12.5px;color:var(--text-2);">
+            ${renderJsonAsProse(rest)}
         </div>
     </div>`;
 }
@@ -1411,6 +1583,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     initThemeToggle();
+
+    const caseSearchInput = document.getElementById('caseSearchInput');
+    if (caseSearchInput) {
+        caseSearchInput.addEventListener('input', () => {
+            caseSearchTerm = caseSearchInput.value;
+            fillerPage = 0; // a fresh search always starts from a clean slate, not wherever pagination happened to be
+            renderCases();
+        });
+    }
 
     const now = new Date();
     const todayElem = document.getElementById('todayStr');
@@ -1564,7 +1745,11 @@ function renderDashboard() {
 
     let approved = 0, overridden = 0;
     PERSONAS.forEach(p => state[p.id].gates.forEach(g => { if (g === 'approve') approved++; else if (g === 'override') overridden++; }));
-    const gatesRemaining = PERSONAS.reduce((a, p) => a + state[p.id].gates.filter(g => g === null).length, 0);
+    // Every dummy case has the same 6 gate slots as a real case, all still
+    // pending since filler cases never run - without counting them here, this
+    // panel only ever reflected the 4 real cases (24 possible decisions) even
+    // though the queue actually holds 150 cases (900 possible decisions).
+    const gatesRemaining = PERSONAS.reduce((a, p) => a + state[p.id].gates.filter(g => g === null).length, 0) + FILLER.length * 6;
 
     const panelHumanDecisions = document.getElementById('panelHumanDecisions');
     if (panelHumanDecisions) {
@@ -1591,11 +1776,14 @@ function renderDashboard() {
     // than that stays "Pending", which is what makes this genuinely reflect what
     // has happened rather than a fixed label decided in advance. Each bucket also
     // tracks which case it came from, so the legend can open that case directly.
-    const dist = { recognised: 0, recoverable: 0, notrecoverable: 0, mixed: 0, pending: 0 };
+    // The 146 dummy cases never run, so they always sit in Pending too - without
+    // that, the donut only ever totalled 4 instead of the real queue of 150.
+    const dist = { recognised: 0, recoverable: 0, notrecoverable: 0, mixed: 0, pending: FILLER.length };
     const distCase = { recognised: null, recoverable: null, notrecoverable: null, mixed: null };
     PERSONAS.forEach(p => {
         const s = state[p.id];
-        const classified = s.agentStatus && s.agentStatus.transactionClassification === 'done';
+        const classified = s.agentStatus && s.agentStatus.transactionClassification === 'done'
+            && p.a.transactionClassification && p.a.transactionClassification.isFallback !== true;
         if (s.closed && p.recognised) { dist.recognised++; distCase.recognised = p.id; }
         else if (classified && p.classification === 'recoverable') { dist.recoverable++; distCase.recoverable = p.id; }
         else if (classified && p.classification === 'not-recoverable') { dist.notrecoverable++; distCase.notrecoverable = p.id; }
@@ -1717,6 +1905,7 @@ function drawDonut(segments) {
 
 const FILTERS = ['All', 'Not started', 'In progress', 'Awaiting gate', 'Needs decision', 'Done'];
 let activeFilter = 'All';
+let caseSearchTerm = '';
 
 function renderFilterbar() {
     const c = caseCounts();
@@ -1770,16 +1959,20 @@ function renderCases() {
     updateLiveNavIndicator(); renderFilterbar();
     const tbody = document.getElementById('casesTbody');
     if (!tbody) return;
+    const term = caseSearchTerm.trim().toLowerCase();
     let rows = PERSONAS.filter(p => activeFilter === 'All' || caseStatusLabel(p) === activeFilter);
+    if (term) rows = rows.filter(p => p.customer.toLowerCase().includes(term) || p.id.toLowerCase().includes(term));
     tbody.innerHTML = rows.map(p => {
         const s = state[p.id];
         const started = Object.keys(s.agentStatus).length > 0;
         const screenLabel = s.closed && p.recognised ? `2 of 2 (Deflected)` : s.closed ? `2 of 2` : started ? `${s.screenIdx + 1} of 6` : `0 of 6`;
         const statusLbl = caseStatusLabel(p);
 
-        // Urgency only shows once Case Intake has actually completed - before that,
-        // there is no real urgency.level to show, so the column stays neutral.
-        const intakeDone = s.agentStatus && s.agentStatus.caseIntake === 'done';
+        // Urgency only shows once Case Intake has genuinely completed (not via
+        // a timeout/error fallback) - before that, there is no real
+        // urgency.level to show, so the column stays neutral.
+        const intakeDone = s.agentStatus && s.agentStatus.caseIntake === 'done'
+            && p.a.caseIntake && p.a.caseIntake.isFallback !== true;
         const urgencyCls = s.urgencyLevel === 'Critical' ? 'b-crit' : s.urgencyLevel === 'High' ? 'b-high' : s.urgencyLevel === 'Medium' ? 'b-medium' : 'b-low';
         const urgencyCell = intakeDone && s.urgencyLevel ? `<span class="badge ${urgencyCls}">${s.urgencyLevel}</span>` : '<span class="sla-pending">—</span>';
 
@@ -1807,32 +2000,39 @@ function renderCases() {
       <td>${recommendationCell}</td>
       <td>${humanCell}</td>
     </tr>`;
-    }).join('') + FILLER.slice(fillerPage * FILLER_PAGE_SIZE, (fillerPage + 1) * FILLER_PAGE_SIZE).map(f => `<tr class="rowlink filler" data-id="${f.ref}">
+    }).join('') + (term ? FILLER.filter(f => f.name.toLowerCase().includes(term) || f.ref.toLowerCase().includes(term)) : FILLER.slice(fillerPage * FILLER_PAGE_SIZE, (fillerPage + 1) * FILLER_PAGE_SIZE)).map(f => `<tr class="rowlink filler" data-id="${f.ref}">
       <td><div class="cust-name">${f.name}</div><div class="cust-ref">${f.ref}</div></td>
       <td><span class="sla-pending">—</span></td>
       <td><span class="sla-pending">—</span></td>
       <td><span class="badge b-neutral">Not started</span></td>
       <td>0 of 6</td>
-      <td><button class="btn pill-btn ghost" data-open="${f.ref}">View</button></td>
+      <td><span class="sla-pending">—</span></td>
       <td>—</td>
     </tr>`).join('');
 
-    const totalFillerPages = Math.max(1, Math.ceil(FILLER.length / FILLER_PAGE_SIZE));
     const pag = document.getElementById('fillerPagination');
     if (pag) {
-        const rangeStart = fillerPage * FILLER_PAGE_SIZE + 1;
-        const rangeEnd = Math.min((fillerPage + 1) * FILLER_PAGE_SIZE, FILLER.length);
-        pag.innerHTML = `
+        if (term) {
+            // Searching bypasses pagination entirely - shows every match across
+            // all 146, not just whichever page happened to be open.
+            const matchCount = FILLER.filter(f => f.name.toLowerCase().includes(term) || f.ref.toLowerCase().includes(term)).length;
+            pag.innerHTML = `<span class="fp-range">${matchCount} queued case${matchCount === 1 ? '' : 's'} match "${caseSearchTerm.trim()}"</span>`;
+        } else {
+            const totalFillerPages = Math.max(1, Math.ceil(FILLER.length / FILLER_PAGE_SIZE));
+            const rangeStart = fillerPage * FILLER_PAGE_SIZE + 1;
+            const rangeEnd = Math.min((fillerPage + 1) * FILLER_PAGE_SIZE, FILLER.length);
+            pag.innerHTML = `
         <span class="fp-range">Showing ${rangeStart}–${rangeEnd} of ${FILLER.length} additional queued cases</span>
         <div class="fp-controls">
             <button class="btn ghost pill-btn" id="fpPrev" ${fillerPage === 0 ? 'disabled' : ''}>${I('arrowLeft', 13)} Prev</button>
             <span class="fp-page">Page ${fillerPage + 1} of ${totalFillerPages}</span>
             <button class="btn ghost pill-btn" id="fpNext" ${fillerPage >= totalFillerPages - 1 ? 'disabled' : ''}>Next ${I('arrowRight', 13)}</button>
         </div>`;
-        const fpPrev = document.getElementById('fpPrev');
-        if (fpPrev) fpPrev.addEventListener('click', () => { if (fillerPage > 0) { fillerPage--; renderCases(); } });
-        const fpNext = document.getElementById('fpNext');
-        if (fpNext) fpNext.addEventListener('click', () => { if (fillerPage < totalFillerPages - 1) { fillerPage++; renderCases(); } });
+            const fpPrev = document.getElementById('fpPrev');
+            if (fpPrev) fpPrev.addEventListener('click', () => { if (fillerPage > 0) { fillerPage--; renderCases(); } });
+            const fpNext = document.getElementById('fpNext');
+            if (fpNext) fpNext.addEventListener('click', () => { if (fillerPage < totalFillerPages - 1) { fillerPage++; renderCases(); } });
+        }
     }
 
     tbody.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); openCase(b.dataset.open); }));
@@ -1891,18 +2091,85 @@ function findPersona(id) { return PERSONAS.find(p => p.id === id); }
 // header pills too - previously urgency/SLA only appeared once you navigated
 // away and back, because nothing re-rendered them the moment Case Intake
 // actually finished.
+// Returns true/false once Case Intake has genuinely (not via fallback)
+// confirmed vulnerability either way, or null while that's still unknown -
+// used instead of the case's static narrative flag, which used to show
+// "Vulnerable" confidently regardless of whether any agent had actually run.
+function getLiveVulnerability(p) {
+    const s = state[p.id];
+    const intakeGenuinelyDone = s.agentStatus && s.agentStatus.caseIntake === 'done'
+        && p.a.caseIntake && p.a.caseIntake.isFallback !== true;
+    if (!intakeGenuinelyDone || !p.a.caseIntake.rawText) return null;
+    const parsed = parseAgentJson(p.a.caseIntake.rawText);
+    if (!parsed || !parsed.vulnerability) return null;
+    return !!parsed.vulnerability.flagged;
+}
+
 function renderCaseHeaderPills(p) {
     if (p.id !== currentCaseId) return; // stale async callback - see renderStatusBanner
     const dPills = document.getElementById('dPills');
     if (!dPills) return;
     const s = state[p.id];
-    const intakeDone = s.agentStatus && s.agentStatus.caseIntake === 'done';
+    const intakeGenuinelyDone = s.agentStatus && s.agentStatus.caseIntake === 'done'
+        && p.a.caseIntake && p.a.caseIntake.isFallback !== true;
     const sla = slaInfo(p);
+    const liveVulnerable = getLiveVulnerability(p);
     dPills.innerHTML =
-        (intakeDone && s.urgencyLevel
+        (intakeGenuinelyDone && s.urgencyLevel
             ? `<span class="tag tag-urgency-${s.urgencyLevel.toLowerCase()}">${s.urgencyLevel} urgency</span>${sla ? `<span class="tag ${sla.overdue ? 'tag-sla-overdue' : sla.remainingMs < 3600000 ? 'tag-sla-warn' : 'tag-sla-ok'}">SLA: ${formatSlaCountdown(sla.remainingMs)}</span>` : ''}`
             : `<span class="tag tag-muted">Urgency pending Case Intake</span>`) +
-        (p.vulnerable ? `<span class="tag" style="background:var(--red-100);color:var(--red-700)">Vulnerable (71yo)</span>` : '');
+        (liveVulnerable === true ? `<span class="tag" style="background:var(--red-100);color:var(--red-700)">Vulnerable</span>` : '');
+}
+
+// Pulls disputed amount / channel / product from the real, live Case Intake
+// response once it's completed - genuinely completed, not just attempted.
+// A timed-out or connection-failed agent still gets marked 'done' (so the
+// pipeline can proceed), so agentStatus alone can't tell real success apart
+// from a fallback - isFallback is what actually distinguishes them. This
+// used to fall back to the case's static narrative data whenever live data
+// wasn't available, which looked identical to a real result and could show
+// confidently-wrong information after a timeout. It now shows a plain
+// pending placeholder instead - nothing is ever shown as fact unless an
+// agent genuinely said so.
+function getLiveCaseInfo(p) {
+    const s = state[p.id];
+    const info = { amount: '—', channel: '—', product: '—', live: false };
+    const intakeGenuinelyDone = s.agentStatus && s.agentStatus.caseIntake === 'done'
+        && p.a.caseIntake && p.a.caseIntake.isFallback !== true;
+    if (!intakeGenuinelyDone || !p.a.caseIntake.rawText) return info;
+
+    const parsed = parseAgentJson(p.a.caseIntake.rawText);
+    if (!parsed) return info;
+
+    const reportedEvent = gP(parsed, 'reportedEvent', 'reported Event') || {};
+    const reportedTotal = gP(reportedEvent, 'reportedTotal', 'reported Total') || {};
+    const customer = gP(parsed, 'customer') || {};
+
+    if (reportedTotal.amount != null) {
+        info.amount = `R${Number(reportedTotal.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`;
+        info.live = true;
+    }
+    const liveChannel = gP(reportedEvent, 'channel') || gP(parsed, 'channel') || gP(customer, 'channel');
+    if (liveChannel) { info.channel = liveChannel; info.live = true; }
+
+    const liveProduct = gP(customer, 'product') || gP(customer, 'accountProduct', 'account Product') || gP(parsed, 'product');
+    if (liveProduct) { info.product = liveProduct; info.live = true; }
+
+    return info;
+}
+
+// Same stale-callback guard as renderCaseHeaderPills - wired into the same
+// agent-completion refresh points so the header updates the moment Case
+// Intake actually finishes, not only on next navigation.
+function renderCaseHeaderInfo(p) {
+    if (p.id !== currentCaseId) return;
+    const dInfoBox = document.getElementById('dInfoBox');
+    if (!dInfoBox) return;
+    const info = getLiveCaseInfo(p);
+    dInfoBox.innerHTML = `
+        <div class="wb-info-item"><div class="il">Disputed amount</div><div class="iv">${info.amount}</div></div>
+        <div class="wb-info-item"><div class="il">Channel</div><div class="iv">${info.channel}</div></div>
+        <div class="wb-info-item"><div class="il">Product</div><div class="iv">${info.product}</div></div>`;
 }
 
 function openCase(id) {
@@ -1939,12 +2206,7 @@ function openCase(id) {
     if (threadBtn) threadBtn.removeAttribute('disabled');
 
     const dInfoBox = document.getElementById('dInfoBox');
-    if (dInfoBox) {
-        dInfoBox.innerHTML = `
-        <div class="wb-info-item"><div class="il">Disputed amount</div><div class="iv">${p.amount}</div></div>
-        <div class="wb-info-item"><div class="il">Channel</div><div class="iv">${p.channel}</div></div>
-        <div class="wb-info-item"><div class="il">Product</div><div class="iv">${p.product}</div></div>`;
-    }
+    if (dInfoBox) renderCaseHeaderInfo(p);
 
     closeThread();
 
@@ -2137,7 +2399,11 @@ function renderAgentCard(p, agentKey) {
     let timerBadge = '';
     if (st === 'running') {
         const liveSec = data.elapsedSeconds || 0;
-        timerBadge = `<span class="agent-timer-badge live">${I('timer', 11)} ${formatLiveClock(liveSec)}</span>`;
+        // data-timer-for gives the once-a-second tick a precise target to
+        // update via textContent, instead of re-rendering the whole stage
+        // (which used to re-add every card's entrance animation every
+        // second - that repeated fade-in-and-rise was the "blinking").
+        timerBadge = `<span class="agent-timer-badge live">${I('timer', 11)} <span data-timer-for="${agentKey}">${formatLiveClock(liveSec)}</span></span>`;
     } else if (st === 'done' && data.elapsedSeconds) {
         timerBadge = `<span class="agent-timer-badge completed">${I('timer', 11)} Took ${formatDuration(data.elapsedSeconds)}</span>`;
         if (data.completedAt) {
@@ -2301,7 +2567,15 @@ async function runScreenAgents(p) {
 
         agentTimerIntervals[timerKey] = setInterval(() => {
             p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
-            renderActiveStageContent(p);
+            // Surgical update - just the timer text, not a full re-render of
+            // the whole stage. A full renderActiveStageContent() every second
+            // was regenerating every agent card's HTML from scratch, which
+            // re-triggered their entrance animation every second - that
+            // repeated fade-in-and-rise was the "blinking".
+            if (p.id === currentCaseId) {
+                const timerEl = document.querySelector(`[data-timer-for="${ak}"]`);
+                if (timerEl) timerEl.textContent = formatLiveClock(p.a[ak].elapsedSeconds);
+            }
         }, 1000);
 
         renderHorizontalStepper(p);
@@ -2335,6 +2609,7 @@ async function runScreenAgents(p) {
                 p.a[ak].completedAt = new Date().toISOString();
 
                 if (apiRes.success && apiRes.outputText) {
+                    p.a[ak].isFallback = false; // explicit, so a genuine success can never be mistaken for one
                     p.a[ak].rawText = apiRes.outputText;
                     const parsed = parseAgentJson(apiRes.outputText);
                     if (parsed && typeof parsed === 'object') {
@@ -2358,6 +2633,10 @@ async function runScreenAgents(p) {
                     p.a[ak].finding = 'Live API Timeout / Fallback Applied';
                     p.a[ak].desc = apiRes.message || 'Server took longer than 120s to respond.';
                     p.a[ak].tone = 'flag';
+                    p.a[ak].isFallback = true; // NOT a real result - every display surface that shows derived
+                    // info (header amount/channel/product, classification, trigger, urgency) must check this
+                    // before trusting anything on this agent, otherwise a timed-out agent looks identical to
+                    // a genuine success and static demo data quietly stands in for real analysis.
                     p.a[ak].rawText = JSON.stringify({
                         status: 'completed',
                         agent: ak,
@@ -2376,7 +2655,7 @@ async function runScreenAgents(p) {
 
                 if (ak === 'caseIntake' && s.screenIdx === 0 && s.messages.length === 0) { pushMessage(p, 0); }
                 i++;
-                renderHorizontalStepper(p); renderActiveStageContent(p); renderCaseHeaderPills(p); renderDashboardIfVisible(); renderCasesIfVisible();
+                renderHorizontalStepper(p); renderActiveStageContent(p); renderCaseHeaderPills(p); renderCaseHeaderInfo(p); renderDashboardIfVisible(); renderCasesIfVisible();
                 next();
             })
             .catch(err => {
@@ -2389,6 +2668,7 @@ async function runScreenAgents(p) {
                 p.a[ak].finding = 'Connection Error';
                 p.a[ak].desc = err.message || 'Failed to reach local API service.';
                 p.a[ak].tone = 'block';
+                p.a[ak].isFallback = true; // see the timeout branch above - same reasoning
                 if (ak === 'caseIntake') p.a[ak].urgencyLevel = 'High';
                 s.agentStatus[ak] = 'done';
                 if (ak === 'caseIntake' && !s.slaStartedAt) {
@@ -2396,7 +2676,7 @@ async function runScreenAgents(p) {
                     s.slaStartedAt = Date.now();
                 }
                 i++;
-                renderHorizontalStepper(p); renderActiveStageContent(p); renderCaseHeaderPills(p); renderDashboardIfVisible(); renderCasesIfVisible();
+                renderHorizontalStepper(p); renderActiveStageContent(p); renderCaseHeaderPills(p); renderCaseHeaderInfo(p); renderDashboardIfVisible(); renderCasesIfVisible();
                 next();
             });
     }
@@ -2633,24 +2913,36 @@ function buildCaseFileHtml(p, forExport) {
     const statusPill = s.closed ? 'Closed' : s.escalated ? 'Escalated' : doneAgents === 0 ? 'Awaiting agents…' : 'In progress';
     const statusCls = s.closed ? 'clean' : s.escalated ? 'block' : 'flag';
 
-    const intakeDone = s.agentStatus && s.agentStatus.caseIntake === 'done';
+    const intakeGenuinelyDone = s.agentStatus && s.agentStatus.caseIntake === 'done'
+        && p.a.caseIntake && p.a.caseIntake.isFallback !== true;
     const sla = slaInfo(p);
 
-    // Vulnerability: prefer what Case Intake actually flagged live, fall back
-    // to the case's narrative default only if the agent hasn't run yet.
-    const caseIntakeRaw = p.a.caseIntake && p.a.caseIntake.rawText ? parseAgentJson(p.a.caseIntake.rawText) : null;
-    const liveVulnerable = caseIntakeRaw && caseIntakeRaw.vulnerability ? !!caseIntakeRaw.vulnerability.flagged : null;
-    const vulnerable = liveVulnerable !== null ? liveVulnerable : p.vulnerable;
+    // Vulnerability only ever reflects what Case Intake genuinely (not via
+    // fallback) confirmed - previously fell back to the case's static
+    // narrative flag whenever live data wasn't available, which showed
+    // "Not vulnerable" or "Vulnerable" as fact even when no agent had
+    // actually run yet.
+    const liveVulnerable = getLiveVulnerability(p);
+    const vulnerableLabel = liveVulnerable === true ? 'Vulnerable customer' : liveVulnerable === false ? 'Not vulnerable' : 'Unknown — pending Case Intake';
 
     // Current classification mirrors the dashboard donut's live-gated logic -
     // a case only shows a real classification once it has actually reached
-    // that point, not from the moment the app loads.
-    const classified = s.agentStatus && s.agentStatus.transactionClassification === 'done';
+    // that point, not from the moment the app loads, and not off a fallback.
+    const classifiedGenuinely = s.agentStatus && s.agentStatus.transactionClassification === 'done'
+        && p.a.transactionClassification && p.a.transactionClassification.isFallback !== true;
     const currentBucket = s.closed && p.recognised ? 'Recognised — deflected'
-        : classified ? { recoverable: 'Recoverable (CNP)', 'not-recoverable': 'Chase & Repatriate', mixed: 'Mixed rails / Sim Swap' }[p.classification] || 'Pending'
+        : classifiedGenuinely ? { recoverable: 'Recoverable (CNP)', 'not-recoverable': 'Chase & Repatriate', mixed: 'Mixed rails / Sim Swap' }[p.classification] || 'Pending'
             : 'Pending';
 
+    // Trigger used to be the case's static narrative headline, shown
+    // unconditionally regardless of whether any agent had run - now it's
+    // Case Intake's own real finding once genuinely available, or an honest
+    // "not yet run" placeholder before that.
+    const triggerText = intakeGenuinelyDone && p.a.caseIntake.finding ? p.a.caseIntake.finding : 'Pending — awaiting Case Intake';
+
     const decidedGates = SCREENS.map((scr, i) => s.gates[i] ? { i, scr, action: s.gates[i], approver: s.gateApprover[i], reason: s.gateReason[i], decidedAt: s.gateDecidedAt[i] } : null).filter(Boolean);
+
+    const liveInfo = getLiveCaseInfo(p);
 
     return `
     <div class="case-file-header">
@@ -2670,18 +2962,18 @@ function buildCaseFileHtml(p, forExport) {
     <div class="cf-section-label">Customer &amp; Case Identity</div>
     <div class="cf-grid">
         <div><div class="cf-label">Full name</div><div class="cf-value">${p.customer}</div><div class="cf-subvalue">${p.id}</div></div>
-        <div><div class="cf-label">Tag · Channel</div><div class="cf-value">${p.tag} · ${p.channel}</div></div>
-        <div><div class="cf-label">Product</div><div class="cf-value">${p.product}</div></div>
-        <div><div class="cf-label">Disputed amount</div><div class="cf-value">${p.amount}</div></div>
-        <div><div class="cf-label">Urgency</div><div class="cf-value">${intakeDone && s.urgencyLevel ? s.urgencyLevel : '—'}</div></div>
+        <div><div class="cf-label">Tag · Channel</div><div class="cf-value">${p.tag} · ${liveInfo.channel}</div></div>
+        <div><div class="cf-label">Product</div><div class="cf-value">${liveInfo.product}</div></div>
+        <div><div class="cf-label">Disputed amount</div><div class="cf-value">${liveInfo.amount}</div></div>
+        <div><div class="cf-label">Urgency</div><div class="cf-value">${intakeGenuinelyDone && s.urgencyLevel ? s.urgencyLevel : '—'}</div></div>
         <div><div class="cf-label">SLA</div><div class="cf-value">${sla ? formatSlaCountdown(sla.remainingMs) : '—'}</div></div>
     </div>
 
     <div class="cf-section-label">Case Overview</div>
     <div class="cf-grid">
-        <div class="cf-span2"><div class="cf-label">Trigger</div><div class="cf-value">${p.headline}</div></div>
+        <div class="cf-span2"><div class="cf-label">Trigger</div><div class="cf-value">${triggerText}</div></div>
         <div><div class="cf-label">Current classification</div><div class="cf-value">${currentBucket}</div></div>
-        <div><div class="cf-label">Vulnerability</div><div class="cf-value">${vulnerable ? 'Vulnerable customer' : 'Not vulnerable'}</div></div>
+        <div><div class="cf-label">Vulnerability</div><div class="cf-value">${vulnerableLabel}</div></div>
     </div>
 
     <div class="cf-section-label">Agent Findings</div>
