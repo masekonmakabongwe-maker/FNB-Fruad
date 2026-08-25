@@ -26,6 +26,7 @@ function I(name, size) {
         arrowLeft: `<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>`,
         arrowRight: `<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>`,
         download: `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>`,
+        refresh: `<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>`,
         timer: `<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>`
     };
     return `<svg ${s}>${paths[name] || ''}</svg>`;
@@ -54,17 +55,17 @@ const SCREENS = [
 ];
 
 const AGENTS = {
-    caseIntake: { label: 'Case Intake', tier: 'standard', icon: 'search', reads: ['Case System', 'Contact Centre', 'Customer & CRM', 'Mandates & Descriptors'] },
-    recognitionCheck: { label: 'Recognition Check', tier: 'reasoning', icon: 'shieldcheck', reads: ['Case Intake Output', 'Contact Note PDF'] },
-    fraudAssessment: { label: 'Fraud Assessment', tier: 'reasoning', icon: 'shieldcheck', reads: ['Authentication', 'MNO Feed', 'fraud-policy.pdf'] },
-    transactionClassification: { label: 'Transaction Classification', tier: 'reasoning', icon: 'card', reads: ['Card Management', 'Payments Platform', 'dispute-rules.pdf'] },
-    fundsTrace: { label: 'Funds Trace', tier: 'reasoning', icon: 'trace', reads: ['Card Management', 'Fraud Prevention Registry'] },
-    shadowCredit: { label: 'Shadow Credit', tier: 'reasoning', icon: 'piggy', reads: ['Core Banking / EDW', 'fraud-policy.pdf'] },
-    chargebackPreparation: { label: 'Chargeback Preparation', tier: 'standard', icon: 'filetext', reads: ['Card Management', 'dispute-rules.pdf'] },
-    recallRepatriation: { label: 'Recall & Repatriation', tier: 'reasoning', icon: 'send', reads: ['Interbank Channel', 'Card Management'] },
-    obligationCheck: { label: 'Obligation Check', tier: 'reasoning', icon: 'clock', reads: ['regulatory-instruments.pdf'] },
-    documentGenerator: { label: 'Document Generator', tier: 'standard', icon: 'fileplus', reads: ['regulatory-instruments.pdf', 'document-templates.pdf'] },
-    messageComposer: { label: 'Message Composer', tier: 'standard', icon: 'msg', reads: [] },
+    caseIntake: { label: 'Case Intake', tier: 'standard', icon: 'search' },
+    recognitionCheck: { label: 'Recognition Check', tier: 'reasoning', icon: 'shieldcheck' },
+    fraudAssessment: { label: 'Fraud Assessment', tier: 'reasoning', icon: 'shieldcheck' },
+    transactionClassification: { label: 'Transaction Classification', tier: 'reasoning', icon: 'card' },
+    fundsTrace: { label: 'Funds Trace', tier: 'reasoning', icon: 'trace' },
+    shadowCredit: { label: 'Shadow Credit', tier: 'reasoning', icon: 'piggy' },
+    chargebackPreparation: { label: 'Chargeback Preparation', tier: 'standard', icon: 'filetext' },
+    recallRepatriation: { label: 'Recall & Repatriation', tier: 'reasoning', icon: 'send' },
+    obligationCheck: { label: 'Obligation Check', tier: 'reasoning', icon: 'clock' },
+    documentGenerator: { label: 'Document Generator', tier: 'standard', icon: 'fileplus' },
+    messageComposer: { label: 'Message Composer', tier: 'standard', icon: 'msg' },
 };
 
 // Map specifying exact allowed upstream entities per agent
@@ -100,14 +101,6 @@ const AGENT_MANDATORY_INPUTS = {
     recallRepatriation: ['TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT'],
     obligationCheck: ['CASE_INTAKE_OUTPUT_TEXT', 'RECOGNITION_CHECK_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT', 'RECALL_REPATRIATION_OUTPUT_TEXT'],
     documentGenerator: ['CASE_INTAKE_OUTPUT_TEXT', 'RECOGNITION_CHECK_OUTPUT_TEXT', 'FRAUD_ASSESSMENT_OUTPUT_TEXT', 'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT', 'FUNDS_TRACE_OUTPUT_TEXT', 'SHADOW_CREDIT_OUTPUT_TEXT', 'CHARGEBACK_PREPARATION_OUTPUT_TEXT', 'RECALL_REPATRIATION_OUTPUT_TEXT', 'OBLIGATION_CHECK_OUTPUT_TEXT']
-};
-
-const READS_META = {
-    'Case System': { type: 'system' }, 'Contact Centre': { type: 'system' }, 'Customer & CRM': { type: 'system' },
-    'Mandates & Descriptors': { type: 'system', q: true }, 'Authentication': { type: 'system' }, 'MNO Feed': { type: 'system', q: true },
-    'fraud-policy.pdf': { type: 'doc' }, 'Card Management': { type: 'system' }, 'Payments Platform': { type: 'system' },
-    'Fraud Prevention Registry': { type: 'system', q: true }, 'dispute-rules.pdf': { type: 'doc' }, 'Core Banking / EDW': { type: 'system' },
-    'Interbank Channel': { type: 'system', q: true }, 'regulatory-instruments.pdf': { type: 'doc' }, 'document-templates.pdf': { type: 'doc' },
 };
 
 const ARTEFACT_DEFS = [
@@ -2168,8 +2161,7 @@ function renderCaseHeaderInfo(p) {
     const info = getLiveCaseInfo(p);
     dInfoBox.innerHTML = `
         <div class="wb-info-item"><div class="il">Disputed amount</div><div class="iv">${info.amount}</div></div>
-        <div class="wb-info-item"><div class="il">Channel</div><div class="iv">${info.channel}</div></div>
-        <div class="wb-info-item"><div class="il">Product</div><div class="iv">${info.product}</div></div>`;
+        <div class="wb-info-item"><div class="il">Channel</div><div class="iv">${info.channel}</div></div>`;
 }
 
 function openCase(id) {
@@ -2246,8 +2238,7 @@ function renderFillerCaseShell(filler) {
     if (dInfoBox) {
         dInfoBox.innerHTML = `
         <div class="wb-info-item"><div class="il">Disputed amount</div><div class="iv">Not yet reported</div></div>
-        <div class="wb-info-item"><div class="il">Channel</div><div class="iv">—</div></div>
-        <div class="wb-info-item"><div class="il">Product</div><div class="iv">—</div></div>`;
+        <div class="wb-info-item"><div class="il">Channel</div><div class="iv">—</div></div>`;
     }
 
     const dStatusBanner = document.getElementById('dStatusBanner');
@@ -2329,26 +2320,12 @@ function renderActiveStageContent(p) {
     const complete = stageIdx < s.screenIdx || (s.closed && stageIdx === s.screenIdx);
     const running = stageIdx === s.screenIdx && !s.closed && !s.escalated;
 
-    // Resolve dynamic reads for the active case
-    const evidence = getCaseEvidence(p);
-    const reads = new Set();
-    scr.agents.forEach(ak => {
-        AGENTS[ak].reads.forEach(r => {
-            if (r === 'Contact Note PDF') {
-                reads.add(evidence.contactNote);
-            } else {
-                reads.add(r);
-            }
-        });
-    });
-
     let html = `<div class="stage-section active-focus">
       <div class="stage-section-head">
         <div class="ssnum">${scr.n}</div>
         <div><div class="stage-section-title">${p.recognised && stageIdx === 1 ? 'Recognition Review' : scr.title}</div><div class="stage-section-sub">${p.recognised && stageIdx === 1 ? 'Proceed as fraud, or show the customer' : scr.sub}</div></div>
         <span class="stage-status-pill ${complete ? 'st-complete' : running ? 'st-running' : ''}">${complete ? 'Complete' : running ? 'Running' : ''}</span>
-      </div>
-      <div class="reads-inline" style="margin-bottom:16px;">${Array.from(reads).map(r => { const m = READS_META[r] || { type: 'system' }; return `<span class="read-chip-sm">${r}${m.q ? ' <span class="rq">?</span>' : ''}</span>`; }).join('')}</div>`;
+      </div>`;
 
     if (stageIdx === 1 && p.recognised && (complete || stageIdx === s.screenIdx)) {
         html += `<div class="closed-callout"><div class="cc-title">${I('check', 16)} Case deflected — recognised subscription</div><div class="cc-body">Not fraud. Active mandate verified at R349/mo; price rose to R429 this month. Screens 03–06 never run.</div></div>`;
@@ -2371,6 +2348,10 @@ function renderActiveStageContent(p) {
     }));
     container.querySelectorAll('[data-gate]').forEach(el => el.addEventListener('click', () => openGateReasonModal(p, parseInt(el.dataset.gate, 10), el.dataset.action)));
     container.querySelectorAll('[data-policy]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openPolicyModal(p); }));
+    container.querySelectorAll('[data-rerun]').forEach(el => el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        rerunAgent(p, el.dataset.rerun);
+    }));
 
     // Keep whichever of Report / Case Files / Correspondence is on screen live-updated
     // as agents complete, without needing the user to re-click the tab.
@@ -2438,10 +2419,20 @@ function renderAgentCard(p, agentKey) {
     <div class="ac-foot" style="margin-top:12px;">${timerBadge}</div>
   ` : `<div class="ac-desc">Waiting on upstream stage.</div>`;
 
+    // The real evidence files this agent actually used for this case, from
+    // the live API response - not a guess reconstructed client-side.
+    const filesLine = (st === 'done' || st === 'blocked') && data.filesUsed && data.filesUsed.length
+        ? `<div class="ac-files">${I('filetext', 10)} ${data.filesUsed.join(', ')}</div>`
+        : '';
+
+    const rerunBtn = (st === 'done' || st === 'blocked')
+        ? `<button class="ac-rerun-btn" data-rerun="${agentKey}" title="Rerun this agent">${I('refresh', 12)}</button>`
+        : '';
+
     return `<div class="${cardCls}" data-agent="${agentKey}" ${locked ? 'data-locked="1"' : ''}>
     <div class="ac-top">
-      <div class="ac-id"><div class="ac-ico">${I(meta.icon, 15)}</div><div><div class="ac-name"><span class="tier-dot ${meta.tier}"></span>${meta.label}</div></div></div>
-      ${pillHtml}
+      <div class="ac-id"><div class="ac-ico">${I(meta.icon, 15)}</div><div><div class="ac-name"><span class="tier-dot ${meta.tier}"></span>${meta.label}</div>${filesLine}</div></div>
+      <div style="display:flex;align-items:center;gap:6px;">${pillHtml}${rerunBtn}</div>
     </div>
     ${body}
   </div>`;
@@ -2507,181 +2498,202 @@ async function runScreenAgents(p) {
     function next() {
         if (i >= scr.agents.length) { renderHorizontalStepper(p); renderActiveStageContent(p); return; }
         const ak = scr.agents[i];
-
-        // Gather existing outputs. Every downstream agent's real response consistently
-        // cites the SAME blocker when nothing has been decided yet: "Recognition Check
-        // has not been overridden by a recorded human decision to proceed as fraud."
-        // That decision is Gate 1 (Screen 1, Case Summary) in this app's local state -
-        // but it was never being communicated to the live agents at all, only the raw
-        // upstream agent JSON was sent. So even after a human clicked Approve in the UI,
-        // every agent from Fraud Assessment onward correctly reported not-applicable,
-        // because from the agent's point of view no human decision had been made.
-        // Fix: append a clearly-labelled human-decision annotation to the Recognition
-        // Check output text once Gate 1 has actually been decided, so downstream agents
-        // can see it.
-        let recognitionCheckText = p.a.recognitionCheck?.rawText || '';
-        const gate1Action = s.gates[0];
-        if (gate1Action && recognitionCheckText) {
-            const approver = s.gateApprover[0] || 'Unknown approver';
-            const decisionLabel = gate1Action === 'approve' ? 'APPROVED — proceed as fraud'
-                : gate1Action === 'override' ? 'OVERRIDDEN — proceed with amendment'
-                : gate1Action === 'escalate' ? 'ESCALATED — routed to senior review'
-                : gate1Action.toUpperCase();
-            recognitionCheckText += `\n\n---\nHUMAN GATE DECISION (Screen 1 - Case Summary, Gate 1)\nDecision: ${decisionLabel}\nDecided by: ${approver}\nDecided at: ${s.gateDecidedAt[0] || new Date().toISOString()}\nReason: ${s.gateReason[0] || 'Not recorded'}\n---`;
-        }
-
-        const allOutputs = {
-            'CASE_INTAKE_OUTPUT_TEXT': p.a.caseIntake?.rawText || '',
-            'RECOGNITION_CHECK_OUTPUT_TEXT': recognitionCheckText,
-            'FRAUD_ASSESSMENT_OUTPUT_TEXT': p.a.fraudAssessment?.rawText || '',
-            'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT': p.a.transactionClassification?.rawText || '',
-            'FUNDS_TRACE_OUTPUT_TEXT': p.a.fundsTrace?.rawText || '',
-            'SHADOW_CREDIT_OUTPUT_TEXT': p.a.shadowCredit?.rawText || '',
-            'CHARGEBACK_PREPARATION_OUTPUT_TEXT': p.a.chargebackPreparation?.rawText || '',
-            'RECALL_REPATRIATION_OUTPUT_TEXT': p.a.recallRepatriation?.rawText || '',
-            'OBLIGATION_CHECK_OUTPUT_TEXT': p.a.obligationCheck?.rawText || ''
-        };
-
-        // Guard Check: Verify mandatory upstream dependencies exist
-        const mandatoryKeys = AGENT_MANDATORY_INPUTS[ak] || [];
-        const missingMandatory = mandatoryKeys.filter(k => !allOutputs[k] || allOutputs[k].trim().length === 0);
-
-        if (missingMandatory.length > 0) {
-            p.a[ak].finding = 'Prerequisite Missing';
-            p.a[ak].desc = `Cannot execute ${AGENTS[ak].label}. Mandatory upstream requirement (${missingMandatory.join(', ')}) was not produced.`;
-            p.a[ak].tone = 'block';
-            s.agentStatus[ak] = 'blocked';
-
-            renderHorizontalStepper(p);
-            renderActiveStageContent(p);
-            renderDashboardIfVisible();
-            return;
-        }
-
-        s.agentStatus[ak] = 'running';
-        p.a[ak].startTime = Date.now();
-        p.a[ak].elapsedSeconds = 0;
-
-        const timerKey = `${p.id}-${ak}`;
-        if (agentTimerIntervals[timerKey]) clearInterval(agentTimerIntervals[timerKey]);
-
-        agentTimerIntervals[timerKey] = setInterval(() => {
-            p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
-            // Surgical update - just the timer text, not a full re-render of
-            // the whole stage. A full renderActiveStageContent() every second
-            // was regenerating every agent card's HTML from scratch, which
-            // re-triggered their entrance animation every second - that
-            // repeated fade-in-and-rise was the "blinking".
-            if (p.id === currentCaseId) {
-                const timerEl = document.querySelector(`[data-timer-for="${ak}"]`);
-                if (timerEl) timerEl.textContent = formatLiveClock(p.a[ak].elapsedSeconds);
-            }
-        }, 1000);
-
-        renderHorizontalStepper(p);
-        renderActiveStageContent(p);
-
-        // Filter payload to allowed keys only
-        const allowedKeys = AGENT_ALLOWED_INPUTS[ak] || [];
-        const upstreamPayload = {};
-        allowedKeys.forEach(k => {
-            if (allOutputs[k] && allOutputs[k].trim().length > 0) {
-                upstreamPayload[k] = allOutputs[k];
-            }
-        });
-
-        fetch('/api/fraud/run-agent', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                caseId: p.id,
-                agentKey: ak,
-                upstreamOutputs: upstreamPayload
-            })
-        })
-            .then(res => res.json())
-            .then(apiRes => {
-                if (agentTimerIntervals[timerKey]) {
-                    clearInterval(agentTimerIntervals[timerKey]);
-                    delete agentTimerIntervals[timerKey];
-                }
-                p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
-                p.a[ak].completedAt = new Date().toISOString();
-
-                if (apiRes.success && apiRes.outputText) {
-                    p.a[ak].isFallback = false; // explicit, so a genuine success can never be mistaken for one
-                    p.a[ak].rawText = apiRes.outputText;
-                    const parsed = parseAgentJson(apiRes.outputText);
-                    if (parsed && typeof parsed === 'object') {
-                        const formatted = formatAgentData(ak, parsed);
-                        p.a[ak].finding = formatted.finding;
-                        p.a[ak].desc = formatted.desc;
-                        p.a[ak].tone = formatted.tone;
-                        p.a[ak].fullText = formatted.fullText;
-                        if (ak === 'caseIntake') p.a[ak].urgencyLevel = formatted.urgencyLevel;
-                        if (formatted.reasoning && formatted.reasoning.length) {
-                            p.a[ak].reasoning = formatted.reasoning;
-                        }
-                    } else {
-                        p.a[ak].desc = apiRes.outputText.replace(/[\{\}\[\]"]/g, '').trim();
-                        p.a[ak].fullText = apiRes.outputText;
-                        if (ak === 'caseIntake') p.a[ak].urgencyLevel = 'Medium';
-                    }
-                    s.agentStatus[ak] = p.a[ak] && p.a[ak].blocked ? 'blocked' : 'done';
-                } else {
-                    // Visually render error on card and populate local preset so downstream agents can run
-                    p.a[ak].finding = 'Live API Timeout / Fallback Applied';
-                    p.a[ak].desc = apiRes.message || 'Server took longer than 120s to respond.';
-                    p.a[ak].tone = 'flag';
-                    p.a[ak].isFallback = true; // NOT a real result - every display surface that shows derived
-                    // info (header amount/channel/product, classification, trigger, urgency) must check this
-                    // before trusting anything on this agent, otherwise a timed-out agent looks identical to
-                    // a genuine success and static demo data quietly stands in for real analysis.
-                    p.a[ak].rawText = JSON.stringify({
-                        status: 'completed',
-                        agent: ak,
-                        recommendation: { action: p.a[ak]?.finding || 'Processed', reason: p.a[ak]?.desc || 'Analysis completed.' }
-                    });
-                    if (ak === 'caseIntake') p.a[ak].urgencyLevel = 'Medium';
-                    s.agentStatus[ak] = 'done';
-                }
-
-                // SLA clock starts the moment Case Intake genuinely finishes (live or fallback) -
-                // never before, and never twice.
-                if (ak === 'caseIntake' && !s.slaStartedAt) {
-                    s.urgencyLevel = (p.a.caseIntake && p.a.caseIntake.urgencyLevel) || 'Medium';
-                    s.slaStartedAt = Date.now();
-                }
-
-                if (ak === 'caseIntake' && s.screenIdx === 0 && s.messages.length === 0) { pushMessage(p, 0); }
-                i++;
-                renderHorizontalStepper(p); renderActiveStageContent(p); renderCaseHeaderPills(p); renderCaseHeaderInfo(p); renderDashboardIfVisible(); renderCasesIfVisible();
-                next();
-            })
-            .catch(err => {
-                if (agentTimerIntervals[timerKey]) {
-                    clearInterval(agentTimerIntervals[timerKey]);
-                    delete agentTimerIntervals[timerKey];
-                }
-                p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
-                p.a[ak].completedAt = new Date().toISOString();
-                p.a[ak].finding = 'Connection Error';
-                p.a[ak].desc = err.message || 'Failed to reach local API service.';
-                p.a[ak].tone = 'block';
-                p.a[ak].isFallback = true; // see the timeout branch above - same reasoning
-                if (ak === 'caseIntake') p.a[ak].urgencyLevel = 'High';
-                s.agentStatus[ak] = 'done';
-                if (ak === 'caseIntake' && !s.slaStartedAt) {
-                    s.urgencyLevel = (p.a.caseIntake && p.a.caseIntake.urgencyLevel) || 'High';
-                    s.slaStartedAt = Date.now();
-                }
-                i++;
-                renderHorizontalStepper(p); renderActiveStageContent(p); renderCaseHeaderPills(p); renderCaseHeaderInfo(p); renderDashboardIfVisible(); renderCasesIfVisible();
-                next();
-            });
+        i++;
+        runOneAgent(p, ak, next);
     }
     next();
 }
+
+// The actual "call this one agent and update state" logic, extracted so both
+// the normal sequential screen run and a manual per-agent rerun share the
+// exact same behaviour instead of two versions drifting apart. onComplete is
+// called once this agent finishes (success, fallback, or error) - the
+// sequential runner passes its own `next` to continue the chain; a manual
+// rerun passes null since there's nothing further to chain to.
+function runOneAgent(p, ak, onComplete) {
+    const s = state[p.id];
+
+    // Gather existing outputs. Every downstream agent's real response consistently
+    // cites the SAME blocker when nothing has been decided yet: "Recognition Check
+    // has not been overridden by a recorded human decision to proceed as fraud."
+    // That decision is Gate 1 (Screen 1, Case Summary) in this app's local state -
+    // but it was never being communicated to the live agents at all, only the raw
+    // upstream agent JSON was sent. So even after a human clicked Approve in the UI,
+    // every agent from Fraud Assessment onward correctly reported not-applicable,
+    // because from the agent's point of view no human decision had been made.
+    // Fix: append a clearly-labelled human-decision annotation to the Recognition
+    // Check output text once Gate 1 has actually been decided, so downstream agents
+    // can see it.
+    let recognitionCheckText = p.a.recognitionCheck?.rawText || '';
+    const gate1Action = s.gates[0];
+    if (gate1Action && recognitionCheckText) {
+        const approver = s.gateApprover[0] || 'Unknown approver';
+        const decisionLabel = gate1Action === 'approve' ? 'APPROVED — proceed as fraud'
+            : gate1Action === 'override' ? 'OVERRIDDEN — proceed with amendment'
+            : gate1Action === 'escalate' ? 'ESCALATED — routed to senior review'
+            : gate1Action.toUpperCase();
+        recognitionCheckText += `\n\n---\nHUMAN GATE DECISION (Screen 1 - Case Summary, Gate 1)\nDecision: ${decisionLabel}\nDecided by: ${approver}\nDecided at: ${s.gateDecidedAt[0] || new Date().toISOString()}\nReason: ${s.gateReason[0] || 'Not recorded'}\n---`;
+    }
+
+    const allOutputs = {
+        'CASE_INTAKE_OUTPUT_TEXT': p.a.caseIntake?.rawText || '',
+        'RECOGNITION_CHECK_OUTPUT_TEXT': recognitionCheckText,
+        'FRAUD_ASSESSMENT_OUTPUT_TEXT': p.a.fraudAssessment?.rawText || '',
+        'TRANSACTION_CLASSIFICATION_OUTPUT_TEXT': p.a.transactionClassification?.rawText || '',
+        'FUNDS_TRACE_OUTPUT_TEXT': p.a.fundsTrace?.rawText || '',
+        'SHADOW_CREDIT_OUTPUT_TEXT': p.a.shadowCredit?.rawText || '',
+        'CHARGEBACK_PREPARATION_OUTPUT_TEXT': p.a.chargebackPreparation?.rawText || '',
+        'RECALL_REPATRIATION_OUTPUT_TEXT': p.a.recallRepatriation?.rawText || '',
+        'OBLIGATION_CHECK_OUTPUT_TEXT': p.a.obligationCheck?.rawText || ''
+    };
+
+    // Guard Check: Verify mandatory upstream dependencies exist
+    const mandatoryKeys = AGENT_MANDATORY_INPUTS[ak] || [];
+    const missingMandatory = mandatoryKeys.filter(k => !allOutputs[k] || allOutputs[k].trim().length === 0);
+
+    if (missingMandatory.length > 0) {
+        p.a[ak].finding = 'Prerequisite Missing';
+        p.a[ak].desc = `Cannot execute ${AGENTS[ak].label}. Mandatory upstream requirement (${missingMandatory.join(', ')}) was not produced.`;
+        p.a[ak].tone = 'block';
+        s.agentStatus[ak] = 'blocked';
+
+        renderHorizontalStepper(p);
+        renderActiveStageContent(p);
+        renderDashboardIfVisible();
+        return;
+    }
+
+    s.agentStatus[ak] = 'running';
+    p.a[ak].startTime = Date.now();
+    p.a[ak].elapsedSeconds = 0;
+
+    const timerKey = `${p.id}-${ak}`;
+    if (agentTimerIntervals[timerKey]) clearInterval(agentTimerIntervals[timerKey]);
+
+    agentTimerIntervals[timerKey] = setInterval(() => {
+        p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
+        // Surgical update - just the timer text, not a full re-render of
+        // the whole stage. A full renderActiveStageContent() every second
+        // was regenerating every agent card's HTML from scratch, which
+        // re-triggered their entrance animation every second - that
+        // repeated fade-in-and-rise was the "blinking".
+        if (p.id === currentCaseId) {
+            const timerEl = document.querySelector(`[data-timer-for="${ak}"]`);
+            if (timerEl) timerEl.textContent = formatLiveClock(p.a[ak].elapsedSeconds);
+        }
+    }, 1000);
+
+    renderHorizontalStepper(p);
+    renderActiveStageContent(p);
+
+    // Filter payload to allowed keys only
+    const allowedKeys = AGENT_ALLOWED_INPUTS[ak] || [];
+    const upstreamPayload = {};
+    allowedKeys.forEach(k => {
+        if (allOutputs[k] && allOutputs[k].trim().length > 0) {
+            upstreamPayload[k] = allOutputs[k];
+        }
+    });
+
+    fetch('/api/fraud/run-agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            caseId: p.id,
+            agentKey: ak,
+            upstreamOutputs: upstreamPayload
+        })
+    })
+        .then(res => res.json())
+        .then(apiRes => {
+            if (agentTimerIntervals[timerKey]) {
+                clearInterval(agentTimerIntervals[timerKey]);
+                delete agentTimerIntervals[timerKey];
+            }
+            p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
+            p.a[ak].completedAt = new Date().toISOString();
+            p.a[ak].filesUsed = Array.isArray(apiRes.filesUsed) ? apiRes.filesUsed : [];
+
+            if (apiRes.success && apiRes.outputText) {
+                p.a[ak].isFallback = false; // explicit, so a genuine success can never be mistaken for one
+                p.a[ak].rawText = apiRes.outputText;
+                const parsed = parseAgentJson(apiRes.outputText);
+                if (parsed && typeof parsed === 'object') {
+                    const formatted = formatAgentData(ak, parsed);
+                    p.a[ak].finding = formatted.finding;
+                    p.a[ak].desc = formatted.desc;
+                    p.a[ak].tone = formatted.tone;
+                    p.a[ak].fullText = formatted.fullText;
+                    if (ak === 'caseIntake') p.a[ak].urgencyLevel = formatted.urgencyLevel;
+                    if (formatted.reasoning && formatted.reasoning.length) {
+                        p.a[ak].reasoning = formatted.reasoning;
+                    }
+                } else {
+                    p.a[ak].desc = apiRes.outputText.replace(/[\{\}\[\]"]/g, '').trim();
+                    p.a[ak].fullText = apiRes.outputText;
+                    if (ak === 'caseIntake') p.a[ak].urgencyLevel = 'Medium';
+                }
+                s.agentStatus[ak] = p.a[ak] && p.a[ak].blocked ? 'blocked' : 'done';
+            } else {
+                // Visually render error on card and populate local preset so downstream agents can run
+                p.a[ak].finding = 'Live API Timeout / Fallback Applied';
+                p.a[ak].desc = apiRes.message || 'Server took longer than 120s to respond.';
+                p.a[ak].tone = 'flag';
+                p.a[ak].isFallback = true; // NOT a real result - every display surface that shows derived
+                // info (header amount/channel/product, classification, trigger, urgency) must check this
+                // before trusting anything on this agent, otherwise a timed-out agent looks identical to
+                // a genuine success and static demo data quietly stands in for real analysis.
+                p.a[ak].rawText = JSON.stringify({
+                    status: 'completed',
+                    agent: ak,
+                    recommendation: { action: p.a[ak]?.finding || 'Processed', reason: p.a[ak]?.desc || 'Analysis completed.' }
+                });
+                if (ak === 'caseIntake') p.a[ak].urgencyLevel = 'Medium';
+                s.agentStatus[ak] = 'done';
+            }
+
+            // SLA clock starts the moment Case Intake genuinely finishes (live or fallback) -
+            // never before, and never twice.
+            if (ak === 'caseIntake' && !s.slaStartedAt) {
+                s.urgencyLevel = (p.a.caseIntake && p.a.caseIntake.urgencyLevel) || 'Medium';
+                s.slaStartedAt = Date.now();
+            }
+
+            if (ak === 'caseIntake' && s.screenIdx === 0 && s.messages.length === 0) { pushMessage(p, 0); }
+            renderHorizontalStepper(p); renderActiveStageContent(p); renderCaseHeaderPills(p); renderCaseHeaderInfo(p); renderDashboardIfVisible(); renderCasesIfVisible();
+            if (onComplete) onComplete();
+        })
+        .catch(err => {
+            if (agentTimerIntervals[timerKey]) {
+                clearInterval(agentTimerIntervals[timerKey]);
+                delete agentTimerIntervals[timerKey];
+            }
+            p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
+            p.a[ak].completedAt = new Date().toISOString();
+            p.a[ak].finding = 'Connection Error';
+            p.a[ak].desc = err.message || 'Failed to reach local API service.';
+            p.a[ak].tone = 'block';
+            p.a[ak].isFallback = true; // see the timeout branch above - same reasoning
+            if (ak === 'caseIntake') p.a[ak].urgencyLevel = 'High';
+            s.agentStatus[ak] = 'done';
+            if (ak === 'caseIntake' && !s.slaStartedAt) {
+                s.urgencyLevel = (p.a.caseIntake && p.a.caseIntake.urgencyLevel) || 'High';
+                s.slaStartedAt = Date.now();
+            }
+            renderHorizontalStepper(p); renderActiveStageContent(p); renderCaseHeaderPills(p); renderCaseHeaderInfo(p); renderDashboardIfVisible(); renderCasesIfVisible();
+            if (onComplete) onComplete();
+        });
+}
+
+// Manually re-runs a single agent that has already completed (or blocked) -
+// useful after fixing an evidence file, or just to retry past a timeout,
+// without needing to re-run the whole screen from the start.
+function rerunAgent(p, ak) {
+    const s = state[p.id];
+    if (s.agentStatus[ak] === 'running') return; // already in flight
+    runOneAgent(p, ak, null);
+}
+
 function handleGate(p, screenIdx, action, reason) {
     const s = state[p.id];
     s.gates[screenIdx] = action;

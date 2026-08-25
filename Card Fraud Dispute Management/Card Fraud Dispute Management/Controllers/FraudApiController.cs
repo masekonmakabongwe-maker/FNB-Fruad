@@ -109,6 +109,18 @@ namespace CardFraudDisputeApp.Controllers
                     password
                 );
 
+                // Merge the real filenames actually sent into whatever shape the
+                // service returned (success/timeout/error each look different) -
+                // JsonNode lets this add one field without needing to know or
+                // reconstruct the exact shape of `result`. This is what lets the
+                // UI show the real evidence files an agent used, not a guess.
+                var resultNode = System.Text.Json.JsonSerializer.SerializeToNode(result) as System.Text.Json.Nodes.JsonObject;
+                if (resultNode != null)
+                {
+                    resultNode["filesUsed"] = System.Text.Json.Nodes.JsonValue.Create(caseFiles.Select(f => f.FileName).ToArray());
+                    return Ok(resultNode);
+                }
+
                 return Ok(result);
             }
             catch (Exception ex)

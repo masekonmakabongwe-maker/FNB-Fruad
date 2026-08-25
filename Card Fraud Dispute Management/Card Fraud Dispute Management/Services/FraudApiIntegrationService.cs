@@ -155,8 +155,8 @@ namespace CardFraudDisputeApp.Services
 
         private async Task<string> PollTraceResultAsync(string assetId, string traceId, string apiKey, string token)
         {
-            // Extended window: 40 attempts x 3000ms = 120 seconds total
-            int maxAttempts = 40;
+            // Extended window: 70 attempts x 3000ms = 210 seconds total
+            int maxAttempts = 70;
             int delayMs = 3000;
 
             for (int i = 0; i < maxAttempts; i++)

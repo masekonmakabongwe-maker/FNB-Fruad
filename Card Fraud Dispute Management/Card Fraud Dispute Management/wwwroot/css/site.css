@@ -1501,6 +1501,34 @@ tr.filler {
     align-items: center;
     gap: 6px;
 }
+.ac-files {
+    font-size: 9.5px;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    line-height: 1.4;
+}
+.ac-rerun-btn {
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--text-2);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background .15s, color .15s, transform .3s;
+}
+.ac-rerun-btn:hover {
+    background: var(--purple-50);
+    color: var(--purple-700);
+    transform: rotate(90deg);
+}
 
 .tier-dot {
     width: 6px;
