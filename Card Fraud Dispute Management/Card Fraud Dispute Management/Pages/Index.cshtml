@@ -96,9 +96,12 @@
                 <div class="page-head"><div><div class="page-title">Cases</div><div class="page-sub">Card fraud queue — synthetic demonstration data</div></div></div>
                 <div class="cases-toolbar">
                     <div class="filterbar" id="filterbar"></div>
-                    <div class="case-search-wrap">
-                        <span class="case-search-ico">🔍</span>
-                        <input type="text" id="caseSearchInput" class="case-search-input" placeholder="Search cases by name or reference…" autocomplete="off">
+                    <div class="cases-toolbar-right">
+                        <button class="btn ghost pill-btn" id="caseSortBtn" title="Sort alphabetically">A–Z</button>
+                        <div class="case-search-wrap">
+                            <span class="case-search-ico">🔍</span>
+                            <input type="text" id="caseSearchInput" class="case-search-input" placeholder="Search cases by name or reference…" autocomplete="off">
+                        </div>
                     </div>
                 </div>
                 <div class="tablecard"><table><thead><tr><th>Customer</th><th>Urgency</th><th>SLA</th><th>Progress</th><th>Screen</th><th>Agent Recommendation</th><th>Final Human decision</th></tr></thead><tbody id="casesTbody"></tbody></table></div>
@@ -146,9 +149,9 @@
                                 <div class="wb-status" id="dStatusBanner"></div>
                                 <div class="wtabs">
                                     <div class="wtab active" data-wtab="agents">Agents</div>
-                                    <div class="wtab" data-wtab="report">Report</div>
+                                    <div class="wtab" data-wtab="report">Case Actions</div>
                                     <div class="wtab" data-wtab="corr">Correspondence</div>
-                                    <div class="wtab" data-wtab="summary">Summary</div>
+                                    <div class="wtab" data-wtab="summary">Case Details</div>
                                 </div>
                             </div>
                             <div class="wb-scroll" id="wbScroll"></div>
@@ -206,7 +209,7 @@
 
 <div class="mscrim" id="mscrim"></div>
 <div class="modal" id="agentModal">
-    <div class="modal-head"><div class="mh-ico" id="amIco"></div><div class="mh-txt"><div class="mh1" id="amName">—</div><div class="mh2" id="amSub">—</div></div><button class="modal-close" id="amClose">✕</button></div>
+    <div class="modal-head"><div class="mh-ico" id="amIco"></div><div class="mh-txt"><div class="mh1" id="amName">—</div><div class="mh2" id="amSub">—</div><div class="mh3" id="amTime"></div></div><button class="modal-close" id="amClose">✕</button></div>
     <div class="modal-body" id="amBody"></div>
 </div>
 <div class="modal" id="policyModal" style="width:460px;">

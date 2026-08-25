@@ -32,7 +32,7 @@ namespace CardFraudDisputeApp.Services
             ["chargebackPreparation"] = "b87bdd53-de89-47f9-b384-697c4db1823e",
             ["recallRepatriation"] = "a58999c2-653d-45e6-8fda-de4d372aea82",
             ["obligationCheck"] = "ab3666f2-9f29-4f10-9d78-d7ae27f173f0",
-            ["documentGenerator"] = "2f2a88df-fbbe-4f5a-8d25-9fd1a6e765ee"
+            ["documentGenerator"] = "61c626f8-2379-48fc-8b7f-02df67d7f22e"
         };
 
         public FraudApiIntegrationService(HttpClient httpClient, ILogger<FraudApiIntegrationService> logger)
@@ -63,6 +63,25 @@ namespace CardFraudDisputeApp.Services
 
             using var doc = JsonDocument.Parse(responseString);
             return doc.RootElement.GetProperty("access_token").GetString() ?? string.Empty;
+        }
+
+        // Real evidence now spans several file types beyond the original PDF/DOCX
+        // assumption - .xlsx (auth logs, customer profiles, counterparty chains,
+        // transfer logs) and .eml (some counterparty reply emails) both turned up
+        // in the confirmed real input manifest. Previously anything that wasn't
+        // .docx was labelled application/pdf regardless of its real type, which
+        // would have mislabelled every one of these.
+        private static string GetContentTypeForFile(string fileName)
+        {
+            var ext = Path.GetExtension(fileName).ToLowerInvariant();
+            return ext switch
+            {
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                ".eml" => "message/rfc822",
+                ".pdf" => "application/pdf",
+                _ => "application/octet-stream"
+            };
         }
 
         public async Task<object> InvokeAgentAsync(
@@ -110,10 +129,7 @@ namespace CardFraudDisputeApp.Services
                     {
                         if (file.Bytes == null || file.Bytes.Length == 0) continue;
                         var fileContent = new ByteArrayContent(file.Bytes);
-                        var contentType = file.FileName.EndsWith(".docx", StringComparison.OrdinalIgnoreCase)
-                            ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                            : "application/pdf";
-                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(GetContentTypeForFile(file.FileName));
                         content.Add(fileContent, "CASE_FILES_TEXT", file.FileName);
                         _logger.LogInformation("📄 Attaching file entity: 'CASE_FILES_TEXT' ({FileName}, {Size} bytes)", file.FileName, file.Bytes.Length);
                     }

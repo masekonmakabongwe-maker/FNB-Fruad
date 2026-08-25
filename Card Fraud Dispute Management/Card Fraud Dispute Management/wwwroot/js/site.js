@@ -55,17 +55,17 @@ const SCREENS = [
 ];
 
 const AGENTS = {
-    caseIntake: { label: 'Case Intake', tier: 'standard', icon: 'search' },
-    recognitionCheck: { label: 'Recognition Check', tier: 'reasoning', icon: 'shieldcheck' },
-    fraudAssessment: { label: 'Fraud Assessment', tier: 'reasoning', icon: 'shieldcheck' },
-    transactionClassification: { label: 'Transaction Classification', tier: 'reasoning', icon: 'card' },
-    fundsTrace: { label: 'Funds Trace', tier: 'reasoning', icon: 'trace' },
-    shadowCredit: { label: 'Shadow Credit', tier: 'reasoning', icon: 'piggy' },
-    chargebackPreparation: { label: 'Chargeback Preparation', tier: 'standard', icon: 'filetext' },
-    recallRepatriation: { label: 'Recall & Repatriation', tier: 'reasoning', icon: 'send' },
-    obligationCheck: { label: 'Obligation Check', tier: 'reasoning', icon: 'clock' },
-    documentGenerator: { label: 'Document Generator', tier: 'standard', icon: 'fileplus' },
-    messageComposer: { label: 'Message Composer', tier: 'standard', icon: 'msg' },
+    caseIntake: { label: 'Case Intake', tier: 'standard', icon: 'search', desc: 'Builds the first reliable case record from raw evidence, flags vulnerability, sets urgency and gates all downstream automation until a human reviews.' },
+    recognitionCheck: { label: 'Recognition Check', tier: 'reasoning', icon: 'shieldcheck', desc: "Checks every disputed transaction against the customer's own history to see if it could be their own spend before fraud investigation begins." },
+    fraudAssessment: { label: 'Fraud Assessment', tier: 'reasoning', icon: 'shieldcheck', desc: 'Classifies how the fraud happened, determines how deep the compromise went using the policy scale and recommends proportionate containment.' },
+    transactionClassification: { label: 'Transaction Classification', tier: 'reasoning', icon: 'card', desc: 'Reads ECI codes, scheme rails and card-present indicators to determine whether a disputed transaction is recoverable, not-recoverable or needs human verification before any chargeback effort begins.' },
+    fundsTrace: { label: 'Funds Trace', tier: 'reasoning', icon: 'trace', desc: "Reconstructs where the disputed value went after leaving the customer's account, identifies recovery targets by counterparty class and assigns the right recovery action to each. Does not send recalls." },
+    shadowCredit: { label: 'Shadow Credit', tier: 'reasoning', icon: 'piggy', desc: 'Assesses whether the customer is eligible for a provisional refund, checks exclusions, surfaces counterarguments, derives the authority band and recommends a named human decision.' },
+    chargebackPreparation: { label: 'Chargeback Preparation', tier: 'standard', icon: 'filetext', desc: 'Assembles the evidence pack for each recoverable scheme-card transaction, selects the correct templates, and prepares everything for human review and submission. Never submits anything itself.' },
+    recallRepatriation: { label: 'Recall & Repatriation', tier: 'reasoning', icon: 'send', desc: 'Reconciles the Funds Trace register with counterparty replies, prepares recall requests, chase plans and CASP hold requests for human approval.' },
+    obligationCheck: { label: 'Obligation Check', tier: 'reasoning', icon: 'clock', desc: "Reviews all regulatory and operational obligations arising from the case across five instruments and tells the human what is owed, what isn't, and what needs a decision." },
+    documentGenerator: { label: 'Document Generator', tier: 'standard', icon: 'fileplus', desc: 'Selects the right document templates for the case state, resolves all variables from approved evidence and produces a structured package for the deterministic renderer.' },
+    messageComposer: { label: 'Message Composer', tier: 'standard', icon: 'msg', desc: 'Drafts customer-facing updates once a human decision is recorded at a gate, matching channel and tone to what actually happened in the case.' },
 };
 
 // Map specifying exact allowed upstream entities per agent
@@ -991,7 +991,7 @@ function renderFraudAssessmentReport(obj) {
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Containment Actions</div>
             ${recActions.map(a => `
                 <div style="display:flex;justify-content:space-between;background:#F0FDF4;border:1px solid #BBF7D0;padding:6px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;color:#166534;">
-                    <span><b>Action:</b> ${typeof a === 'string' ? a : (a.action || JSON.stringify(a))}</span>
+                    <span><b>Action:</b> ${typeof a === 'string' ? a : (a.action || renderJsonAsProse(a))}</span>
                     ${a.state ? `<span>🟢 ${a.state}</span>` : ''}
                 </div>
             `).join('')}
@@ -1068,12 +1068,19 @@ function renderFundsTraceReport(obj) {
         ${timeCriticality.length ? `
         <div style="margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Time-Criticality Ranking</div>
-            ${timeCriticality.map((t, i) => `
-                <div style="display:flex;justify-content:space-between;background:#FFFBEB;border:1px solid #FDE68A;padding:6px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;color:#92400E;">
-                    <span><b>#${i + 1}</b> ${t.who || t.counterparty || JSON.stringify(t)}</span>
-                    ${t.window || t.recoveryWindow ? `<span>${t.window || t.recoveryWindow}</span>` : ''}
-                </div>
-            `).join('')}
+            ${timeCriticality.map((t, i) => {
+        // Confirmed real fields: counterpartyRef, rank, reason - the old
+        // guesses (who/counterparty/window/recoveryWindow) never matched,
+        // so this fell through to a raw JSON.stringify dump every time.
+        const ref = t.counterpartyRef || t.who || t.counterparty;
+        const rank = t.rank != null ? t.rank : (i + 1);
+        const reason = t.reason || '';
+        return `
+                <div style="background:#FFFBEB;border:1px solid #FDE68A;padding:8px 10px;border-radius:6px;margin-bottom:6px;">
+                    <div style="font-size:11.5px;font-weight:700;color:#92400E;">#${rank}${ref ? ` ${ref}` : ''}</div>
+                    ${reason ? `<div style="font-size:11px;color:#78350F;margin-top:3px;line-height:1.5;">${reason}</div>` : ''}
+                </div>`;
+    }).join('')}
         </div>` : ''}
 
         <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
@@ -1244,26 +1251,26 @@ function renderRecallRepatriationReport(obj) {
             ${recallItems.map(r => `
                 <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;font-size:11.5px;">
                     <div style="font-family:var(--mono);font-weight:700;">${r.transactionRef || r.reference || 'Item'}</div>
-                    <div style="color:var(--text-2);margin-top:4px;">${r.status || r.reason || JSON.stringify(r)}</div>
+                    <div style="color:var(--text-2);margin-top:4px;">${r.status || r.reason || renderJsonAsProse(r)}</div>
                 </div>`).join('')}
         </div>` : '<div style="font-size:11.5px;color:var(--text-3);font-style:italic;margin-bottom:14px;">No recall requests raised yet.</div>'}
 
         ${caspHolds.length ? `
         <div style="margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">CASP Hold Requests</div>
-            ${caspHolds.map(h => `<div style="background:#FFFBEB;border:1px solid #FDE68A;padding:8px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;color:#92400E;">${h.provider || h.name || JSON.stringify(h)}</div>`).join('')}
+            ${caspHolds.map(h => `<div style="background:#FFFBEB;border:1px solid #FDE68A;padding:8px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;color:#92400E;">${h.provider || h.name || renderJsonAsProse(h)}</div>`).join('')}
         </div>` : ''}
 
         ${bankRequests.length ? `
         <div style="margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Counterparty Bank Requests</div>
-            ${bankRequests.map(b => `<div style="background:#F1F5F9;border:1px solid #CBD5E1;padding:8px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;">${b.bank || b.institution || JSON.stringify(b)}</div>`).join('')}
+            ${bankRequests.map(b => `<div style="background:#F1F5F9;border:1px solid #CBD5E1;padding:8px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;">${b.bank || b.institution || renderJsonAsProse(b)}</div>`).join('')}
         </div>` : ''}
 
         ${blocking.length ? `
         <div style="margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--red-700);margin-bottom:6px;">Blocking Actions on FNB</div>
-            ${blocking.map(b => `<div style="background:#FFF5F5;border:1px solid #FED7D7;padding:8px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;color:#742A2A;">${typeof b === 'string' ? b : JSON.stringify(b)}</div>`).join('')}
+            ${blocking.map(b => `<div style="background:#FFF5F5;border:1px solid #FED7D7;padding:8px 10px;border-radius:6px;margin-bottom:4px;font-size:11.5px;color:#742A2A;">${typeof b === 'string' ? b : renderJsonAsProse(b)}</div>`).join('')}
         </div>` : ''}
 
         <div style="background:var(--purple-50);border:1px solid #E9D8FD;border-radius:10px;padding:12px;">
@@ -1282,7 +1289,6 @@ function renderObligationCheckReport(obj) {
     const obligations = gP(obj, 'obligations') || [];
     const summary = gP(obj, 'summary') || {};
     const rec = gP(obj, 'recommendation') || {};
-    const screenReason = gP(obj, 'screenReason', 'screenReason');
     const commsRestriction = gP(obj, 'communicationRestriction', 'communicationRestriction') || {};
     const voluntaryComplaint = gP(obj, 'voluntaryCriminalComplaint', 'voluntaryCriminalComplaint') || {};
     const openEscalations = gP(obj, 'openEscalations', 'openEscalations') || [];
@@ -1302,12 +1308,6 @@ function renderObligationCheckReport(obj) {
                 ${summary.owed || 0} owed · ${summary.verifyFirst || 0} verify-first · ${summary.notOwed || 0} not owed · ${summary.notInForce || 0} not in force
             </div>
         </div>
-
-        ${screenReason ? `
-        <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;">
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#92400E;">Screen Gate</div>
-            <div style="font-size:12px;color:#78350F;margin-top:4px;">${screenReason}</div>
-        </div>` : ''}
 
         <div style="margin-bottom:14px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--purple-700);margin-bottom:6px;">Five Instruments</div>
@@ -1436,85 +1436,165 @@ function renderJsonAsProse(obj, depth) {
 // FNB-53042). Each document gets its own real title/template name as the
 // section header, not a generic counter; each binding renders as a plain
 // Field: Value row using the real field name, not another "Item N".
+// Finds a binding's value by field name, tolerant of exact camelCase vs the
+// humanized display label, since bindings are stored as {field, value} pairs
+// in an array rather than a flat object. Treats "UNKNOWN" the same as
+// missing, since that's the agent's own way of saying a field wasn't
+// resolved - never worth quoting as if it were real content.
+function findBindingValue(doc, ...fieldCandidates) {
+    if (!doc || !Array.isArray(doc.bindings)) return null;
+    const normalize = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+    for (const candidate of fieldCandidates) {
+        const target = normalize(candidate);
+        const match = doc.bindings.find(b => normalize(b.field || '') === target);
+        if (match && match.value != null && match.value !== 'UNKNOWN' && match.value !== '') return match.value;
+    }
+    return null;
+}
+
+// Real bindings like "Transaction Schedule" pack several transactions into
+// one semicolon/pipe-delimited string, e.g.
+// "AUTH-51204-01 | TECHZONE ONLINE | ZAR 12,400.00 | 2026-08-12T20:14:00+02:00 | ARN ...".
+// Splits that back into structured rows for a proper bullet list instead of
+// showing the raw delimited string.
+function parsePipeSchedule(str) {
+    if (!str) return [];
+    return String(str).split(';').map(s => s.trim()).filter(Boolean)
+        .map(item => item.split('|').map(x => x.trim()).filter(Boolean));
+}
+
 function renderDocumentGeneratorReport(obj) {
     const documents = gP(obj, 'documents') || [];
     const summary = gP(obj, 'summary') || {};
-    const gaps = gP(summary, 'openPolicyGaps', 'open Policy Gaps') || [];
+    const caseRef = gP(obj, 'caseRef', 'case Ref');
+    const customerRef = gP(obj, 'customerRef', 'customer Ref');
 
-    const statusBadge = (status) => {
+    const statusMeta = (status) => {
         const map = {
-            'ready-for-human-review': { cls: 'b-medium', label: 'Ready for human review' },
-            'blocked': { cls: 'b-high', label: 'Blocked' },
-            'completed': { cls: 'b-low', label: 'Completed' },
+            'ready-for-human-review': { cls: 'b-medium', label: 'Ready for human review', group: 'ready' },
+            'blocked': { cls: 'b-high', label: 'Blocked', group: 'blocked' },
+            'approved-confirmed': { cls: 'b-low', label: 'Approved & confirmed', group: 'produced' },
+            'completed': { cls: 'b-low', label: 'Completed', group: 'produced' },
         };
-        const m = map[status] || { cls: 'b-neutral', label: status ? String(status).replace(/-/g, ' ') : 'Unknown' };
-        return `<span class="badge ${m.cls}">${m.label}</span>`;
+        return map[status] || { cls: 'b-neutral', label: status ? String(status).replace(/-/g, ' ') : 'Unknown', group: 'other' };
     };
 
+    const blockedDocs = documents.filter(d => statusMeta(d.status).group === 'blocked');
+    const readyDocs = documents.filter(d => statusMeta(d.status).group === 'ready');
+
+    // The two documents that actually carry the incident narrative: whichever
+    // one has the SAPS-style incident sentences, and the internal case file
+    // (or whichever document has the customer/containment detail) - these
+    // vary by which document types a given persona's case produced, so both
+    // are found defensively rather than assumed to always exist.
+    const incidentDoc = documents.find(d => findBindingValue(d, 'incidentOpeningSentence', 'Incident Opening Sentence'));
+    const caseFileDoc = documents.find(d => (d.template && d.template.id === 'DT-09'))
+        || documents.find(d => findBindingValue(d, 'customerDescriptor', 'Customer Descriptor'));
+
+    // ---- Build the Incident Summary paragraph from real bindings only -
+    // any sentence whose source field is missing is simply left out, rather
+    // than showing a gap or invented text. ----
+    let incidentParts = [];
+    const reportDate = findBindingValue(incidentDoc, 'customerReportDate', 'Customer Report Date') || findBindingValue(caseFileDoc, 'customerReportDate', 'Customer Report Date');
+    const customerDescriptor = findBindingValue(caseFileDoc, 'customerDescriptor', 'Customer Descriptor');
+    const disputedTotal = findBindingValue(caseFileDoc, 'disputedTotal', 'Disputed Total') || findBindingValue(incidentDoc, 'disputedTotal', 'Disputed Total');
+    const txSchedule = parsePipeSchedule(findBindingValue(incidentDoc, 'transactionSchedule', 'Transaction Schedule') || findBindingValue(caseFileDoc, 'disputedItemSchedule', 'Disputed Item Schedule'));
+
+    if (reportDate || customerDescriptor || disputedTotal) {
+        const dateStr = reportDate ? formatSATimestamp(reportDate).split(' ').slice(0, 3).join(' ').replace(/\s\d{2}:\d{2}$/, '') : '';
+        // customerDescriptor often packs several semicolon-separated facts
+        // ("Sipho Ndlovu; card ending 7314; verified contact +27 *** 4412") -
+        // the opening sentence only needs the name and card, not the contact
+        // number, so it reads as a clean introduction rather than a data dump.
+        const shortDescriptor = customerDescriptor ? customerDescriptor.split(';').slice(0, 2).map(s => s.trim()).join(', ') : '';
+        incidentParts.push(`${dateStr ? `On ${dateStr}, the` : 'The'} customer${shortDescriptor ? ` (${shortDescriptor})` : ''} reported ${txSchedule.length ? `${txSchedule.length} unauthorised` : ''} transaction${txSchedule.length === 1 ? '' : 's'}${disputedTotal ? ` totaling ${disputedTotal}` : ''}.`);
+    }
+    const openingSentence = findBindingValue(incidentDoc, 'incidentOpeningSentence', 'Incident Opening Sentence');
+    if (openingSentence) incidentParts.push(openingSentence);
+    const methodSentence = findBindingValue(incidentDoc, 'incidentMethodSentences', 'Incident Method Sentences');
+    if (methodSentence) incidentParts.push(methodSentence);
+    const containment = findBindingValue(caseFileDoc, 'containmentActions', 'Containment Actions');
+    if (containment) incidentParts.push(`Containment: ${containment}.`);
+
+    const onwardMovement = findBindingValue(incidentDoc, 'onwardMovementSentence', 'Onward Movement Sentence');
+    const refundRec = findBindingValue(caseFileDoc, 'provisionalRefundRecommendation', 'Provisional Refund Recommendation');
+    const recoverableAmount = findBindingValue(caseFileDoc, 'recoverableAmount', 'Recoverable Amount');
+    let closingParts = [];
+    if (onwardMovement) closingParts.push(onwardMovement);
+    if (refundRec) closingParts.push(`The recommended action is to ${String(refundRec).replace(/-/g, ' ')}${recoverableAmount ? ` of ${recoverableAmount}` : ''}, pending human approval.`);
+
+    // ---- Document Package Status: grouped by template, so "two acquirer
+    // notifications" reads as one line rather than two near-identical ones ----
+    const groups = {};
+    documents.forEach(doc => {
+        const key = (doc.template && (doc.template.name || doc.template.id)) || doc.title || 'document';
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(doc);
+    });
+    const groupLines = Object.entries(groups).map(([key, docs]) => {
+        const refs = docs.map(d => gP(d, 'documentRef', 'document Ref')).filter(Boolean);
+        const meta = statusMeta(docs[0].status);
+        const readableTitle = docs.length === 1 && docs[0].title ? docs[0].title : humanizeKey(key);
+        const refText = refs.length > 1 ? `${refs.slice(0, -1).join(', ')} & ${refs[refs.length - 1]}` : refs[0] || '';
+        const statusSentence = meta.group === 'blocked' ? 'Currently blocked (see Material Gaps below).'
+            : meta.group === 'ready' ? 'Ready for human review.'
+                : meta.group === 'produced' ? 'Already produced upstream.'
+                    : `Status: ${meta.label}.`;
+        return `<li style="margin-bottom:6px;"><b>${readableTitle}</b>${refText ? ` (${refText})` : ''}: ${statusSentence}</li>`;
+    });
+
+    // ---- Material Gaps & Blocked Actions, from the blocked documents' own
+    // real blockReasons - never invented. Deliberately not also listing
+    // unknownFields as a separate bullet here: the reasons already state in
+    // prose what's missing and why, so a second raw field-name list next to
+    // it just repeats the same information less readably.
+    const gapLines = [];
+    blockedDocs.forEach(doc => {
+        const reasons = gP(doc, 'blockReasons', 'block Reasons') || [];
+        reasons.forEach(r => gapLines.push(r));
+    });
+
+    // ---- Next steps: the case's own human gate, if the response included
+    // one at the top level - otherwise a generic closing line rather than
+    // inventing a gate name that isn't actually in the data ----
+    const humanGate = gP(obj, 'humanGate') || {};
+
     return `
-    <div class="agent-report-wrap" style="line-height:1.5;">
-        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
+    <div class="agent-report-wrap" style="line-height:1.6;font-size:13px;">
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:16px;">
             <div style="font-size:16px;font-weight:800;color:var(--purple-800);">📑 Document Generator</div>
-            <div style="font-size:12px;color:var(--text-2);margin-top:4px;">${summary.documentCount != null ? summary.documentCount : documents.length} documents drafted · ${summary.readyCount || 0} ready · ${summary.blockedCount || 0} blocked</div>
         </div>
 
-        ${documents.map(doc => {
-        const bindings = gP(doc, 'bindings') || [];
-        const sourceRefs = gP(doc, 'sourceRefs', 'source Refs') || [];
-        const unknownFields = gP(doc, 'unknownFields', 'unknown Fields') || [];
-        const blockReasons = gP(doc, 'blockReasons', 'block Reasons') || [];
-        const template = gP(doc, 'template') || {};
-        const docLabel = doc.title || template.name || gP(doc, 'documentRef', 'document Ref') || 'Document';
+        <div class="dg-section-label">Case Overview</div>
+        <p style="margin:0 0 4px;">Case Reference: <b>${caseRef || '—'}</b></p>
+        <p style="margin:0 0 4px;">Customer Reference: <b>${customerRef || '—'}</b></p>
+        <p style="margin:0 0 4px;">Processing Agent: <b>${obj.agent || 'document-generator'}</b></p>
+        <p style="margin:0 0 16px;">Status: <b>${obj.status || 'Completed'}${obj.applicability ? ` (${obj.applicability})` : ''}</b></p>
 
-        return `
-            <div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-                    <div>
-                        <div style="font-size:13px;font-weight:800;">${docLabel}</div>
-                        <div style="font-size:10.5px;font-family:var(--mono);color:var(--text-3);margin-top:2px;">${gP(doc, 'documentRef', 'document Ref') || ''}${template.id ? ` · ${template.id}` : ''}${template.name ? ` · ${template.name}` : ''}</div>
-                    </div>
-                    ${statusBadge(doc.status)}
-                </div>
+        ${incidentParts.length ? `
+        <div class="dg-section-label">Incident Summary</div>
+        <p>${incidentParts.join(' ')}</p>
+        ${txSchedule.length ? `
+        <p style="margin-bottom:4px;">The disputed transaction${txSchedule.length === 1 ? ' is' : 's are'}:</p>
+        <ul style="margin:0 0 10px;padding-left:20px;">
+            ${txSchedule.map(row => `<li>${row.slice(0, 3).join(' — ')}</li>`).join('')}
+        </ul>` : ''}
+        ${closingParts.length ? `<p style="margin-bottom:16px;">${closingParts.join(' ')}</p>` : ''}
+        ` : ''}
 
-                <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--text-2);">
-                    ${doc.submissionChannel ? `<span>📤 ${doc.submissionChannel}</span>` : ''}
-                    ${doc.requiresSignatory ? `<span>✍️ Signatory required</span>` : ''}
-                    ${gP(doc, 'requiresCommissionerOfOaths', 'requiresCommissionerOfOaths') ? `<span>⚖️ Commissioner of Oaths required</span>` : ''}
-                </div>
+        ${groupLines.length ? `
+        <div class="dg-section-label">Document Package Status</div>
+        <p style="margin-bottom:6px;">The system processed ${summary.documentCount != null ? summary.documentCount : documents.length} document${documents.length === 1 ? '' : 's'} for this case (${summary.readyCount || 0} ready for review, ${summary.blockedCount || 0} blocked, and ${documents.length - (summary.readyCount || 0) - (summary.blockedCount || 0)} already produced upstream):</p>
+        <ul style="margin:0 0 16px;padding-left:20px;">${groupLines.join('')}</ul>
+        ` : ''}
 
-                ${bindings.length ? `
-                <table style="width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px;">
-                    <tbody>
-                    ${bindings.map(b => {
-            const isUnknown = b.value === 'UNKNOWN' || b.value === undefined || b.value === null;
-            return `
-                        <tr style="border-top:1px solid var(--border-soft);">
-                            <td style="padding:5px 8px 5px 0;font-weight:700;color:var(--text);width:34%;vertical-align:top;">${humanizeKey(b.field || '')}</td>
-                            <td style="padding:5px 0;vertical-align:top;color:${isUnknown ? 'var(--amber-700)' : 'var(--text-2)'};font-weight:${isUnknown ? '700' : '400'};">${isUnknown ? 'Unknown' : b.value}</td>
-                        </tr>`;
-        }).join('')}
-                    </tbody>
-                </table>` : ''}
+        ${gapLines.length ? `
+        <div class="dg-section-label">Material Gaps &amp; Blocked Actions</div>
+        <ul style="margin:0 0 16px;padding-left:20px;">${gapLines.map(g => `<li style="margin-bottom:6px;">${g}</li>`).join('')}</ul>
+        ` : ''}
 
-                ${unknownFields.length ? `<div style="margin-top:8px;font-size:11px;color:var(--amber-700);"><b>Unknown fields:</b> ${unknownFields.map(humanizeKey).join(', ')}</div>` : ''}
-
-                ${blockReasons.length ? `
-                <div style="background:#FFF5F5;border:1px solid #FED7D7;border-radius:8px;padding:8px 10px;margin-top:8px;">
-                    <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--red-700);">Blocked because</div>
-                    <ul style="margin:4px 0 0;padding-left:16px;">${blockReasons.map(r => `<li style="font-size:11px;color:#742A2A;line-height:1.5;">${r}</li>`).join('')}</ul>
-                </div>` : ''}
-
-                ${sourceRefs.length ? `<div style="margin-top:8px;font-size:10px;color:var(--text-3);">Sources: ${sourceRefs.join(', ')}</div>` : ''}
-            </div>`;
-    }).join('')}
-
-        ${gaps.length ? `
-        <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px;margin-top:6px;">
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#92400E;">Open Policy Gaps</div>
-            <ul style="margin:4px 0 0;padding-left:16px;">${gaps.map(g => `<li style="font-size:12px;color:#78350F;line-height:1.5;">${g}</li>`).join('')}</ul>
-        </div>` : ''}
-
-        ${summary.humanReviewRequired ? `<div style="margin-top:10px;font-size:12px;font-weight:700;color:var(--red-700);">⚠️ Human review required before any external use.</div>` : ''}
+        <div class="dg-section-label">Recommendations &amp; Next Steps</div>
+        <p>${blockedDocs.length ? `The system recommends resolving the unknown fields before approval of ${blockedDocs.length === 1 ? 'the blocked document' : 'the blocked documents'}. ` : ''}The remainder of the document package is fully prepared using current upstream evidence.${humanGate.gateId ? ` The file is currently stationed at the human gate (\`${humanGate.gateId}\`)${humanGate.requiredRole ? `, awaiting review by a ${String(humanGate.requiredRole).replace(/-/g, ' ')}` : ''}.` : ''}</p>
     </div>`;
 }
 
@@ -1582,6 +1662,16 @@ document.addEventListener('DOMContentLoaded', () => {
         caseSearchInput.addEventListener('input', () => {
             caseSearchTerm = caseSearchInput.value;
             fillerPage = 0; // a fresh search always starts from a clean slate, not wherever pagination happened to be
+            renderCases();
+        });
+    }
+
+    const caseSortBtn = document.getElementById('caseSortBtn');
+    if (caseSortBtn) {
+        caseSortBtn.addEventListener('click', () => {
+            caseSortAlpha = !caseSortAlpha;
+            caseSortBtn.classList.toggle('active', caseSortAlpha);
+            fillerPage = 0;
             renderCases();
         });
     }
@@ -1899,6 +1989,7 @@ function drawDonut(segments) {
 const FILTERS = ['All', 'Not started', 'In progress', 'Awaiting gate', 'Needs decision', 'Done'];
 let activeFilter = 'All';
 let caseSearchTerm = '';
+let caseSortAlpha = false;
 
 function renderFilterbar() {
     const c = caseCounts();
@@ -1955,6 +2046,7 @@ function renderCases() {
     const term = caseSearchTerm.trim().toLowerCase();
     let rows = PERSONAS.filter(p => activeFilter === 'All' || caseStatusLabel(p) === activeFilter);
     if (term) rows = rows.filter(p => p.customer.toLowerCase().includes(term) || p.id.toLowerCase().includes(term));
+    if (caseSortAlpha) rows = [...rows].sort((a, b) => a.customer.localeCompare(b.customer));
     tbody.innerHTML = rows.map(p => {
         const s = state[p.id];
         const started = Object.keys(s.agentStatus).length > 0;
@@ -1993,7 +2085,22 @@ function renderCases() {
       <td>${recommendationCell}</td>
       <td>${humanCell}</td>
     </tr>`;
-    }).join('') + (term ? FILLER.filter(f => f.name.toLowerCase().includes(term) || f.ref.toLowerCase().includes(term)) : FILLER.slice(fillerPage * FILLER_PAGE_SIZE, (fillerPage + 1) * FILLER_PAGE_SIZE)).map(f => `<tr class="rowlink filler" data-id="${f.ref}">
+    }).join('');
+
+    // The 146 dummy cases are always "Not started" - showing them regardless
+    // of activeFilter is exactly why clicking "Done" or any other filter
+    // looked broken: the real cases correctly filtered down, but 146 filler
+    // rows kept flooding in underneath regardless of what was selected.
+    const showFiller = activeFilter === 'All' || activeFilter === 'Not started';
+    // Sorted once, on the full 146 (not just the current page slice), so
+    // pagination pages through a genuinely alphabetical order rather than
+    // sorting only whatever 30 happened to already be on screen.
+    const fillerSource = caseSortAlpha ? [...FILLER].sort((a, b) => a.name.localeCompare(b.name)) : FILLER;
+    const fillerMatches = term ? fillerSource.filter(f => f.name.toLowerCase().includes(term) || f.ref.toLowerCase().includes(term)) : [];
+    const fillerRows = showFiller
+        ? (term ? fillerMatches : fillerSource.slice(fillerPage * FILLER_PAGE_SIZE, (fillerPage + 1) * FILLER_PAGE_SIZE))
+        : [];
+    tbody.innerHTML += fillerRows.map(f => `<tr class="rowlink filler" data-id="${f.ref}">
       <td><div class="cust-name">${f.name}</div><div class="cust-ref">${f.ref}</div></td>
       <td><span class="sla-pending">—</span></td>
       <td><span class="sla-pending">—</span></td>
@@ -2005,10 +2112,15 @@ function renderCases() {
 
     const pag = document.getElementById('fillerPagination');
     if (pag) {
-        if (term) {
+        if (!showFiller) {
+            // A filter that excludes "Not started" naturally excludes every
+            // filler case too - nothing to paginate, so just say so plainly
+            // instead of showing stale page controls for a list that's empty.
+            pag.innerHTML = `<span class="fp-range">Dummy cases are always "Not started", so none match the "${activeFilter}" filter.</span>`;
+        } else if (term) {
             // Searching bypasses pagination entirely - shows every match across
             // all 146, not just whichever page happened to be open.
-            const matchCount = FILLER.filter(f => f.name.toLowerCase().includes(term) || f.ref.toLowerCase().includes(term)).length;
+            const matchCount = fillerMatches.length;
             pag.innerHTML = `<span class="fp-range">${matchCount} queued case${matchCount === 1 ? '' : 's'} match "${caseSearchTerm.trim()}"</span>`;
         } else {
             const totalFillerPages = Math.max(1, Math.ceil(FILLER.length / FILLER_PAGE_SIZE));
@@ -2419,11 +2531,11 @@ function renderAgentCard(p, agentKey) {
     <div class="ac-foot" style="margin-top:12px;">${timerBadge}</div>
   ` : `<div class="ac-desc">Waiting on upstream stage.</div>`;
 
-    // The real evidence files this agent actually used for this case, from
-    // the live API response - not a guess reconstructed client-side.
-    const filesLine = (st === 'done' || st === 'blocked') && data.filesUsed && data.filesUsed.length
-        ? `<div class="ac-files">${I('filetext', 10)} ${data.filesUsed.join(', ')}</div>`
-        : '';
+    // A short, always-visible line describing what this agent actually does -
+    // the file names it used moved to the bottom of its full reply instead
+    // (see openAgentModal), since that's a detail worth having but not
+    // something that needs to compete for space on the compact card.
+    const descLine = meta.desc ? `<div class="ac-desc-line">${meta.desc}</div>` : '';
 
     const rerunBtn = (st === 'done' || st === 'blocked')
         ? `<button class="ac-rerun-btn" data-rerun="${agentKey}" title="Rerun this agent">${I('refresh', 12)}</button>`
@@ -2431,7 +2543,7 @@ function renderAgentCard(p, agentKey) {
 
     return `<div class="${cardCls}" data-agent="${agentKey}" ${locked ? 'data-locked="1"' : ''}>
     <div class="ac-top">
-      <div class="ac-id"><div class="ac-ico">${I(meta.icon, 15)}</div><div><div class="ac-name"><span class="tier-dot ${meta.tier}"></span>${meta.label}</div>${filesLine}</div></div>
+      <div class="ac-id"><div class="ac-ico">${I(meta.icon, 15)}</div><div><div class="ac-name"><span class="tier-dot ${meta.tier}"></span>${meta.label}</div>${descLine}</div></div>
       <div style="display:flex;align-items:center;gap:6px;">${pillHtml}${rerunBtn}</div>
     </div>
     ${body}
@@ -2853,12 +2965,28 @@ function openAgentModal(p, agentKey) {
     const amSub = document.getElementById('amSub');
     if (amSub) amSub.textContent = `${p.customer} · ${p.id} · ${meta.tier === 'reasoning' ? 'Reasoning tier' : 'Standard tier'}`;
 
-    let html = '';
-    if (data.elapsedSeconds) {
-        html += `<div style="display:inline-flex;align-items:center;gap:6px;background:#F1F5F9;color:#334155;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-bottom:12px;">${I('timer', 12)} Agent Response Time: ${formatDuration(data.elapsedSeconds)}${data.completedAt ? ` · Completed ${formatWallClock(data.completedAt)}` : ''}</div>`;
+    // Response time now lives in the modal header itself, right under the
+    // customer/case-id line, instead of floating as its own pill at the top
+    // of the body - same container as the agent name throughout.
+    const amTime = document.getElementById('amTime');
+    if (amTime) {
+        amTime.innerHTML = data.elapsedSeconds
+            ? `${I('timer', 11)} Agent Response Time: ${formatDuration(data.elapsedSeconds)}${data.completedAt ? ` · Completed ${formatWallClock(data.completedAt)}` : ''}`
+            : '';
     }
 
+    let html = '';
     html += renderRichAgentReport(data.rawText || data.fullText || data, agentKey);
+
+    // The real evidence files this agent actually used for this case, from
+    // the live API response - shown at the very end of the full reply now,
+    // not competing for space on the compact card.
+    if (data.filesUsed && data.filesUsed.length) {
+        html += `<div class="am-files-footer">
+            <div class="am-files-label">${I('filetext', 12)} Evidence files used</div>
+            <div class="am-files-list">${data.filesUsed.join(', ')}</div>
+        </div>`;
+    }
 
     const amBody = document.getElementById('amBody');
     if (amBody) amBody.innerHTML = html;

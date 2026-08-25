@@ -68,7 +68,11 @@ namespace CardFraudDisputeApp.Controllers
             ["chargebackPreparation"] = new[] { "auth-log", "contact-note", "statement-history" },
             ["recallRepatriation"] = new[] { "auth-log", "counterparty-chain" }, // + CounterpartyReplyKeywords, always included - see GetCaseFiles
             ["obligationCheck"] = new[] { "auth-log", "contact-note", "profile-event-log", "viya-case", "fraud-policy" },
-            ["documentGenerator"] = new[] { "auth-log", "contact-note", "customer-profile", "viya-case", "statement-history", "profile-event-log", "transfer-log", "counterparty-chain", "fraud-policy", "mandate-register", "merchant-descriptors" },
+            // Verified against the real Document Generator input manifest (per-persona
+            // "evidence" lists, 25 Aug) - it does NOT read viya-case, fraud-policy,
+            // mandate-register or merchant-descriptors, unlike my earlier broad guess.
+            // + CounterpartyReplyKeywords, always included - see GetCaseFiles.
+            ["documentGenerator"] = new[] { "auth-log", "contact-note", "customer-profile", "statement-history", "profile-event-log", "transfer-log", "counterparty-chain" },
         };
 
         [HttpPost("run-agent")]
@@ -168,12 +172,15 @@ namespace CardFraudDisputeApp.Controllers
                 .Where(p => Path.GetFileName(p).IndexOf(caseNum, StringComparison.OrdinalIgnoreCase) >= 0)
                 .ToList();
 
-            // Recall & Repatriation (and Funds Trace, which shares counterparty
-            // context) always also pull in whatever counterparty-reply-style
-            // files exist for this case, on top of their normal category list -
-            // these never share one consistent name across personas.
+            // Recall & Repatriation and Funds Trace (which shares counterparty
+            // context), plus Document Generator (confirmed by the real input
+            // manifest - both P2 and P4's Document Generator evidence list
+            // includes their counterparty-reply files), always also pull in
+            // whatever counterparty-reply-style files exist for this case, on
+            // top of their normal category list - these never share one
+            // consistent name across personas.
             var effectiveCategories = new List<string>(categories);
-            if (agentKey == "recallRepatriation" || agentKey == "fundsTrace")
+            if (agentKey == "recallRepatriation" || agentKey == "fundsTrace" || agentKey == "documentGenerator")
             {
                 effectiveCategories.AddRange(CounterpartyReplyKeywords);
             }
