@@ -297,7 +297,8 @@ function freshState(p) {
         expanded: {},
         messages: [],
         urgencyLevel: null,
-        slaStartedAt: null
+        slaStartedAt: null,
+        sapsDraft: null // {subject, body} once generated - persists edits, see renderCorrespondenceTab
     };
 }
 PERSONAS.forEach(p => state[p.id] = freshState(p));
@@ -308,14 +309,17 @@ function pushMessage(p, triggerIndex) {
     const templates = MESSAGES(p);
     if (!templates || triggerIndex >= templates.length) return;
     const s = state[p.id];
-    if (s.messages.some(m => m.trigger === triggerIndex + 1)) return; // already sent - gates are one-shot but this guards against any repeat call
+    if (s.messages.some(m => m.trigger === triggerIndex + 1)) return; // already drafted - gates are one-shot but this guards against any repeat call
     const tmpl = templates[triggerIndex];
     const t = new Date();
-    s.messages.push({ text: tmpl.text, channel: tmpl.channel, suppression: !!tmpl.suppression, time: t.toTimeString().slice(0, 5), trigger: triggerIndex + 1 });
+    // Drafted, not sent - a human has to review and explicitly send every
+    // message (see sendDraftMessage), in case it needs editing first. Nothing
+    // here notifies the customer; that only happens on send.
+    s.messages.push({ text: tmpl.text, channel: tmpl.channel, suppression: !!tmpl.suppression, time: t.toTimeString().slice(0, 5), trigger: triggerIndex + 1, status: 'draft', draftedAt: t.toISOString(), sentAt: null });
     updateThreadBadge();
     flashBadge();
     if (currentCaseId === p.id) renderThread(p);
-    showToast(`Customer notified via ${tmpl.channel}`, 'msg', 'msg');
+    showToast(`New customer message drafted (${tmpl.channel}) - awaiting review`, 'msg', 'msg');
 }
 
 // Fires every message whose afterGate matches the screen whose gate was just
@@ -326,6 +330,22 @@ function pushMessagesForGate(p, screenIdx) {
     templates.forEach((tmpl, i) => {
         if (tmpl.afterGate === screenIdx) pushMessage(p, i);
     });
+}
+
+// The actual send action - this is the only point a customer is genuinely
+// notified. Whatever text is in the draft at this moment (including any
+// human edits) is what goes out, which is the whole point of drafting
+// first rather than auto-sending.
+function sendDraftMessage(p, msgIndex) {
+    const s = state[p.id];
+    const msg = s.messages[msgIndex];
+    if (!msg || msg.status !== 'draft') return;
+    if (!msg.text || !msg.text.trim()) { showToast('Message is empty - add some text before sending.', 'flag', 'flag'); return; }
+    msg.status = 'sent';
+    msg.sentAt = new Date().toISOString();
+    updateThreadBadge();
+    if (currentCaseId === p.id) renderThread(p);
+    showToast(`Customer notified via ${msg.channel}`, 'msg', 'msg');
 }
 
 /* ============================================================
@@ -1676,6 +1696,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // rerunCaseBtn/stopCaseBtn live in the static case-detail header, so they
+    // resolve whichever case is currently open at click time rather than
+    // being bound to one case - same reason openThreadBtn works this way.
+    const rerunCaseBtn = document.getElementById('rerunCaseBtn');
+    if (rerunCaseBtn) {
+        rerunCaseBtn.addEventListener('click', () => {
+            const p = findPersona(currentCaseId);
+            if (p) rerunEntireCase(p);
+        });
+    }
+    const stopCaseBtn = document.getElementById('stopCaseBtn');
+    if (stopCaseBtn) {
+        stopCaseBtn.addEventListener('click', () => {
+            const p = findPersona(currentCaseId);
+            if (p) stopCase(p);
+        });
+    }
+
     const now = new Date();
     const todayElem = document.getElementById('todayStr');
     if (todayElem) todayElem.textContent = now.toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -1843,12 +1881,13 @@ function renderDashboard() {
         panelHumanDecisions.querySelectorAll('[data-goto]').forEach(row => row.addEventListener('click', () => goto(row.dataset.goto)));
     }
 
-    let totalTriggers = PERSONAS.reduce((a, p) => a + state[p.id].messages.length, 0);
+    let sentCount = PERSONAS.reduce((a, p) => a + state[p.id].messages.filter(m => m.status === 'sent').length, 0);
+    let draftCount = PERSONAS.reduce((a, p) => a + state[p.id].messages.filter(m => m.status === 'draft').length, 0);
     const panelComposer = document.getElementById('panelComposer');
     if (panelComposer) {
         panelComposer.innerHTML = `
-        <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:var(--purple-700)"></span>Customer updates sent</div><div class="kv-val">${totalTriggers}</div></div>
-        <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:#D7D2E8"></span>Fires on approval only</div></div>`;
+        <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:var(--purple-700)"></span>Customer updates sent</div><div class="kv-val">${sentCount}</div></div>
+        <div class="kv-row"><div class="kv-left"><span class="kv-dot" style="background:var(--amber-700)"></span>Drafts awaiting review</div><div class="kv-val">${draftCount}</div></div>`;
     }
 
     // Recoverability distribution reflects real progress, not just each case's
@@ -2308,9 +2347,12 @@ function openCase(id) {
 
     const threadBtn = document.getElementById('openThreadBtn');
     if (threadBtn) threadBtn.removeAttribute('disabled');
+    const rerunCaseBtn = document.getElementById('rerunCaseBtn');
+    if (rerunCaseBtn) rerunCaseBtn.removeAttribute('disabled');
 
     const dInfoBox = document.getElementById('dInfoBox');
     if (dInfoBox) renderCaseHeaderInfo(p);
+    updateStopButtonState(p);
 
     closeThread();
 
@@ -2328,7 +2370,8 @@ function openCase(id) {
     updateThreadBadge();
 
     const s = state[id];
-    if (Object.keys(s.agentStatus).length === 0) runScreenAgents(p);
+    if (Object.keys(s.agentStatus).length === 0 && !s.stopped) runScreenAgents(p);
+    updateStopButtonState(p);
 }
 
 /* ============================================================
@@ -2358,7 +2401,7 @@ function renderFillerCaseShell(filler) {
         dStatusBanner.innerHTML = `<div class="filler-notice">${filler.name} is a queued placeholder used to give the case list realistic volume. It doesn't run the agent pipeline — only Sipho, Andile, Nomvula and Thabo do that in this build.</div>`;
     }
 
-    ['openThreadBtn'].forEach(id => { const el = document.getElementById(id); if (el) el.setAttribute('disabled', 'disabled'); });
+    ['openThreadBtn', 'rerunCaseBtn', 'stopCaseBtn'].forEach(id => { const el = document.getElementById(id); if (el) el.setAttribute('disabled', 'disabled'); });
 
     const wbScrollEl = document.getElementById('wbScroll');
     if (wbScrollEl) { wbScrollEl.style.display = 'block'; wbScrollEl.innerHTML = `<div class="filler-empty">No agent activity for this case.</div>`; }
@@ -2722,6 +2765,11 @@ function runOneAgent(p, ak, onComplete) {
                 clearInterval(agentTimerIntervals[timerKey]);
                 delete agentTimerIntervals[timerKey];
             }
+            // The request can't actually be cancelled mid-flight without a lot
+            // more plumbing, but a response that lands after the case was
+            // stopped should never silently flip a stopped agent back to done -
+            // this is what makes Stop feel real rather than cosmetic.
+            if (s.stopped) return;
             p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
             p.a[ak].completedAt = new Date().toISOString();
             p.a[ak].filesUsed = Array.isArray(apiRes.filesUsed) ? apiRes.filesUsed : [];
@@ -2780,6 +2828,7 @@ function runOneAgent(p, ak, onComplete) {
                 clearInterval(agentTimerIntervals[timerKey]);
                 delete agentTimerIntervals[timerKey];
             }
+            if (s.stopped) return;
             p.a[ak].elapsedSeconds = Math.floor((Date.now() - p.a[ak].startTime) / 1000);
             p.a[ak].completedAt = new Date().toISOString();
             p.a[ak].finding = 'Connection Error';
@@ -2804,6 +2853,69 @@ function rerunAgent(p, ak) {
     const s = state[p.id];
     if (s.agentStatus[ak] === 'running') return; // already in flight
     runOneAgent(p, ak, null);
+}
+
+// Soft stop: can't actually abort an in-flight HTTP request without a lot
+// more plumbing (AbortController wiring through every call site), but this
+// makes Stop genuinely effective rather than cosmetic - any agent currently
+// "running" gets visually blocked immediately, every timer for this case is
+// cleared, and the fetch handlers themselves check s.stopped before applying
+// a late-arriving response, so a request that resolves after the stop can
+// never silently revive the case.
+function stopCase(p) {
+    const s = state[p.id];
+    s.stopped = true;
+    Object.keys(p.a).forEach(ak => {
+        const timerKey = `${p.id}-${ak}`;
+        if (agentTimerIntervals[timerKey]) {
+            clearInterval(agentTimerIntervals[timerKey]);
+            delete agentTimerIntervals[timerKey];
+        }
+        if (s.agentStatus[ak] === 'running') {
+            s.agentStatus[ak] = 'blocked';
+            p.a[ak].finding = 'Stopped by user';
+            p.a[ak].desc = 'This case was stopped while this agent was running. Rerun the case to start again.';
+            p.a[ak].tone = 'block';
+        }
+    });
+    renderHorizontalStepper(p); renderActiveStageContent(p); renderDashboardIfVisible(); renderCasesIfVisible();
+    updateStopButtonState(p);
+    showToast(`${p.customer}'s case stopped`, 'warn', 'alert');
+}
+
+// Full reset - clears every agent's run data and the case's own progress
+// state back to a fresh-case shape, then starts the pipeline again from
+// Case Intake. Destructive (it discards any recorded human decisions too),
+// so it's confirmed before running.
+function rerunEntireCase(p) {
+    if (!window.confirm(`Rerun the entire case for ${p.customer}? This clears every agent's output and every human decision recorded so far, and starts the case again from Case Intake.`)) {
+        return;
+    }
+    const oldTimerKeys = Object.keys(agentTimerIntervals).filter(k => k.startsWith(`${p.id}-`));
+    oldTimerKeys.forEach(k => { clearInterval(agentTimerIntervals[k]); delete agentTimerIntervals[k]; });
+
+    state[p.id] = freshState(p);
+    Object.keys(p.a).forEach(ak => {
+        const entry = p.a[ak];
+        delete entry.rawText; delete entry.fullText; delete entry.finding; delete entry.desc;
+        delete entry.tone; delete entry.isFallback; delete entry.completedAt; delete entry.elapsedSeconds;
+        delete entry.startTime; delete entry.filesUsed; delete entry.urgencyLevel; delete entry.reasoning;
+    });
+
+    renderCaseHeaderPills(p); renderCaseHeaderInfo(p);
+    renderStatusBanner(p); renderHorizontalStepper(p); renderActiveStageContent(p); updateProgressRing(p);
+    renderDashboardIfVisible(); renderCasesIfVisible();
+    updateStopButtonState(p);
+    showToast(`${p.customer}'s case reset - rerunning from Case Intake`, 'msg', 'msg');
+    runScreenAgents(p);
+}
+
+function updateStopButtonState(p) {
+    const s = state[p.id];
+    const stopBtn = document.getElementById('stopCaseBtn');
+    if (!stopBtn) return;
+    stopBtn.disabled = !!s.stopped;
+    stopBtn.textContent = s.stopped ? '■ Stopped' : '■ Stop case';
 }
 
 function handleGate(p, screenIdx, action, reason) {
@@ -2838,7 +2950,7 @@ function handleGate(p, screenIdx, action, reason) {
         s.screenIdx = screenIdx + 1;
         s.activeStageTab = s.screenIdx;
         renderStatusBanner(p);
-        runScreenAgents(p);
+        if (!s.stopped) runScreenAgents(p);
     } else {
         s.closed = true;
         releaseArtefacts(p);
@@ -3223,18 +3335,96 @@ function downloadDocumentGeneratorPdf(p) {
 
 /* ---- Correspondence tab: Funds Trace (where it went) and
        Recall & Repatriation (outbound chases + replies), live ---- */
+// Builds the initial SAPS voluntary criminal complaint draft from real case
+// data - confirmed against a real completed Obligation Check response
+// (voluntaryCriminalComplaint.status/reason/humanDecisionRequired). Only
+// ever a starting point: the human can edit every word before it goes
+// anywhere, and nothing here gets sent automatically.
+function generateSapsDraft(p) {
+    const info = getLiveCaseInfo(p);
+    const obl = p.a.obligationCheck;
+    const parsed = obl && obl.rawText ? parseAgentJson(obl.rawText) : null;
+    const vcc = (parsed && gP(parsed, 'voluntaryCriminalComplaint', 'voluntaryCriminalComplaint')) || {};
+    const caseRef = (parsed && gP(parsed, 'caseRef', 'case Ref')) || p.id;
+
+    const subject = `Voluntary Criminal Complaint — Case ${caseRef} — ${p.customer}`;
+    const body = `To: South African Police Service (SAPS) — Cyber/Commercial Crimes Unit
+Case Reference: ${caseRef}
+Customer: ${p.customer}
+Disputed Amount: ${info.amount}
+
+I am writing on behalf of FNB to voluntarily report the above matter for evidence preservation purposes.
+
+${vcc.reason || 'A voluntary complaint may be operationally useful for evidence preservation and to obtain a case number should any later recovery process require one.'}
+
+This complaint is submitted voluntarily. No statutory reporting duty has been identified as applying to this case. A case number is requested for our records.
+
+Regards,
+[Investigator name]
+FNB Fraud Operations`;
+
+    return { subject, body };
+}
+
+// Whether Obligation Check has genuinely (not via fallback) determined that
+// a human actually needs to decide on the voluntary SAPS complaint - the
+// draft option only appears when that's actually true, not for every case.
+function getSapsSuitability(p) {
+    const s = state[p.id];
+    const genuinelyDone = s.agentStatus && s.agentStatus.obligationCheck === 'done'
+        && p.a.obligationCheck && p.a.obligationCheck.isFallback !== true;
+    if (!genuinelyDone || !p.a.obligationCheck.rawText) return false;
+    const parsed = parseAgentJson(p.a.obligationCheck.rawText);
+    const vcc = parsed && gP(parsed, 'voluntaryCriminalComplaint', 'voluntaryCriminalComplaint');
+    return !!(vcc && vcc.humanDecisionRequired === true);
+}
+
+function renderSapsDraftCard(p) {
+    const s = state[p.id];
+    if (!getSapsSuitability(p)) return '';
+
+    if (!s.sapsDraft) {
+        return `<div class="corr-card">
+            <div class="cc-head"><div class="cc-ico">${I('filetext', 14)}</div>
+                <div><div class="cc-title">SAPS Voluntary Criminal Complaint</div><div class="cc-sub">Obligation Check flagged this as a human decision</div></div>
+                <span class="cc-status pending">Not drafted</span></div>
+            <div style="padding:12px 0;">
+                <p style="font-size:12.5px;color:var(--text-2);margin:0 0 10px;">Obligation Check determined this case needs a human decision on a voluntary SAPS complaint. A draft can be prepared from the case's real data for a human to review and edit before it's used.</p>
+                <button class="btn primary pill-btn" id="genSapsDraftBtn">Draft SAPS complaint email</button>
+            </div>
+        </div>`;
+    }
+
+    return `<div class="corr-card">
+        <div class="cc-head"><div class="cc-ico">${I('filetext', 14)}</div>
+            <div><div class="cc-title">SAPS Voluntary Criminal Complaint</div><div class="cc-sub">Draft — not sent, edit freely before use</div></div>
+            <span class="cc-status done">Draft</span></div>
+        <div style="padding:12px 0;">
+            <label class="gr-label" for="sapsSubjectInput">Subject</label>
+            <input type="text" id="sapsSubjectInput" class="case-search-input" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:10px;" value="${s.sapsDraft.subject.replace(/"/g, '&quot;')}">
+            <label class="gr-label" for="sapsBodyInput">Body</label>
+            <textarea id="sapsBodyInput" class="gr-textarea" rows="12" style="width:100%;">${s.sapsDraft.body}</textarea>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+                <button class="btn ghost pill-btn" id="regenSapsDraftBtn">Regenerate from case data</button>
+            </div>
+        </div>
+    </div>`;
+}
+
 function renderCorrespondenceTab(p) {
     const panel = document.getElementById('wbCorrPanel');
     if (!panel) return;
     const corrAgents = ['fundsTrace', 'recallRepatriation'];
     const anyRun = corrAgents.some(ak => ['done', 'blocked'].includes(agentRunState(p, ak)));
+    const sapsCard = renderSapsDraftCard(p);
 
-    if (!anyRun) {
+    if (!anyRun && !sapsCard) {
         panel.innerHTML = `<div class="corr-empty"><b>No counterparty correspondence yet</b>This becomes available once Funds Trace and Recall &amp; Repatriation have run. If this case turns out to be merchant-only, or is recognised as the customer's own spend, this tab will stay empty — that's expected, not a gap.</div>`;
+        wireSapsDraftHandlers(p);
         return;
     }
 
-    let html = `<div class="corr-grid">` + corrAgents.map(ak => {
+    let html = `<div class="corr-grid">` + sapsCard + (anyRun ? corrAgents.map(ak => {
         const meta = AGENTS[ak];
         const st = agentRunState(p, ak);
         const subtitle = ak === 'fundsTrace' ? 'Where the money went' : 'Outbound recalls, pledges &amp; replies';
@@ -3249,9 +3439,37 @@ function renderCorrespondenceTab(p) {
             <div><div class="cc-title">${meta.label}</div><div class="cc-sub">${subtitle}</div></div>
             <span class="cc-status ${st === 'blocked' ? 'blocked' : 'done'}">${st === 'blocked' ? 'Gate closed' : 'Live'}</span></div>
             ${renderRichAgentReport(data.rawText || data.fullText || data, ak)}</div>`;
-    }).join('') + `</div>`;
+    }).join('') : '') + `</div>`;
 
     panel.innerHTML = html;
+    wireSapsDraftHandlers(p);
+}
+
+// Wires the SAPS draft card's controls - generate, live-edit persistence,
+// and regenerate. Called after every renderCorrespondenceTab so it works
+// whether the card is showing its "not drafted yet" state or the editable
+// draft itself.
+function wireSapsDraftHandlers(p) {
+    const s = state[p.id];
+    const genBtn = document.getElementById('genSapsDraftBtn');
+    if (genBtn) {
+        genBtn.addEventListener('click', () => {
+            s.sapsDraft = generateSapsDraft(p);
+            renderCorrespondenceTab(p);
+        });
+    }
+    const regenBtn = document.getElementById('regenSapsDraftBtn');
+    if (regenBtn) {
+        regenBtn.addEventListener('click', () => {
+            if (!window.confirm('Replace your edits with a freshly generated draft?')) return;
+            s.sapsDraft = generateSapsDraft(p);
+            renderCorrespondenceTab(p);
+        });
+    }
+    const subjectInput = document.getElementById('sapsSubjectInput');
+    if (subjectInput) subjectInput.addEventListener('input', () => { if (s.sapsDraft) s.sapsDraft.subject = subjectInput.value; });
+    const bodyInput = document.getElementById('sapsBodyInput');
+    if (bodyInput) bodyInput.addEventListener('input', () => { if (s.sapsDraft) s.sapsDraft.body = bodyInput.value; });
 }
 
 /* ---- Summary tab: a chronological, plain-language record of the case -
@@ -3375,22 +3593,49 @@ function renderThread(p) {
     const s = state[p.id];
     const body = document.getElementById('threadBody');
     if (!body) return;
-    if (!s.messages.length) { body.innerHTML = `<div class="thread-empty">No messages sent yet. Message Composer fires the first update once Case Intake completes.</div>`; return; }
-    body.innerHTML = s.messages.map(m => `
+    if (!s.messages.length) { body.innerHTML = `<div class="thread-empty">No messages drafted yet. Message Composer drafts the first update once Case Intake completes - a human still has to review and send it.</div>`; return; }
+    body.innerHTML = s.messages.map((m, i) => {
+        if (m.status === 'draft') {
+            return `
+    <div class="msg-group msg-draft">
+      <div class="msg-meta-top"><span class="mchan">${I(CHANNEL_ICON[m.channel] || 'msg', 11)} ${m.channel}</span> · <span class="draft-badge">Draft — not sent</span></div>
+      <textarea class="msg-draft-edit" data-msg-index="${i}" rows="3">${m.text}</textarea>
+      ${m.suppression ? `<div class="suppression-note">${I('check', 12)} Tipping-off suppression active — regulatory reference withheld</div>` : ''}
+      <div class="msg-draft-actions">
+        <span class="msg-draft-hint">Edit if needed, then send</span>
+        <button class="btn primary pill-btn" data-send-msg="${i}">Send to customer</button>
+      </div>
+    </div>`;
+        }
+        return `
     <div class="msg-group">
-      <div class="msg-meta-top"><span class="mchan">${I(CHANNEL_ICON[m.channel] || 'msg', 11)} ${m.channel}</span> · ${m.time}</div>
+      <div class="msg-meta-top"><span class="mchan">${I(CHANNEL_ICON[m.channel] || 'msg', 11)} ${m.channel}</span> · ${m.sentAt ? formatWallClock(m.sentAt) : m.time}</div>
       <div class="msg-bubble">${m.text}</div>
       ${m.suppression ? `<div class="suppression-note">${I('check', 12)} Tipping-off suppression active — regulatory reference withheld</div>` : ''}
       <div class="msg-status">Delivered <span style="color:var(--purple-500)">✓✓</span> <span class="trigger-badge">trigger ${m.trigger}</span></div>
-    </div>`).join('');
+    </div>`;
+    }).join('');
     body.scrollTop = body.scrollHeight;
+
+    body.querySelectorAll('[data-send-msg]').forEach(btn => {
+        btn.addEventListener('click', () => sendDraftMessage(p, parseInt(btn.dataset.sendMsg, 10)));
+    });
+    body.querySelectorAll('.msg-draft-edit').forEach(ta => {
+        ta.addEventListener('input', () => {
+            const idx = parseInt(ta.dataset.msgIndex, 10);
+            if (s.messages[idx]) s.messages[idx].text = ta.value;
+        });
+    });
 }
 
 function updateThreadBadge() {
     if (!currentCaseId) return;
     const s = state[currentCaseId];
     const badge = document.getElementById('threadBadge');
-    if (badge) badge.textContent = s.messages.length;
+    if (!badge) return;
+    badge.textContent = s.messages.length;
+    const hasDrafts = s.messages.some(m => m.status === 'draft');
+    badge.classList.toggle('has-drafts', hasDrafts);
 }
 
 function renderRoleCards() {

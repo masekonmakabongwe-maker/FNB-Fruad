@@ -11,7 +11,7 @@
     <div class="login-left">
         <div class="login-mesh"></div>
         <div class="login-brand">
-            <div class="logo-mark">P</div>
+            <img src="~/img/purple-fabric-logo.png" alt="Purple Fabric" class="logo-mark" />
             <div class="logo-word"><b>PURPLE</b><b>FABRIC</b></div>
         </div>
         <div class="login-tagline">
@@ -36,7 +36,7 @@
 
 <div class="shell" id="shellRoot" style="display:none;">
     <header class="topbar">
-        <div class="logo-mark">P</div>
+        <img src="~/img/purple-fabric-logo.png" alt="Purple Fabric" class="logo-mark" />
         <div class="logo-word"><b>PURPLE</b><b>FABRIC</b></div>
         <div class="divider-v"></div>
         <div class="product-name">Card Fraud Dispute Management</div>
@@ -143,6 +143,8 @@
                                     </div>
                                     <div class="wb-h-actions">
                                         <button class="thread-btn" id="openThreadBtn">💬 Customer thread <span class="tb-badge" id="threadBadge">0</span></button>
+                                        <button class="btn ghost pill-btn" id="rerunCaseBtn" title="Rerun every agent for this case from the start">↻ Rerun case</button>
+                                        <button class="btn danger pill-btn" id="stopCaseBtn" title="Stop this case - cancels any agent currently running and blocks further automation">■ Stop case</button>
                                     </div>
                                 </div>
                                 <div class="wb-info" id="dInfoBox"></div>
