@@ -1,0 +1,14 @@
+bin/
+obj/
+.vs/
+*.user
+.git/
+.gitignore
+.dockerignore
+README.md
+DEPLOYMENT.md
+
+# Local dev secrets never belong in the image - real credentials are set as
+# Vercel Environment Variables instead, see DEPLOYMENT.md.
+appsettings.Development.json
+**/secrets.json

@@ -1,0 +1,31 @@
+# Build artifacts
+bin/
+obj/
+out/
+publish/
+
+# IDE / editor
+.vs/
+.vscode/
+*.user
+*.suo
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local-only settings and secrets
+# appsettings.json itself IS committed - it only ever holds blank
+# placeholder values, with real credentials injected at deploy time via
+# environment variables (see DEPLOYMENT.md). appsettings.Development.json
+# and dotnet user-secrets' local secrets.json are excluded since neither
+# should ever be relied on to hold real values either, but doubly so if a
+# real value is ever pasted in by mistake during local testing.
+appsettings.Development.json
+**/secrets.json
+*.pfx
+*.key
+
+# Vercel
+.vercel
