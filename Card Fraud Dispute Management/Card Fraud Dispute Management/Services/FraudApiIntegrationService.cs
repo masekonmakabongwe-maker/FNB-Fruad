@@ -32,7 +32,7 @@ namespace CardFraudDisputeApp.Services
             ["chargebackPreparation"] = "b87bdd53-de89-47f9-b384-697c4db1823e",
             ["recallRepatriation"] = "a58999c2-653d-45e6-8fda-de4d372aea82",
             ["obligationCheck"] = "ab3666f2-9f29-4f10-9d78-d7ae27f173f0",
-            ["documentGenerator"] = "61c626f8-2379-48fc-8b7f-02df67d7f22e"
+            ["documentGenerator"] = "a9968cbf-563b-41f9-aa30-ee3e39bbdf9f"
         };
 
         public FraudApiIntegrationService(HttpClient httpClient, ILogger<FraudApiIntegrationService> logger)
@@ -171,8 +171,8 @@ namespace CardFraudDisputeApp.Services
 
         private async Task<string> PollTraceResultAsync(string assetId, string traceId, string apiKey, string token)
         {
-            // Extended window: 70 attempts x 3000ms = 210 seconds total
-            int maxAttempts = 70;
+            // Extended window: 90 attempts x 3000ms = 270 seconds total
+            int maxAttempts = 90;
             int delayMs = 3000;
 
             for (int i = 0; i < maxAttempts; i++)

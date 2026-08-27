@@ -114,6 +114,192 @@ const ARTEFACT_DEFS = [
 
 function A(agentKey, o) { return Object.assign({ agentKey }, o); }
 
+/* ============================================================
+   HARDCODED REFERENCE CASE — a complete, always-working replica of
+   Sipho Ndlovu's case (FNB-51204), transcribed field-for-field from a real
+   completed run of all 9 agents (25 Aug). Exists as its own separate case
+   (FNB-51204-REF) so the live FNB-51204 case is untouched and still calls
+   the real API - this one never does, so it's always available for a demo
+   even if Purple Fabric is slow, rate-limited, or unreachable.
+   ============================================================ */
+const HARDCODED_SIPHO_REF_DATA = {
+    caseIntake: {
+        caseRef: 'VIYA-FNB-CF-51204', customerRef: 'CUS-51204', agent: 'case-intake', status: 'completed',
+        customer: { fullName: 'Sipho Ndlovu', preferredName: 'Sipho', verifiedContact: '+27 *** 4412', cardEnding: '7314' },
+        reportedEvent: {
+            reportedTotal: { amount: 44300, currency: 'ZAR' },
+            compromiseDisclosure: { otpMentioned: false, inAppApprovalMade: false, phoneWorking: true, detailsDisclosed: ['card number', 'expiry date', 'CVV'] },
+            knownTimeline: [
+                "2026-08-12T19:42:00+02:00 — Customer reported receiving an SMS stating 'FNB: Card ending 7314 blocked — suspicious activity. Reactivate now: fnb-secure-verify.co.za'.",
+                '2026-08-12T19:47:00+02:00 — Customer reported opening the link and entering card number, expiry date and CVV on the website.',
+                '2026-08-12T20:14:00+02:00 — Card transaction AUTH-51204-01 for R12,400.00 at TECHZONE ONLINE recorded as Approved.',
+                '2026-08-12T20:26:00+02:00 — Card transaction AUTH-51204-02 for R31,900.00 at GAMEHUB DIGITAL recorded as Approved.',
+                '2026-08-12T20:31:00+02:00 — Card transaction AUTH-51204-03 for R28,000.00 at ELECTRO MART ONLINE recorded as Declined.',
+                '2026-08-12T20:33:00+02:00 — Alert messages were sent for the authorisation activity; customer first noticed alerts at about this time.',
+                '2026-08-12T20:38:00+02:00 — Customer called the fraud line regarding two card transactions he said were not his.',
+                '2026-08-12T21:02:00+02:00 — Case was passed to fraud review at end of call.',
+            ],
+        },
+        caseScope: {
+            includedItems: [
+                { transactionRef: 'AUTH-51204-01', amount: 12400 },
+                { transactionRef: 'AUTH-51204-02', amount: 31900 },
+            ],
+            excludedItems: [
+                { transactionRef: 'AUTH-51204-03', reason: 'Declined attempt only; customer confirmed it did not debit the account and does not dispute it.' },
+            ],
+        },
+        containmentAlreadyCompleted: [{ action: 'card-block', status: 'completed' }],
+        materialGaps: [
+            'Whether the two approved authorisations have posted and settled is not confirmed in the intake file set.',
+            'Physical evidence of the SMS link/customer-facing messages is not captured in the intake file set; customer was asked to keep the SMS.',
+            'Profile and channel containment beyond card block is not evidenced as completed in the intake file set; the contact note states system events still require review before any further account-access or profile-containment decision.',
+            'Counterparty destination or onward movement of funds is not evidenced in the intake file set.',
+            'ECI values and 3DS statuses differ across the authorisation log entries (AUTH-51204-01: Not attempted / 07; AUTH-51204-02: Attempted / 05; AUTH-51204-03: Not attempted / 07) and should be reviewed at Transaction Classification.',
+        ],
+        recommendation: { action: 'confirm-case-scope-and-continue', reason: 'Case scope is identifiable and evidenced at intake: two approved disputed card transactions are in scope, one declined attempt is excluded, and completed card containment is evidenced. Remaining gaps are downstream evidence gaps and do not prevent scoping.' },
+        vulnerability: { flagged: false },
+        urgency: { level: 'high' },
+    },
+    recognitionCheck: {
+        caseRef: 'VIYA-FNB-CF-51204', agent: 'recognition-check', status: 'completed', applicability: 'applicable',
+        recognitionResult: 'no-match',
+        statementHistoryBasis: '24-month statement window reviewed; 243 history rows reviewed; no prior settled relationship found for TECHZONE ONLINE or GAMEHUB DIGITAL; customer denial matches absence of prior relationship',
+        window: { from: '2024-08-13', to: '2026-08-12', rowsEvaluated: 243 },
+        materialGaps: ['No reliable descriptor directory or biller record was provided to independently resolve TECHZONE ONL DBN ZA or GHUB*DIGITAL ZA.'],
+        recommendation: { action: 'no-recognition-deflection', reason: 'Recognition is not established because neither disputed merchant has a prior settled relationship in the reviewed history. The case should continue to Fraud Assessment.' },
+    },
+    fraudAssessment: {
+        caseRef: 'VIYA-FNB-CF-51204', agent: 'fraud-assessment', status: 'completed', applicability: 'applicable',
+        classification: { fraudType: 'phishing-card-details-compromise', channel: 'e-commerce-card-not-present' },
+        compromiseExtent: { label: 'card credentials', basis: 'Available evidence supports compromise of the card details entered into the phishing site, with no evidence that banking profile credentials, the registered device, the mobile authentication channel, beneficiaries or transaction limits were compromised.' },
+        containmentActions: [{ action: 'card-block', status: 'already-completed' }, { action: 'card-reissue', status: 'already-completed' }],
+        bankControlAssessment: 'No bank control failure is evidenced on the available records. The available evidence indicates a third-party phishing website captured card details before the disputed e-commerce authorisations. The authorisation and alert records show the bank processed the card-not-present requests and sent activity alerts at 20:33 on the data available to it. No separate third-party data dependency finding is evidenced in the file set.',
+        recommendation: { action: 'confirm-fraud-classification-and-card-only-containment', reason: 'The evidence supports a phishing-led card-details compromise followed by unauthorised e-commerce card-not-present use, with compromise extent limited to card number, expiry date and CVV and no profile compromise evidenced in the 72-hour event log.' },
+    },
+    transactionClassification: {
+        caseRef: 'VIYA-FNB-CF-51204', agent: 'transaction-classification', status: 'completed', applicability: 'applicable',
+        rail: 'Visa card scheme', condition: 'Visa 10.4', summary: { schemeCondition: 'Visa 10.4' },
+        items: [
+            { transactionRef: 'AUTH-51204-01', merchant: 'TECHZONE ONLINE', eciPresented: '07', plainEnglish: 'This was a Visa online card payment with no 3-D Secure authentication shown. That means there is a scheme fraud route against the merchant/acquirer, so the item is recoverable under Visa 10.4 if filed in time.', threeDSStatus: 'Not attempted', cavvPresent: false, recoverability: { filingDeadline: '2026-12-10' } },
+            { transactionRef: 'AUTH-51204-02', merchant: 'GAMEHUB DIGITAL', eciPresented: '05', plainEnglish: 'This online Visa payment claims authentication, but the record does not contain the required CAVV. Under the rules, that means the authentication claim is unsupported, there is no issuer liability shift, and a Visa 10.4 fraud route remains available against the merchant/acquirer.', threeDSStatus: 'Attempted', cavvPresent: false, recoverability: { filingDeadline: '2026-12-10' } },
+        ],
+        recommendation: { action: 'confirm-two-visa-10.4-routes', reason: 'Both approved disputed items are Visa e-commerce card-not-present transactions with no valid authentication position that would shift liability to the issuer, and both fall within the current 120-day Visa 10.4 filing window from processing date.' },
+    },
+    fundsTrace: {
+        caseRef: 'VIYA-FNB-CF-51204', agent: 'funds-trace', status: 'completed', applicability: 'applicable',
+        recoveryPosition: { potentiallyRecoverable: 44300, currency: 'ZAR' },
+        items: [
+            { transactionRef: 'AUTH-51204-01', arn: '7482955 12040001 12233445', amount: 12400, movementPath: ['FNB issuer account', 'Visa card scheme', 'acquirer identity not supplied in source evidence', 'TECHZONE ONLINE'] },
+            { transactionRef: 'AUTH-51204-02', arn: '74829551204000112233446', amount: 31900, movementPath: ['FNB issuer account', 'Visa card scheme', 'acquirer identity not supplied in source evidence', 'GAMEHUB DIGITAL'] },
+        ],
+        counterparties: [{ name: 'TECHZONE ONLINE', type: 'merchant' }, { name: 'GAMEHUB DIGITAL', type: 'merchant' }],
+        timeCriticalityRanking: [
+            { counterpartyRef: 'CP-1-TECHZONE', rank: 1, reason: 'Visa 10.4 scheme recovery route is open with filing deadline evidenced as 2026-12-10 from processing date; no shorter operational recovery window is evidenced.' },
+            { counterpartyRef: 'CP-2-GAMEHUB', rank: 2, reason: 'Visa 10.4 scheme recovery route is open with filing deadline evidenced as 2026-12-10 from processing date; no shorter operational recovery window is evidenced.' },
+        ],
+        recommendation: { action: 'use-scheme-disputes-and-parallel-acquirer-correspondence', reason: 'Both disputed items are traceable through the Visa card scheme to identified merchant endpoints with ARNs present, ordinary liability does not shift to the issuer on the available classification, and the evidenced recovery route is Visa 10.4 with parallel direct acquirer correspondence once the acquirer identity is obtained.' },
+    },
+    shadowCredit: {
+        caseRef: 'VIYA-FNB-CF-51204', agent: 'shadow-credit', status: 'completed', applicability: 'applicable',
+        recommendation: { decision: 'Approve Provisional Refund', refundAmount: 44300, action: 'approve-provisional-refund', reason: 'On the available evidence the customer was deceived by a convincing impersonation SMS appearing in an existing FNB alert thread and disclosed card number, expiry date and CVV once. Under CFP-3.6, deception by a convincing communication does not by itself amount to gross negligence, and a single credential disclosure is not automatically gross negligence.' },
+        eligibilityAssessment: { eligible: true, grossNegligenceExclusionEngaged: false, grossNegligenceReason: 'There is no specific evidence of reckless disregard, repeated disclosure after prior warning on the same mechanism, or intentional participation.' },
+        counterArgument: { position: 'The strongest counterargument is that the customer entered full card details on a phishing site shortly before the transactions, and one disputed authorisation presents ECI 05 as an authentication attempt, which could be argued to weaken the case for provisional restoration.', response: 'This objection does not engage an exclusion on the current evidence. Under CFP-3.6, being deceived by a convincing impersonation is not gross negligence without more, and a single disclosure is not automatically gross negligence. The customer denied making or authorising the transactions, reported no OTP, no app approval, and no profile credential disclosure. For AUTH-51204-02, the scheme record shows ECI 05 but no CAVV, so the authentication claim is unsupported; scheme-facing authentication data is not proof that the customer authorised the payment. The facts therefore still support fraud presentation and provisional restoration eligibility.' },
+        valueAndAuthority: { policyBand: 1, approvalRole: 'fraud-investigator' },
+    },
+    chargebackPreparation: {
+        caseRef: 'VIYA-FNB-CF-51204', agent: 'chargeback-preparation', status: 'completed', applicability: 'applicable',
+        summary: { chargebackCount: 2, chargebackTotal: { amount: 44300 } },
+        chargebacks: [
+            { chargebackRef: 'CB-51204-01', merchant: 'TECHZONE ONLINE', amount: 12400, scheme: 'Visa', condition: '10.4', packStatus: 'prepared-not-submitted', filingDeadline: '2026-12-10', daysRemainingAtPreparation: 105, evidencePack: new Array(7).fill('item') },
+            { chargebackRef: 'CB-51204-02', merchant: 'GAMEHUB DIGITAL', amount: 31900, scheme: 'Visa', condition: '10.4', packStatus: 'prepared-not-submitted', filingDeadline: '2026-12-10', daysRemainingAtPreparation: 105, evidencePack: new Array(8).fill('item') },
+        ],
+        recommendation: { action: 'approve-and-submit-2-chargebacks-and-2-parallel-merchant-acquirer-notifications', reason: 'Two recoverable Visa 10.4 e-commerce card-not-present items have complete preparation packs for human review. Funds Trace also supports parallel acquirer/merchant notification once sent through the approved process. Shadow Credit separately recommended a provisional refund of ZAR 44,300, which does not change the chargeback pack content.' },
+    },
+    recallRepatriation: {
+        caseRef: 'VIYA-FNB-CF-51204', agent: 'recall-and-repatriation', status: 'completed', applicability: 'not-applicable',
+        materialGaps: [
+            'No raw counterparty chain was present in the input beyond the Funds Trace merchant-endpoint register.',
+            'No verified inbound counterparty replies were present in the input, so no correspondence facts could be reconciled.',
+            'Acquirer identity is not supplied in the available evidence for either merchant.',
+            'Settlement date is unconfirmed in the available evidence; current recovery deadline evidence is based on processing date.',
+            'No evidenced onward movement beyond either merchant endpoint is available on the current record.',
+            'The exact Visa 10.4 cardholder certification wording required for filing is not confirmed on the available record.',
+            'For AUTH-51204-02, whether the presented ECI reflects submission or any later re-stamping remains unconfirmed; the recorded finding remains an unsupported authentication claim because no CAVV is present.',
+        ],
+        waitingOn: 'Gate screen-5-send-recovery-actions — covered-by-shared-screen-gate',
+        recommendation: { action: 'take-no-recall-action', reason: 'Recovery should proceed through the already prepared Visa 10.4 chargeback route and associated chargeback-owned merchant/acquirer notifications, without creating a duplicate recall or repatriation workflow.' },
+        reason: 'No recall or repatriation action is needed because all disputed items travelled on Visa card-scheme rails to merchant endpoints, the confirmed recovery route is fully covered by Chargeback Preparation through two prepared Visa 10.4 dispute packs and parallel DT-14 merchant/acquirer notifications. To avoid duplicating the scheme recovery path, this agent does not open separate recall items.',
+    },
+    obligationCheck: {
+        caseRef: 'VIYA-FNB-CF-51204', agent: 'obligation-check', status: 'completed', applicability: 'applicable',
+        summary: { owed: 0, verifyFirst: 0, notOwed: 3, notInForce: 1 },
+        obligations: [
+            { instrument: 'FIC Act — Section 29 suspicious and unusual transaction reporting', status: 'not-owed', reason: 'On the available evidence, the case presents as card-details compromise and unauthorised merchant card payments, but the statutory section 29 grounds are not evidenced. There is no confirmed mule indicator, no apparent laundering use of the business, no avoidance-of-reporting fact, no forged KYC, no rapid layering and no terrorist-financing fact. Section 29 is therefore assessed as not owed on current facts, subject to AML compliance officer confirmation.', owner: 'aml compliance officer' },
+            { instrument: 'Cybercrimes Act — Electronic communications service provider and financial institution reporting duty', status: 'not-in-force', reason: 'The governed source states that Cybercrimes Act section 54 is not in force. No statutory reporting duty or 72-hour deadline arises from this instrument on the decision date.' },
+            { instrument: 'Joint Standard 2 of 2024 — Material cyber-incident notification — FSCA and Prudential Authority', status: 'not-owed', reason: 'On the available record, this is a localised customer card-fraud event with no evidenced institutional systems compromise or severe and widespread operational impact. The materiality threshold for notification under Joint Standard 2 of 2024 is not met on current facts, so the notification obligation is assessed as not owed.' },
+            { instrument: 'National Financial Ombud Scheme Rules — Complaint handling and internal resolution', status: 'not-in-force', reason: 'An internal fraud claim exists, but no active NFO complaint or NFO-issued response timeframe is evidenced. The applicable handling obligation is therefore internal-policy-only rather than owed under the NFO Scheme Rules.', owner: 'fraud investigator' },
+            { instrument: 'POPIA — Prohibition on solely automated decisions with legal or substantial effect', status: 'not-owed', reason: 'Section 71 compliance maintained by design through mandatory human gates at every consequential decision point.', owner: 'fraud investigator' },
+        ],
+        voluntaryCriminalComplaint: { status: 'pending-human-decision', reason: 'A voluntary SAPS complaint may be operationally useful for evidence preservation and possible future recovery support, but it is not a statutory duty under Cybercrimes Act section 54 and remains a human operational decision.', humanDecisionRequired: true },
+        openEscalations: ['AML compliance officer confirmation of section 29 assessment before Screen 6 closes.', 'Joint Standard 2 reassessment trigger if systemic indicators emerge.'],
+        recommendation: { action: 'proceed-to-screen-6-human-review', reason: 'All five instruments have been assessed on the governed source. No statutory reporting obligation is presently owed on current facts, one internal-policy-only complaint-handling obligation is recorded, and mandatory human review remains required before any consequential action.' },
+    },
+    documentGenerator: {
+        caseRef: 'VIYA-FNB-CF-51204', customerRef: 'CUS-51204', agent: 'document-generator', status: 'completed',
+        documents: [
+            { documentRef: 'DOC-51204-01', template: { id: 'DT-02', name: 'saps-voluntary-criminal-complaint' }, title: 'Voluntary SAPS criminal complaint affidavit draft', status: 'blocked', bindings: [{ field: 'customerDescriptor', value: 'Sipho Ndlovu' }], blockReasons: ['Voluntary SAPS complaint decision remains pending-human-decision in Obligation Check, so DT-02 may only be proposed and is blocked pending an affirmative human lodge decision.'] },
+            { documentRef: 'DOC-51204-02', template: { id: 'DT-09', name: 'internal-case-file' }, title: 'Internal case file', status: 'ready-for-human-review', bindings: [] },
+            { documentRef: 'DOC-51204-03', template: { id: 'DT-14', name: 'acquirer-merchant-fraud-notification' }, title: 'Acquirer/merchant fraud notification - TECHZONE ONLINE', status: 'approved-confirmed', bindings: [] },
+            { documentRef: 'DOC-51204-04', template: { id: 'DT-14', name: 'acquirer-merchant-fraud-notification' }, title: 'Acquirer/merchant fraud notification - GAMEHUB DIGITAL', status: 'approved-confirmed', bindings: [] },
+            { documentRef: 'DOC-51204-05', template: { id: 'DT-15', name: 'chargeback-cover-evidence-index' }, title: 'Chargeback cover and evidence index - AUTH-51204-01', status: 'approved-confirmed', bindings: [] },
+            { documentRef: 'DOC-51204-06', template: { id: 'DT-15', name: 'chargeback-cover-evidence-index' }, title: 'Chargeback cover and evidence index - AUTH-51204-02', status: 'approved-confirmed', bindings: [] },
+        ],
+        summary: { documentCount: 6, readyCount: 1, blockedCount: 1 },
+        humanGate: { gateId: 'screen-6-confirm-obligations-and-documents', requiredRole: 'fraud-investigator' },
+    },
+};
+
+// Evidence files each agent actually used, per the real manifest for this
+// case - same convention as the live server-side matching, shown in each
+// agent's card and the modal footer.
+const HARDCODED_SIPHO_REF_FILES = {
+    caseIntake: ['auth-log-51204.pdf', 'contact-note-51204.pdf', 'customer-profile 51204.pdf', 'viya-case-51204.docx'],
+    recognitionCheck: ['auth-log-51204.pdf', 'contact-note-51204.pdf', 'statement-history-24m 51204.pdf'],
+    fraudAssessment: ['contact-note-51204.pdf', 'customer-profile 51204.pdf', 'auth-log-51204.pdf', 'profile-event-log 51204.pdf', 'fraud-policy51204.docx'],
+    transactionClassification: ['auth-log-51204.pdf', 'statement-history-24m 51204.pdf', 'contact-note-51204.pdf'],
+    fundsTrace: ['auth-log-51204.pdf'],
+    shadowCredit: ['statement-history-24m 51204.pdf', 'contact-note-51204.pdf', 'customer-profile 51204.pdf'],
+    chargebackPreparation: ['auth-log-51204.pdf', 'contact-note-51204.pdf', 'statement-history-24m 51204.pdf'],
+    recallRepatriation: ['auth-log-51204.pdf'],
+    obligationCheck: ['auth-log-51204.pdf', 'contact-note-51204.pdf', 'profile-event-log 51204.pdf', 'viya-case-51204.docx', 'fraud-policy51204.docx'],
+    documentGenerator: ['auth-log-51204.pdf', 'contact-note-51204.pdf', 'customer-profile 51204.pdf', 'statement-history-24m 51204.pdf', 'profile-event-log 51204.pdf'],
+};
+
+// Builds a persona's complete `a` object from the real data above, reusing
+// formatAgentData (the exact same function a live response goes through)
+// so the card summaries and full reports are derived identically to how a
+// genuine API response would be processed - never duplicated/hand-authored
+// separately, which is what would let the two drift out of sync.
+function buildHardcodedAgentData() {
+    const out = {};
+    Object.keys(HARDCODED_SIPHO_REF_DATA).forEach(ak => {
+        const raw = HARDCODED_SIPHO_REF_DATA[ak];
+        const rawText = JSON.stringify(raw);
+        const formatted = formatAgentData(ak, raw);
+        out[ak] = {
+            agentKey: ak, rawText, fullText: rawText, isFallback: false,
+            finding: formatted.finding, desc: formatted.desc, tone: formatted.tone, reasoning: formatted.reasoning,
+            urgencyLevel: ak === 'caseIntake' ? (formatted.urgencyLevel || 'High') : undefined,
+            elapsedSeconds: raw.agent === 'document-generator' ? 153 : 45 + Math.floor(Math.random() * 60),
+            completedAt: '2026-08-26T21:22:00+02:00',
+            filesUsed: HARDCODED_SIPHO_REF_FILES[ak] || [],
+        };
+    });
+    return out;
+}
+
+
 /* Helper to resolve case-specific evidence files dynamically from persona ID */
 function getCaseEvidence(p) {
     if (!p) return { contactNote: 'contact-note.pdf', authLog: 'auth-log.pdf' };
@@ -138,6 +324,13 @@ const POLICY_TEXT = {
    PERSONAS DATA
    ============================================================ */
 const PERSONAS = [
+    {
+        id: 'FNB-51204-REF', tag: 'REF', customer: 'Sipho Ndlovu (Reference Case)', urgency: 'High', amount: 'R44,300.00', channel: 'Card-not-present', product: 'FNB Gold Cheque Account · Visa Gold Debit Card',
+        headline: 'Phishing → card-not-present fraud → ECI 7 → chargeback', recognised: false, classification: 'recoverable', mule: false, casp: false, str: false, vulnerable: false,
+        hardcoded: true, // never calls the live API - see runOneAgent's early-return and openCase's state pre-population
+        a: buildHardcodedAgentData(),
+        customerMsgs: ['We’ve received your report and we’re looking into it now.', 'Your card has been blocked and a new one is on its way. We’ve credited your account while we recover the funds.']
+    },
     {
         id: 'FNB-51204', tag: 'P1', customer: 'Sipho Ndlovu', urgency: 'Medium', amount: 'R44,300.00', channel: 'Card-not-present', product: 'FNB Gold Cheque Account · Visa Gold Debit Card',
         headline: 'Phishing → card-not-present fraud → ECI 7 → chargeback', recognised: false, classification: 'recoverable', mule: false, casp: false, str: false, vulnerable: false,
@@ -282,7 +475,7 @@ const state = {};
 const agentTimerIntervals = {};
 
 function freshState(p) {
-    return {
+    const base = {
         screenIdx: 0,
         activeStageTab: 0,
         gates: [null, null, null, null, null, null],
@@ -298,8 +491,32 @@ function freshState(p) {
         messages: [],
         urgencyLevel: null,
         slaStartedAt: null,
-        sapsDraft: null // {subject, body} once generated - persists edits, see renderCorrespondenceTab
+        sapsDraft: null, // {subject, body} once generated - persists edits, see renderCorrespondenceTab
+        counterpartyDrafts: {} // keyed by counterparty name - {subject, body, status: 'draft'|'sent'}
     };
+    if (!p.hardcoded) return base;
+
+    // Hardcoded reference case: every agent already has real pre-baked data
+    // (see buildHardcodedAgentData), so this starts fully resolved rather
+    // than needing runScreenAgents to call anything. Pre-populating
+    // agentStatus here is what makes openCase's existing
+    // `Object.keys(s.agentStatus).length === 0` auto-trigger check
+    // correctly skip live calls for this case - no separate special-case
+    // branch needed there.
+    Object.keys(p.a).forEach(ak => { base.agentStatus[ak] = 'done'; });
+    base.gates = ['approve', 'approve', 'approve', 'approve', 'approve', 'approve'];
+    base.gateApprover = new Array(6).fill('K. Adebayo');
+    base.gateDecidedAt = new Array(6).fill('2026-08-26T21:25:00+02:00');
+    base.gateReason = ['Approved', 'Approved', 'Approved', 'Approved', 'Approved', 'Approved'];
+    base.closed = true;
+    base.screenIdx = SCREENS.length - 1;
+    base.urgencyLevel = p.a.caseIntake.urgencyLevel || 'High';
+    base.slaStartedAt = Date.now() - 3600000;
+    base.messages = [
+        { text: 'We\u2019ve received your report and we\u2019re looking into it now.', channel: 'SMS', trigger: 1, status: 'sent', draftedAt: '2026-08-26T21:05:00+02:00', sentAt: '2026-08-26T21:05:30+02:00' },
+        { text: 'Your card has been blocked and a new one is on its way. We\u2019ve credited your account while we recover the funds.', channel: 'SMS', trigger: 2, status: 'sent', draftedAt: '2026-08-26T21:24:00+02:00', sentAt: '2026-08-26T21:24:20+02:00' },
+    ];
+    return base;
 }
 PERSONAS.forEach(p => state[p.id] = freshState(p));
 let currentCaseId = null;
@@ -525,7 +742,7 @@ function formatAgentData(agentKey, data) {
         const reportedEvent = getProp(data, 'reportedEvent', 'reported Event') || {};
         const provHyp = getProp(reportedEvent, 'provisionalHypothesis', 'provisional Hypothesis') || getProp(data, 'provisionalHypothesis', 'provisional Hypothesis');
         const rec = getProp(data, 'recommendation') || {};
-        finding = provHyp || rec.action || 'Case record structured';
+        finding = provHyp || (rec.action ? String(rec.action).replace(/-/g, ' ') : null) || 'Case record structured';
 
         let parts = [];
         if (data.status) parts.push(`Status: ${data.status}`);
@@ -697,7 +914,7 @@ function renderNotApplicablePanel(obj) {
     <div class="agent-report-wrap" style="line-height:1.5;">
         <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
             <div style="font-size:16px;font-weight:800;color:var(--purple-800);">⏳ Not Yet Applicable</div>
-            <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-top:2px;text-transform:uppercase;letter-spacing:0.4px;">Status: ${obj.status || 'completed'} · Applicability: not-applicable</div>
+            <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-top:2px;letter-spacing:0.2px;">Status: ${(obj.status || 'Completed').replace(/^\w/, c => c.toUpperCase())} · Applicability: Not applicable</div>
         </div>
 
         <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;">
@@ -1348,7 +1565,7 @@ function renderObligationCheckReport(obj) {
 
         ${commsRestriction.active || commsRestriction.basis ? `
         <div style="background:${commsRestriction.active ? '#FFF5F5' : '#F8FAFC'};border:1px solid ${commsRestriction.active ? '#FED7D7' : '#E2E8F0'};border-radius:10px;padding:12px;margin-bottom:14px;">
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:${commsRestriction.active ? 'var(--red-700)' : 'var(--text-3)'};">Communication Restriction ${commsRestriction.active ? '— ACTIVE' : '— Not Active'}</div>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:${commsRestriction.active ? 'var(--red-700)' : 'var(--text-3)'};">Communication Restriction ${commsRestriction.active ? '— Active' : '— Not Active'}</div>
             <div style="font-size:12px;color:var(--text);margin-top:4px;line-height:1.5;">${commsRestriction.basis || ''}</div>
         </div>` : ''}
 
@@ -1543,41 +1760,38 @@ function renderDocumentGeneratorReport(obj) {
     if (onwardMovement) closingParts.push(onwardMovement);
     if (refundRec) closingParts.push(`The recommended action is to ${String(refundRec).replace(/-/g, ' ')}${recoverableAmount ? ` of ${recoverableAmount}` : ''}, pending human approval.`);
 
-    // ---- Document Package Status: grouped by template, so "two acquirer
-    // notifications" reads as one line rather than two near-identical ones ----
-    const groups = {};
-    documents.forEach(doc => {
-        const key = (doc.template && (doc.template.name || doc.template.id)) || doc.title || 'document';
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(doc);
-    });
-    const groupLines = Object.entries(groups).map(([key, docs]) => {
-        const refs = docs.map(d => gP(d, 'documentRef', 'document Ref')).filter(Boolean);
-        const meta = statusMeta(docs[0].status);
-        const readableTitle = docs.length === 1 && docs[0].title ? docs[0].title : humanizeKey(key);
-        const refText = refs.length > 1 ? `${refs.slice(0, -1).join(', ')} & ${refs[refs.length - 1]}` : refs[0] || '';
-        const statusSentence = meta.group === 'blocked' ? 'Currently blocked (see Material Gaps below).'
-            : meta.group === 'ready' ? 'Ready for human review.'
-                : meta.group === 'produced' ? 'Already produced upstream.'
-                    : `Status: ${meta.label}.`;
-        return `<li style="margin-bottom:6px;"><b>${readableTitle}</b>${refText ? ` (${refText})` : ''}: ${statusSentence}</li>`;
-    });
-
-    // ---- Material Gaps & Blocked Actions, from the blocked documents' own
-    // real blockReasons - never invented. Deliberately not also listing
-    // unknownFields as a separate bullet here: the reasons already state in
-    // prose what's missing and why, so a second raw field-name list next to
-    // it just repeats the same information less readably.
-    const gapLines = [];
-    blockedDocs.forEach(doc => {
+    // ---- Recommendations & Next Steps now carries what the two removed
+    // sections used to show separately - which documents are ready, which
+    // are blocked and specifically why, attributed to each document by
+    // name rather than a flat bullet list. Built from the same real data
+    // (blockReasons, document titles, counts), just as case-specific prose
+    // instead of a checklist. ----
+    const readyTitles = readyDocs.map(d => d.title || gP(d, 'documentRef', 'document Ref')).filter(Boolean);
+    const otherCount = documents.length - readyDocs.length - blockedDocs.length;
+    const blockedSentences = blockedDocs.map(doc => {
+        const title = doc.title || gP(doc, 'documentRef', 'document Ref') || 'One document';
         const reasons = gP(doc, 'blockReasons', 'block Reasons') || [];
-        reasons.forEach(r => gapLines.push(r));
+        // First reason only, for a tight one-line-per-document summary -
+        // the full list was the removed Material Gaps section; anyone who
+        // needs every reason verbatim still has it via "View entire output".
+        const primaryReason = reasons[0] ? reasons[0].replace(/\.$/, '').replace(/^./, c => c.toLowerCase()) : 'a mandatory field is unresolved';
+        return `${title} is blocked because ${primaryReason}.`;
     });
 
     // ---- Next steps: the case's own human gate, if the response included
     // one at the top level - otherwise a generic closing line rather than
     // inventing a gate name that isn't actually in the data ----
     const humanGate = gP(obj, 'humanGate') || {};
+
+    let nextStepsParts = [];
+    // Every document has to be accounted for here, not just ready+blocked -
+    // an earlier version of this sentence silently dropped documents that
+    // were already produced/confirmed upstream, which reads like they'd
+    // vanished when checked against a real 6-document case.
+    nextStepsParts.push(`Of the ${summary.documentCount != null ? summary.documentCount : documents.length} document${documents.length === 1 ? '' : 's'} generated for this case, ${readyDocs.length} ${readyDocs.length === 1 ? 'is' : 'are'} ready for human review and ${blockedDocs.length} remain${blockedDocs.length === 1 ? 's' : ''} blocked${otherCount > 0 ? `, with the remaining ${otherCount} already produced and confirmed upstream` : ''}.`);
+    if (blockedSentences.length) nextStepsParts.push(blockedSentences.join(' '));
+    if (readyTitles.length) nextStepsParts.push(`${readyTitles.length === 1 ? readyTitles[0] : `${readyTitles.slice(0, -1).join(', ')} and ${readyTitles[readyTitles.length - 1]}`} require${readyTitles.length === 1 ? 's' : ''} only human sign-off before use.`);
+    if (humanGate.gateId) nextStepsParts.push(`The file is currently stationed at the human gate (\`${humanGate.gateId}\`)${humanGate.requiredRole ? `, awaiting review by a ${String(humanGate.requiredRole).replace(/-/g, ' ')}` : ''}.`);
 
     return `
     <div class="agent-report-wrap" style="line-height:1.6;font-size:13px;">
@@ -1587,9 +1801,8 @@ function renderDocumentGeneratorReport(obj) {
 
         <div class="dg-section-label">Case Overview</div>
         <p style="margin:0 0 4px;">Case Reference: <b>${caseRef || '—'}</b></p>
-        <p style="margin:0 0 4px;">Customer Reference: <b>${customerRef || '—'}</b></p>
-        <p style="margin:0 0 4px;">Processing Agent: <b>${obj.agent || 'document-generator'}</b></p>
-        <p style="margin:0 0 16px;">Status: <b>${obj.status || 'Completed'}${obj.applicability ? ` (${obj.applicability})` : ''}</b></p>
+        <p style="margin:0 0 16px;">Customer Reference: <b>${customerRef || '—'}</b></p>
+        <p style="margin:0 0 16px;">Status: <b>${obj.status || 'Completed'}</b></p>
 
         ${incidentParts.length ? `
         <div class="dg-section-label">Incident Summary</div>
@@ -1602,19 +1815,8 @@ function renderDocumentGeneratorReport(obj) {
         ${closingParts.length ? `<p style="margin-bottom:16px;">${closingParts.join(' ')}</p>` : ''}
         ` : ''}
 
-        ${groupLines.length ? `
-        <div class="dg-section-label">Document Package Status</div>
-        <p style="margin-bottom:6px;">The system processed ${summary.documentCount != null ? summary.documentCount : documents.length} document${documents.length === 1 ? '' : 's'} for this case (${summary.readyCount || 0} ready for review, ${summary.blockedCount || 0} blocked, and ${documents.length - (summary.readyCount || 0) - (summary.blockedCount || 0)} already produced upstream):</p>
-        <ul style="margin:0 0 16px;padding-left:20px;">${groupLines.join('')}</ul>
-        ` : ''}
-
-        ${gapLines.length ? `
-        <div class="dg-section-label">Material Gaps &amp; Blocked Actions</div>
-        <ul style="margin:0 0 16px;padding-left:20px;">${gapLines.map(g => `<li style="margin-bottom:6px;">${g}</li>`).join('')}</ul>
-        ` : ''}
-
         <div class="dg-section-label">Recommendations &amp; Next Steps</div>
-        <p>${blockedDocs.length ? `The system recommends resolving the unknown fields before approval of ${blockedDocs.length === 1 ? 'the blocked document' : 'the blocked documents'}. ` : ''}The remainder of the document package is fully prepared using current upstream evidence.${humanGate.gateId ? ` The file is currently stationed at the human gate (\`${humanGate.gateId}\`)${humanGate.requiredRole ? `, awaiting review by a ${String(humanGate.requiredRole).replace(/-/g, ' ')}` : ''}.` : ''}</p>
+        <p>${nextStepsParts.join(' ')}</p>
     </div>`;
 }
 
@@ -2089,7 +2291,7 @@ function renderCases() {
     tbody.innerHTML = rows.map(p => {
         const s = state[p.id];
         const started = Object.keys(s.agentStatus).length > 0;
-        const screenLabel = s.closed && p.recognised ? `2 of 2 (Deflected)` : s.closed ? `2 of 2` : started ? `${s.screenIdx + 1} of 6` : `0 of 6`;
+        const screenLabel = s.closed && p.recognised ? `2 of 2 (Deflected)` : s.closed ? `${SCREENS.length} of ${SCREENS.length}` : started ? `${s.screenIdx + 1} of 6` : `0 of 6`;
         const statusLbl = caseStatusLabel(p);
 
         // Urgency only shows once Case Intake has genuinely completed (not via
@@ -2581,12 +2783,12 @@ function renderAgentCard(p, agentKey) {
     const descLine = meta.desc ? `<div class="ac-desc-line">${meta.desc}</div>` : '';
 
     const rerunBtn = (st === 'done' || st === 'blocked')
-        ? `<button class="ac-rerun-btn" data-rerun="${agentKey}" title="Rerun this agent">${I('refresh', 12)}</button>`
+        ? `<button class="ac-rerun-btn" data-rerun="${agentKey}" data-tooltip="Rerun this agent">${I('refresh', 12)}</button>`
         : '';
 
     return `<div class="${cardCls}" data-agent="${agentKey}" ${locked ? 'data-locked="1"' : ''}>
     <div class="ac-top">
-      <div class="ac-id"><div class="ac-ico">${I(meta.icon, 15)}</div><div><div class="ac-name"><span class="tier-dot ${meta.tier}"></span>${meta.label}</div>${descLine}</div></div>
+      <div class="ac-id"><div class="ac-ico">${I(meta.icon, 15)}</div><div><div class="ac-name">${meta.label}</div>${descLine}</div></div>
       <div style="display:flex;align-items:center;gap:6px;">${pillHtml}${rerunBtn}</div>
     </div>
     ${body}
@@ -3001,7 +3203,12 @@ function updateProgressRing(p) {
     const s = state[p.id];
     const fill = document.getElementById('ringFill'); const label = document.getElementById('ringLabel');
     if (!fill) return;
-    const denom = p.recognised ? 2 : 6;
+    // Only the genuinely-closed deflection path uses the shorter 2-screen
+    // scale - before that, even a persona whose narrative *could* end up
+    // deflected is progressing through the normal 6-screen pipeline like
+    // any other case, and should read that way (this was showing "0/2"
+    // for a case that had barely started, instead of "1/6").
+    const denom = (s.closed && p.recognised) ? 2 : SCREENS.length;
     const num = Math.min(s.screenIdx + (s.closed ? 1 : 0), denom);
     const frac = Math.min(num / denom, 1);
     fill.style.strokeDashoffset = (RING_CIRC * (1 - frac)).toFixed(1);
@@ -3072,7 +3279,7 @@ function openAgentModal(p, agentKey) {
     if (amIco) amIco.innerHTML = I(meta.icon, 18);
 
     const amName = document.getElementById('amName');
-    if (amName) amName.innerHTML = `${meta.label} <span class="tier-dot ${meta.tier}" style="margin-left:2px;"></span>`;
+    if (amName) amName.textContent = meta.label;
 
     const amSub = document.getElementById('amSub');
     if (amSub) amSub.textContent = `${p.customer} · ${p.id} · ${meta.tier === 'reasoning' ? 'Reasoning tier' : 'Standard tier'}`;
@@ -3209,53 +3416,60 @@ function buildCaseFileHtml(p, forExport) {
                 <span class="cf-status-pill ${statusCls}">${statusPill}</span>
             </div>
         </div>
+
+        <div class="cf-header-divider"></div>
+        <div class="cf-section-label" style="margin-top:0;">Customer &amp; Case Identity</div>
+        <div class="cf-grid">
+            <div><div class="cf-label">Full name</div><div class="cf-value">${p.customer}</div><div class="cf-subvalue">${p.id}</div></div>
+            <div><div class="cf-label">Tag · Channel</div><div class="cf-value">${p.tag} · ${liveInfo.channel}</div></div>
+            <div><div class="cf-label">Product</div><div class="cf-value">${liveInfo.product}</div></div>
+            <div><div class="cf-label">Disputed amount</div><div class="cf-value">${liveInfo.amount}</div></div>
+            <div><div class="cf-label">Urgency</div><div class="cf-value">${intakeGenuinelyDone && s.urgencyLevel ? s.urgencyLevel : '—'}</div></div>
+            <div><div class="cf-label">SLA</div><div class="cf-value">${sla ? formatSlaCountdown(sla.remainingMs) : '—'}</div></div>
+        </div>
     </div>
 
-    <div class="cf-section-label">Customer &amp; Case Identity</div>
-    <div class="cf-grid">
-        <div><div class="cf-label">Full name</div><div class="cf-value">${p.customer}</div><div class="cf-subvalue">${p.id}</div></div>
-        <div><div class="cf-label">Tag · Channel</div><div class="cf-value">${p.tag} · ${liveInfo.channel}</div></div>
-        <div><div class="cf-label">Product</div><div class="cf-value">${liveInfo.product}</div></div>
-        <div><div class="cf-label">Disputed amount</div><div class="cf-value">${liveInfo.amount}</div></div>
-        <div><div class="cf-label">Urgency</div><div class="cf-value">${intakeGenuinelyDone && s.urgencyLevel ? s.urgencyLevel : '—'}</div></div>
-        <div><div class="cf-label">SLA</div><div class="cf-value">${sla ? formatSlaCountdown(sla.remainingMs) : '—'}</div></div>
+    <div class="case-overview-card">
+        <div class="cf-section-label" style="margin-top:0;">Case Overview</div>
+        <div class="cf-grid">
+            <div class="cf-span2"><div class="cf-label">Trigger</div><div class="cf-value">${triggerText}</div></div>
+            <div><div class="cf-label">Current classification</div><div class="cf-value">${currentBucket}</div></div>
+            <div><div class="cf-label">Vulnerability</div><div class="cf-value">${vulnerableLabel}</div></div>
+        </div>
     </div>
 
-    <div class="cf-section-label">Case Overview</div>
-    <div class="cf-grid">
-        <div class="cf-span2"><div class="cf-label">Trigger</div><div class="cf-value">${triggerText}</div></div>
-        <div><div class="cf-label">Current classification</div><div class="cf-value">${currentBucket}</div></div>
-        <div><div class="cf-label">Vulnerability</div><div class="cf-value">${vulnerableLabel}</div></div>
-    </div>
-
-    <div class="cf-section-label">Agent Findings</div>
-    <div class="cf-findings">
-        ${SCREENS.map(scr => scr.agents.map(ak => {
+    <div class="case-overview-card">
+        <div class="cf-section-label" style="margin-top:0;">Agent Findings</div>
+        <div class="cf-findings">
+            ${SCREENS.map(scr => scr.agents.map(ak => {
         const meta = AGENTS[ak];
         const st = agentRunState(p, ak);
         const data = p.a[ak];
         const done = st === 'done' || st === 'blocked';
         return `<div class="cf-finding-row">
-            <span class="kv-dot" style="background:${!done ? '#D7D2E8' : data.tone === 'clean' ? 'var(--green-700)' : data.tone === 'block' ? 'var(--red-700)' : 'var(--amber-700)'}"></span>
-            <span class="cf-finding-label">${meta.label}</span>
-            <span class="cf-finding-text">${done ? (data.finding || '—') : 'Not yet run'}</span>
-        </div>`;
+                <span class="kv-dot" style="background:${!done ? '#D7D2E8' : data.tone === 'clean' ? 'var(--green-700)' : data.tone === 'block' ? 'var(--red-700)' : 'var(--amber-700)'}"></span>
+                <span class="cf-finding-label">${meta.label}</span>
+                <span class="cf-finding-text">${done ? (data.finding || '—') : 'Not yet run'}</span>
+            </div>`;
     }).join('')).join('')}
+        </div>
     </div>
 
-    <div class="cf-section-label">Decision Summary</div>
-    ${decidedGates.length ? `
-    <div class="cf-decisions">
-        ${decidedGates.map(g => `
-        <div class="cf-decision-row">
-            <div class="cf-decision-head">
-                <span class="badge ${g.action === 'escalate' ? 'b-high' : g.action === 'override' ? 'b-medium' : 'b-low'}">${g.action === 'approve' ? 'Approved' : g.action === 'override' ? 'Overridden' : 'Escalated'}</span>
-                <span class="cf-finding-label">${g.scr.title} (Gate ${g.i + 1})</span>
-                <span class="cf-decision-time">${g.decidedAt ? formatWallClock(g.decidedAt) : ''}</span>
-            </div>
-            <div class="cf-decision-meta">Decided by ${g.approver || 'Unknown approver'}${g.reason ? ` — "${g.reason}"` : ''}</div>
-        </div>`).join('')}
-    </div>` : `<div class="report-empty"><b>No decision yet</b>Progress the case through its gates in the Agents tab to record a decision here.</div>`}
+    <div class="case-overview-card">
+        <div class="cf-section-label" style="margin-top:0;">Decision Summary</div>
+        ${decidedGates.length ? `
+        <div class="cf-decisions">
+            ${decidedGates.map(g => `
+            <div class="cf-decision-row">
+                <div class="cf-decision-head">
+                    <span class="badge ${g.action === 'escalate' ? 'b-high' : g.action === 'override' ? 'b-medium' : 'b-low'}">${g.action === 'approve' ? 'Approved' : g.action === 'override' ? 'Overridden' : 'Escalated'}</span>
+                    <span class="cf-finding-label">${g.scr.title} (Gate ${g.i + 1})</span>
+                    <span class="cf-decision-time">${g.decidedAt ? formatWallClock(g.decidedAt) : ''}</span>
+                </div>
+                <div class="cf-decision-meta">Decided by ${g.approver || 'Unknown approver'}${g.reason ? ` — "${g.reason}"` : ''}</div>
+            </div>`).join('')}
+        </div>` : `<div class="report-empty"><b>No decision yet</b>Progress the case through its gates in the Agents tab to record a decision here.</div>`}
+    </div>
     `;
 }
 
@@ -3411,38 +3625,173 @@ function renderSapsDraftCard(p) {
     </div>`;
 }
 
+// Real counterparties come from Funds Trace's own `counterparties` field
+// (confirmed real structure: [{name, type}]) - not guessed or invented.
+function getCaseCounterparties(p) {
+    const ft = p.a.fundsTrace;
+    const parsed = ft && ft.rawText ? parseAgentJson(ft.rawText) : null;
+    if (!parsed) return [];
+    return gP(parsed, 'counterparties') || [];
+}
+
+// Decides what kind of email a counterparty needs and drafts it from real
+// case data - this genuinely differs per persona, not just per counterparty:
+// if Recall & Repatriation found itself not-applicable (recovery is fully
+// owned by a scheme chargeback route, as in Sipho's case), counterparties
+// get an acquirer/merchant fraud notification built from Chargeback
+// Preparation's real filing data. If Recall & Repatriation is genuinely
+// applicable (a counterparty bank/CASP actually needs to be chased, as in
+// cases with no scheme route), counterparties get a funds-recall request
+// built from Recall & Repatriation's own real reasoning instead.
+function generateCounterpartyDraft(p, counterparty) {
+    const info = getLiveCaseInfo(p);
+    const cb = p.a.chargebackPreparation;
+    const cbParsed = cb && cb.rawText ? parseAgentJson(cb.rawText) : null;
+    const rar = p.a.recallRepatriation;
+    const rarParsed = rar && rar.rawText ? parseAgentJson(rar.rawText) : null;
+
+    const caseRef = (cbParsed && gP(cbParsed, 'caseRef', 'case Ref')) || (rarParsed && gP(rarParsed, 'caseRef', 'case Ref')) || p.id;
+    const rarApplicable = rarParsed && rarParsed.applicability && rarParsed.applicability !== 'not-applicable';
+
+    if (rarApplicable) {
+        const rec = gP(rarParsed, 'recommendation') || {};
+        const subject = `Funds Recall Request — ${counterparty.name} — Case ${caseRef}`;
+        const body = `To: ${counterparty.name}${counterparty.type ? ` (${counterparty.type})` : ''} — Fraud/Compliance Desk
+Case Reference: ${caseRef}
+Disputed Amount: ${info.amount}
+
+We are writing to request your urgent assistance in recalling funds connected to a confirmed fraud case linked to your institution.
+
+${rec.reason || 'Please treat this as a formal request for assistance in restricting and returning the funds identified above.'}
+
+Please confirm receipt of this request and advise on the current status and any hold placed on the funds at your earliest opportunity.
+
+Regards,
+FNB Fraud Operations`;
+        return { subject, body };
+    }
+
+    const chargebacks = (cbParsed && gP(cbParsed, 'chargebacks')) || [];
+    const match = chargebacks.find(c => String(c.merchant || '').toUpperCase() === String(counterparty.name).toUpperCase());
+    const subject = `Fraud Notification — ${counterparty.name} — Case ${caseRef}`;
+    const body = `To: ${counterparty.name}${counterparty.type ? ` (${counterparty.type})` : ''} — Fraud/Chargeback Desk
+Case Reference: ${caseRef}
+Disputed Amount: ${match ? `R${Number(match.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}` : info.amount}
+${match ? `Reference: ${match.chargebackRef || ''}` : ''}
+${match ? `Scheme Condition: ${match.scheme || ''} ${match.condition || ''}`.trim() : ''}
+${match && match.filingDeadline ? `Filing Deadline: ${match.filingDeadline}` : ''}
+
+We are formally notifying you of a confirmed card-not-present fraud dispute involving a transaction processed through your merchant account. A chargeback has been prepared under the scheme condition referenced above and will be filed within the applicable window.
+
+Please preserve all relevant transaction and delivery records pending the chargeback outcome, and direct any queries to this case reference.
+
+Regards,
+FNB Fraud Operations`;
+    return { subject, body };
+}
+
+function renderCounterpartyDraftCard(p, counterparty) {
+    const s = state[p.id];
+    const key = counterparty.name;
+    const draft = s.counterpartyDrafts[key];
+
+    if (!draft) {
+        return `<div class="corr-card">
+            <div class="cc-head"><div class="cc-ico">${I('send', 14)}</div>
+                <div><div class="cc-title">${counterparty.name}</div><div class="cc-sub">${counterparty.type || 'Counterparty'}</div></div>
+                <span class="cc-status pending">Not drafted</span></div>
+            <div style="padding:12px 0;">
+                <button class="btn primary pill-btn" data-gen-cp="${key}">Draft email</button>
+            </div>
+        </div>`;
+    }
+
+    const sent = draft.status === 'sent';
+    return `<div class="corr-card">
+        <div class="cc-head"><div class="cc-ico">${I('send', 14)}</div>
+            <div><div class="cc-title">${counterparty.name}</div><div class="cc-sub">${counterparty.type || 'Counterparty'}${sent ? ' · Sent' : ' · Draft — edit freely before sending'}</div></div>
+            <span class="cc-status ${sent ? 'done' : 'pending'}">${sent ? 'Sent' : 'Draft'}</span></div>
+        <div style="padding:12px 0;">
+            <label class="gr-label">Subject</label>
+            <input type="text" class="case-search-input cp-subject-input" data-cp="${key}" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:10px;" value="${draft.subject.replace(/"/g, '&quot;')}" ${sent ? 'disabled' : ''}>
+            <label class="gr-label">Body</label>
+            <textarea class="gr-textarea cp-body-input" data-cp="${key}" rows="10" style="width:100%;" ${sent ? 'disabled' : ''}>${draft.body}</textarea>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+                ${sent ? '' : `<button class="btn primary pill-btn" data-send-cp="${key}">Send email</button>
+                <button class="btn ghost pill-btn" data-regen-cp="${key}">Regenerate</button>`}
+            </div>
+        </div>
+    </div>`;
+}
+
 function renderCorrespondenceTab(p) {
     const panel = document.getElementById('wbCorrPanel');
     if (!panel) return;
-    const corrAgents = ['fundsTrace', 'recallRepatriation'];
-    const anyRun = corrAgents.some(ak => ['done', 'blocked'].includes(agentRunState(p, ak)));
+    // Only Funds Trace needs to have run for counterparties to be known -
+    // Recall & Repatriation's applicability decides which kind of email
+    // each counterparty gets (see generateCounterpartyDraft), not whether
+    // one gets drafted at all.
+    const ftDone = ['done', 'blocked'].includes(agentRunState(p, 'fundsTrace'));
+    const counterparties = ftDone ? getCaseCounterparties(p) : [];
     const sapsCard = renderSapsDraftCard(p);
 
-    if (!anyRun && !sapsCard) {
-        panel.innerHTML = `<div class="corr-empty"><b>No counterparty correspondence yet</b>This becomes available once Funds Trace and Recall &amp; Repatriation have run. If this case turns out to be merchant-only, or is recognised as the customer's own spend, this tab will stay empty — that's expected, not a gap.</div>`;
+    if (!ftDone && !sapsCard) {
+        panel.innerHTML = `<div class="corr-empty"><b>No counterparty correspondence yet</b>This becomes available once Funds Trace has run and identified who the disputed value actually moved to. If this case turns out to be merchant-only with a clean scheme route, or is recognised as the customer's own spend, some or all of this tab may stay empty — that's expected, not a gap.</div>`;
         wireSapsDraftHandlers(p);
         return;
     }
 
-    let html = `<div class="corr-grid">` + sapsCard + (anyRun ? corrAgents.map(ak => {
-        const meta = AGENTS[ak];
-        const st = agentRunState(p, ak);
-        const subtitle = ak === 'fundsTrace' ? 'Where the money went' : 'Outbound recalls, pledges &amp; replies';
-        if (st !== 'done' && st !== 'blocked') {
-            return `<div class="corr-card"><div class="cc-head"><div class="cc-ico">${I(meta.icon, 14)}</div>
-                <div><div class="cc-title">${meta.label}</div><div class="cc-sub">${subtitle}</div></div>
-                <span class="cc-status pending">${st === 'running' ? 'Running' : 'Pending'}</span></div>
-                <div class="report-empty" style="padding:16px 0;">Not yet run.</div></div>`;
-        }
-        const data = p.a[ak];
-        return `<div class="corr-card"><div class="cc-head"><div class="cc-ico">${I(meta.icon, 14)}</div>
-            <div><div class="cc-title">${meta.label}</div><div class="cc-sub">${subtitle}</div></div>
-            <span class="cc-status ${st === 'blocked' ? 'blocked' : 'done'}">${st === 'blocked' ? 'Gate closed' : 'Live'}</span></div>
-            ${renderRichAgentReport(data.rawText || data.fullText || data, ak)}</div>`;
-    }).join('') : '') + `</div>`;
+    const counterpartyCards = counterparties.length
+        ? counterparties.map(cp => renderCounterpartyDraftCard(p, cp)).join('')
+        : (ftDone ? `<div class="corr-card"><div class="cc-head"><div class="cc-ico">${I('trace', 14)}</div>
+            <div><div class="cc-title">No counterparties identified</div><div class="cc-sub">Funds Trace</div></div></div>
+            <div class="report-empty" style="padding:16px 0;">Funds Trace has run but did not identify any named counterparties for this case.</div></div>` : '');
+
+    let html = `<div class="corr-grid">` + sapsCard + counterpartyCards + `</div>`;
 
     panel.innerHTML = html;
     wireSapsDraftHandlers(p);
+    wireCounterpartyDraftHandlers(p, counterparties);
+}
+
+// Same generate/edit/send/regenerate pattern as the SAPS draft, applied per
+// counterparty - each counterparty's draft is independent, keyed by name.
+function wireCounterpartyDraftHandlers(p, counterparties) {
+    const s = state[p.id];
+    document.querySelectorAll('[data-gen-cp]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const cp = counterparties.find(c => c.name === btn.dataset.genCp);
+            if (!cp) return;
+            s.counterpartyDrafts[cp.name] = { ...generateCounterpartyDraft(p, cp), status: 'draft' };
+            renderCorrespondenceTab(p);
+        });
+    });
+    document.querySelectorAll('[data-regen-cp]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!window.confirm('Replace your edits with a freshly generated draft?')) return;
+            const cp = counterparties.find(c => c.name === btn.dataset.regenCp);
+            if (!cp) return;
+            s.counterpartyDrafts[cp.name] = { ...generateCounterpartyDraft(p, cp), status: 'draft' };
+            renderCorrespondenceTab(p);
+        });
+    });
+    document.querySelectorAll('[data-send-cp]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const key = btn.dataset.sendCp;
+            const draft = s.counterpartyDrafts[key];
+            if (!draft) return;
+            if (!draft.body || !draft.body.trim()) { showToast('Email body is empty - add some text before sending.', 'flag', 'flag'); return; }
+            draft.status = 'sent';
+            renderCorrespondenceTab(p);
+            showToast(`Email sent to ${key}`, 'msg', 'msg');
+        });
+    });
+    document.querySelectorAll('.cp-subject-input').forEach(input => {
+        input.addEventListener('input', () => { const d = s.counterpartyDrafts[input.dataset.cp]; if (d) d.subject = input.value; });
+    });
+    document.querySelectorAll('.cp-body-input').forEach(ta => {
+        ta.addEventListener('input', () => { const d = s.counterpartyDrafts[ta.dataset.cp]; if (d) d.body = ta.value; });
+    });
 }
 
 // Wires the SAPS draft card's controls - generate, live-edit persistence,
