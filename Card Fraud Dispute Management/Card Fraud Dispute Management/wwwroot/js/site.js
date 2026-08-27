@@ -128,8 +128,6 @@ const HARDCODED_SIPHO_REF_DATA = {
         customer: { fullName: 'Sipho Ndlovu', preferredName: 'Sipho', verifiedContact: '+27 *** 4412', cardEnding: '7314' },
         reportedEvent: {
             reportedTotal: { amount: 44300, currency: 'ZAR' },
-            reportedCount: 2,
-            customerPosition: "Customer reported that two card transactions were not made or authorised by him: TECHZONE ONLINE for R12,400.00 and GAMEHUB DIGITAL for R31,900.00. He reported that at about 19:42 he received an SMS stating his card ending 7314 was blocked and prompting reactivation via a link; he said it appeared genuine because it arrived in the same SMS conversation as older FNB alerts. He reported opening the link around 19:47 and entering card number, expiry date and CVV. He stated that he did NOT enter app user name, app password or PIN, was not asked to approve anything in app, and no OTP was mentioned. He stated his phone was working normally and that calls and messages were working normally. He does not dispute the declined R28,000.00 attempt because it did not debit the account. He stated he has never bought from either merchant, no electronics or digital-games order or delivery was expected from them, there was no funds-transfer, beneficiary or app-login complaint, and no other transaction was disputed.",
             compromiseDisclosure: { otpMentioned: false, inAppApprovalMade: false, phoneWorking: true, detailsDisclosed: ['card number', 'expiry date', 'CVV'] },
             knownTimeline: [
                 "2026-08-12T19:42:00+02:00 — Customer reported receiving an SMS stating 'FNB: Card ending 7314 blocked — suspicious activity. Reactivate now: fnb-secure-verify.co.za'.",
@@ -166,16 +164,16 @@ const HARDCODED_SIPHO_REF_DATA = {
     recognitionCheck: {
         caseRef: 'VIYA-FNB-CF-51204', agent: 'recognition-check', status: 'completed', applicability: 'applicable',
         recognitionResult: 'no-match',
-        confidence: { basis: '24-month statement window reviewed; 243 history rows reviewed; no prior settled relationship found for TECHZONE ONLINE or GAMEHUB DIGITAL; customer denial matches absence of prior relationship' },
-        historyWindow: { from: '2024-08-13', to: '2026-08-12', transactionRowsReviewed: 243 },
+        statementHistoryBasis: '24-month statement window reviewed; 243 history rows reviewed; no prior settled relationship found for TECHZONE ONLINE or GAMEHUB DIGITAL; customer denial matches absence of prior relationship',
+        window: { from: '2024-08-13', to: '2026-08-12', rowsEvaluated: 243 },
         materialGaps: ['No reliable descriptor directory or biller record was provided to independently resolve TECHZONE ONL DBN ZA or GHUB*DIGITAL ZA.'],
         recommendation: { action: 'no-recognition-deflection', reason: 'Recognition is not established because neither disputed merchant has a prior settled relationship in the reviewed history. The case should continue to Fraud Assessment.' },
     },
     fraudAssessment: {
         caseRef: 'VIYA-FNB-CF-51204', agent: 'fraud-assessment', status: 'completed', applicability: 'applicable',
         classification: { fraudType: 'phishing-card-details-compromise', channel: 'e-commerce-card-not-present' },
-        compromiseExtent: { label: 'card credentials', plainEnglish: 'Available evidence supports compromise of the card details entered into the phishing site, with no evidence that banking profile credentials, the registered device, the mobile authentication channel, beneficiaries or transaction limits were compromised.' },
-        containment: { recommendedActions: [{ action: 'card-block', state: 'already-completed' }, { action: 'card-reissue', state: 'already-completed' }] },
+        compromiseExtent: { label: 'card credentials', basis: 'Available evidence supports compromise of the card details entered into the phishing site, with no evidence that banking profile credentials, the registered device, the mobile authentication channel, beneficiaries or transaction limits were compromised.' },
+        containmentActions: [{ action: 'card-block', status: 'already-completed' }, { action: 'card-reissue', status: 'already-completed' }],
         bankControlAssessment: 'No bank control failure is evidenced on the available records. The available evidence indicates a third-party phishing website captured card details before the disputed e-commerce authorisations. The authorisation and alert records show the bank processed the card-not-present requests and sent activity alerts at 20:33 on the data available to it. No separate third-party data dependency finding is evidenced in the file set.',
         recommendation: { action: 'confirm-fraud-classification-and-card-only-containment', reason: 'The evidence supports a phishing-led card-details compromise followed by unauthorised e-commerce card-not-present use, with compromise extent limited to card number, expiry date and CVV and no profile compromise evidenced in the 72-hour event log.' },
     },
@@ -229,7 +227,7 @@ const HARDCODED_SIPHO_REF_DATA = {
             'The exact Visa 10.4 cardholder certification wording required for filing is not confirmed on the available record.',
             'For AUTH-51204-02, whether the presented ECI reflects submission or any later re-stamping remains unconfirmed; the recorded finding remains an unsupported authentication claim because no CAVV is present.',
         ],
-        humanGate: { gateId: 'screen-5-send-recovery-actions', status: 'covered-by-shared-screen-gate' },
+        waitingOn: 'Gate screen-5-send-recovery-actions — covered-by-shared-screen-gate',
         recommendation: { action: 'take-no-recall-action', reason: 'Recovery should proceed through the already prepared Visa 10.4 chargeback route and associated chargeback-owned merchant/acquirer notifications, without creating a duplicate recall or repatriation workflow.' },
         reason: 'No recall or repatriation action is needed because all disputed items travelled on Visa card-scheme rails to merchant endpoints, the confirmed recovery route is fully covered by Chargeback Preparation through two prepared Visa 10.4 dispute packs and parallel DT-14 merchant/acquirer notifications. To avoid duplicating the scheme recovery path, this agent does not open separate recall items.',
     },
@@ -237,11 +235,11 @@ const HARDCODED_SIPHO_REF_DATA = {
         caseRef: 'VIYA-FNB-CF-51204', agent: 'obligation-check', status: 'completed', applicability: 'applicable',
         summary: { owed: 0, verifyFirst: 0, notOwed: 3, notInForce: 1 },
         obligations: [
-            { instrument: 'FIC Act — Section 29 suspicious and unusual transaction reporting', status: 'not-owed', reason: 'On the available evidence, the case presents as card-details compromise and unauthorised merchant card payments, but the statutory section 29 grounds are not evidenced. There is no confirmed mule indicator, no apparent laundering use of the business, no avoidance-of-reporting fact, no forged KYC, no rapid layering and no terrorist-financing fact. Section 29 is therefore assessed as not owed on current facts, subject to AML compliance officer confirmation.', humanRole: 'aml compliance officer' },
+            { instrument: 'FIC Act — Section 29 suspicious and unusual transaction reporting', status: 'not-owed', reason: 'On the available evidence, the case presents as card-details compromise and unauthorised merchant card payments, but the statutory section 29 grounds are not evidenced. There is no confirmed mule indicator, no apparent laundering use of the business, no avoidance-of-reporting fact, no forged KYC, no rapid layering and no terrorist-financing fact. Section 29 is therefore assessed as not owed on current facts, subject to AML compliance officer confirmation.', owner: 'aml compliance officer' },
             { instrument: 'Cybercrimes Act — Electronic communications service provider and financial institution reporting duty', status: 'not-in-force', reason: 'The governed source states that Cybercrimes Act section 54 is not in force. No statutory reporting duty or 72-hour deadline arises from this instrument on the decision date.' },
             { instrument: 'Joint Standard 2 of 2024 — Material cyber-incident notification — FSCA and Prudential Authority', status: 'not-owed', reason: 'On the available record, this is a localised customer card-fraud event with no evidenced institutional systems compromise or severe and widespread operational impact. The materiality threshold for notification under Joint Standard 2 of 2024 is not met on current facts, so the notification obligation is assessed as not owed.' },
-            { instrument: 'National Financial Ombud Scheme Rules — Complaint handling and internal resolution', status: 'not-in-force', reason: 'An internal fraud claim exists, but no active NFO complaint or NFO-issued response timeframe is evidenced. The applicable handling obligation is therefore internal-policy-only rather than owed under the NFO Scheme Rules.', humanRole: 'fraud investigator' },
-            { instrument: 'POPIA — Prohibition on solely automated decisions with legal or substantial effect', status: 'not-owed', reason: 'Section 71 compliance maintained by design through mandatory human gates at every consequential decision point.', humanRole: 'fraud investigator' },
+            { instrument: 'National Financial Ombud Scheme Rules — Complaint handling and internal resolution', status: 'not-in-force', reason: 'An internal fraud claim exists, but no active NFO complaint or NFO-issued response timeframe is evidenced. The applicable handling obligation is therefore internal-policy-only rather than owed under the NFO Scheme Rules.', owner: 'fraud investigator' },
+            { instrument: 'POPIA — Prohibition on solely automated decisions with legal or substantial effect', status: 'not-owed', reason: 'Section 71 compliance maintained by design through mandatory human gates at every consequential decision point.', owner: 'fraud investigator' },
         ],
         voluntaryCriminalComplaint: { status: 'pending-human-decision', reason: 'A voluntary SAPS complaint may be operationally useful for evidence preservation and possible future recovery support, but it is not a statutory duty under Cybercrimes Act section 54 and remains a human operational decision.', humanDecisionRequired: true },
         openEscalations: ['AML compliance officer confirmation of section 29 assessment before Screen 6 closes.', 'Joint Standard 2 reassessment trigger if systemic indicators emerge.'],
@@ -250,29 +248,8 @@ const HARDCODED_SIPHO_REF_DATA = {
     documentGenerator: {
         caseRef: 'VIYA-FNB-CF-51204', customerRef: 'CUS-51204', agent: 'document-generator', status: 'completed',
         documents: [
-            {
-                documentRef: 'DOC-51204-01', template: { id: 'DT-02', name: 'saps-voluntary-criminal-complaint' }, title: 'Voluntary SAPS criminal complaint affidavit draft', status: 'blocked',
-                bindings: [
-                    { field: 'customerDescriptor', value: 'Sipho Ndlovu' },
-                    { field: 'customerReportDate', value: '2026-08-12' },
-                    { field: 'disputedTotal', value: 'ZAR 44,300.00' },
-                    { field: 'incidentOpeningSentence', value: 'The available record shows that the customer reported receiving an SMS impersonating FNB, opening the embedded link, and entering card number, expiry date and CVV shortly before two disputed Visa card-not-present merchant transactions were approved.' },
-                    { field: 'incidentMethodSentences', value: 'The evidence supports phishing-led compromise limited to card number, expiry date and CVV. No app username, app password, PIN, OTP approval or profile-compromise event is evidenced on the available record.' },
-                    { field: 'transactionSchedule', value: 'AUTH-51204-01 | TECHZONE ONLINE | ZAR 12,400.00 | 2026-08-12T20:14:00+02:00 | ARN 7482955 12040001 12233445; AUTH-51204-02 | GAMEHUB DIGITAL | ZAR 31,900.00 | 2026-08-12T20:26:00+02:00 | ARN 74829551204000112233446' },
-                    { field: 'onwardMovementSentence', value: 'Funds trace confirms movement through Visa card-scheme rails to merchant endpoints TECHZONE ONLINE and GAMEHUB DIGITAL only; no evidenced onward movement beyond those merchant endpoints is available on the current record.' },
-                ],
-                blockReasons: ['Voluntary SAPS complaint decision remains pending-human-decision in Obligation Check, so DT-02 may only be proposed and is blocked pending an affirmative human lodge decision.'],
-            },
-            {
-                documentRef: 'DOC-51204-02', template: { id: 'DT-09', name: 'internal-case-file' }, title: 'Internal case file', status: 'ready-for-human-review',
-                bindings: [
-                    { field: 'customerDescriptor', value: 'Sipho Ndlovu; card ending 7314; verified contact +27 *** 4412' },
-                    { field: 'disputedTotal', value: 'ZAR 44,300.00' },
-                    { field: 'containmentActions', value: 'card-block completed 2026-08-12T20:56:00+02:00; card-reissue completed 2026-08-12T21:01:00+02:00' },
-                    { field: 'provisionalRefundRecommendation', value: 'approve-provisional-refund' },
-                    { field: 'recoverableAmount', value: 'ZAR 44,300.00' },
-                ],
-            },
+            { documentRef: 'DOC-51204-01', template: { id: 'DT-02', name: 'saps-voluntary-criminal-complaint' }, title: 'Voluntary SAPS criminal complaint affidavit draft', status: 'blocked', bindings: [{ field: 'customerDescriptor', value: 'Sipho Ndlovu' }], blockReasons: ['Voluntary SAPS complaint decision remains pending-human-decision in Obligation Check, so DT-02 may only be proposed and is blocked pending an affirmative human lodge decision.'] },
+            { documentRef: 'DOC-51204-02', template: { id: 'DT-09', name: 'internal-case-file' }, title: 'Internal case file', status: 'ready-for-human-review', bindings: [] },
             { documentRef: 'DOC-51204-03', template: { id: 'DT-14', name: 'acquirer-merchant-fraud-notification' }, title: 'Acquirer/merchant fraud notification - TECHZONE ONLINE', status: 'approved-confirmed', bindings: [] },
             { documentRef: 'DOC-51204-04', template: { id: 'DT-14', name: 'acquirer-merchant-fraud-notification' }, title: 'Acquirer/merchant fraud notification - GAMEHUB DIGITAL', status: 'approved-confirmed', bindings: [] },
             { documentRef: 'DOC-51204-05', template: { id: 'DT-15', name: 'chargeback-cover-evidence-index' }, title: 'Chargeback cover and evidence index - AUTH-51204-01', status: 'approved-confirmed', bindings: [] },
@@ -352,9 +329,10 @@ const PERSONAS = [
         headline: 'Phishing → card-not-present fraud → ECI 7 → chargeback', recognised: false, classification: 'recoverable', mule: false, casp: false, str: false, vulnerable: false,
         hardcoded: true, // never calls the live API - see runOneAgent's early-return and openCase's state pre-population
         a: buildHardcodedAgentData(),
+        customerMsgs: ['We’ve received your report and we’re looking into it now.', 'Your card has been blocked and a new one is on its way. We’ve credited your account while we recover the funds.']
     },
     {
-        id: 'FNB-51204', tag: 'P1', customer: 'Sipho Ndlovu', urgency: 'High', amount: 'R44,300.00', channel: 'Card-not-present', product: 'FNB Gold Cheque Account · Visa Gold Debit Card',
+        id: 'FNB-51204', tag: 'P1', customer: 'Sipho Ndlovu', urgency: 'Medium', amount: 'R44,300.00', channel: 'Card-not-present', product: 'FNB Gold Cheque Account · Visa Gold Debit Card',
         headline: 'Phishing → card-not-present fraud → ECI 7 → chargeback', recognised: false, classification: 'recoverable', mule: false, casp: false, str: false, vulnerable: false,
         a: {
             caseIntake: A('caseIntake', { conf: 0.90, finding: 'Case record structured', tone: 'clean', desc: 'Customer reports unfamiliar overseas software purchases following SMS phishing with spoofed sender ID.', reasoning: ['Completeness: high. No vulnerability markers.'], feeds: 'Case record → Recognition Check' }),
@@ -368,6 +346,7 @@ const PERSONAS = [
             obligationCheck: A('obligationCheck', { conf: null, finding: 'No obligation triggered', tone: 'clean', desc: 'No mule identified. Below cyber-incident materiality threshold.', reasoning: [], feeds: null }),
             documentGenerator: A('documentGenerator', { conf: null, finding: 'Chargeback filings + written determination drafted', tone: 'clean', desc: 'No suspicious transaction report or criminal case report required.', reasoning: [], feeds: 'what is owed → filings' }),
         },
+        customerMsgs: ['We’ve received your report and we’re looking into it now.', 'Your card has been blocked and a new one is on its way. We’ve credited your account while we recover the funds.']
     },
     {
         id: 'FNB-51890', tag: 'P2', customer: 'Andile Khumalo', urgency: 'High', amount: 'R135,500.00', channel: 'Trojanised app · remote-access', product: 'FNB Premier Cheque Account · Visa Platinum Debit Card',
@@ -384,14 +363,16 @@ const PERSONAS = [
             obligationCheck: A('obligationCheck', { conf: null, finding: 'FIC Act s29 STR owed (Mule confirmed)', tone: 'block', desc: 'Mule account positively identified, SAFPS registry hit confirmed. Tipping-off suppression ACTIVE.', reasoning: [], feeds: 'what is owed → Document Generator' }),
             documentGenerator: A('documentGenerator', { conf: null, finding: 'STR draft + written determination drafted', tone: 'flag', desc: 'FICA s29 STR filed under strict tipping-off non-disclosure.', reasoning: [], feeds: 'filings complete' }),
         },
+        customerMsgs: ['We’re reviewing the transaction you flagged.', 'We’ve reimbursed this transaction in full and secured your profile.']
     },
     {
-        id: 'FNB-52377', tag: 'P3', customer: 'Nomvula Dlamini', urgency: 'Medium', amount: 'R429.00', channel: 'Recurring card mandate', product: 'FNB Easy Cheque Account · Visa Debit Card',
+        id: 'FNB-52377', tag: 'P3', customer: 'Nomvula Dlamini', urgency: 'Low', amount: 'R429.00', channel: 'Recurring card mandate', product: 'FNB Easy Cheque Account · Visa Debit Card',
         headline: 'Disputed subscription → recognised as her own → deflected at Screen 2', recognised: true, classification: null, mule: false, casp: false, str: false, vulnerable: false,
         a: {
             caseIntake: A('caseIntake', { conf: 0.95, finding: 'Case record structured', tone: 'clean', desc: 'Customer disputes R429 debit with descriptor DLB*SPCPT ZA.', reasoning: ['Completeness high.'], feeds: 'Case record → Recognition Check' }),
             recognitionCheck: A('recognitionCheck', { conf: 0.98, finding: 'Recognised — customer’s own recurring gym subscription', tone: 'clean', desc: 'Descriptor DLB*SPCPT ZA matches 11 prior monthly debits at R349. Price increase to R429 reflects introductory rate ending for FitHub Wellness Sea Point.', reasoning: ['Active recurring mandate on file, unbroken cadence.', 'Deflected at Screen 2 — no fraud case opened.'], feeds: 'recognised → Case closed' }),
         },
+        customerMsgs: ['We’ve reviewed your report on the R429 debit.', 'We’ve matched this to your FitHub Wellness gym subscription — your introductory rate ended this month. Let us know if you need help cancelling.']
     },
     {
         id: 'FNB-53042', tag: 'P4', customer: 'Thabo Mokoena', urgency: 'High', amount: 'R143,750.00 (Mixed rails)', channel: 'SIM swap + push payment', product: 'FNB Premier · Visa Platinum Debit Card',
@@ -408,6 +389,7 @@ const PERSONAS = [
             obligationCheck: A('obligationCheck', { conf: null, finding: 'FIC Act s29 STR owed', tone: 'block', desc: 'Mule account identified, SAFPS registry hit. Tipping-off suppression ACTIVE.', reasoning: [], feeds: 'what is owed → Document Generator' }),
             documentGenerator: A('documentGenerator', { conf: null, finding: 'STR draft + written determination drafted', tone: 'flag', desc: 'FICA s29 STR filed. Customer messages truthful about money while strictly suppressing STR reference.', reasoning: [], feeds: 'filings complete' }),
         },
+        customerMsgs: ['We’ve received your report and are securing your accounts.', 'We’ve credited your account in full while recovery continues. Next update within 24 hours.']
     },
 ];
 
@@ -423,30 +405,29 @@ const PERSONAS = [
 // exception, fired separately at Case Intake, not through a gate at all.
 function MESSAGES(p) {
     const amt = p.amount.replace(/\s*\(.*\)\s*$/, ''); // strip internal-only annotations like "(Mixed rails)" before this reaches customer-facing text
-    const first = p.customer.split(' ')[0];
     switch (p.id) {
         case 'FNB-51204': return [
-            { channel: 'SMS', text: `Hi ${first}, got your call about the ${amt} charges you don't recognise - we're looking into it right away.`, afterGate: null },
-            { channel: 'SMS', text: `Update: we've blocked your card and a new one's on the way, so those charges can't happen again while we sort this out.`, afterGate: 1 },
-            { channel: 'SMS', text: `Good news - we've put the full ${amt} back in your account while we recover it from the merchants. No action needed from you.`, afterGate: 3 },
+            { channel: 'SMS', text: `Hi ${p.customer.split(' ')[0]}, thanks for reporting the ${amt} card-not-present transaction — we're on it.`, afterGate: null },
+            { channel: 'App push', text: `We've confirmed the ${amt} charge on your ${p.product.split('·')[1]?.trim() || 'card'} wasn't authorised by you. Your card has been blocked and replaced.`, afterGate: 1 },
+            { channel: 'Email', text: `We've credited ${amt} to your account while we recover the funds via chargeback.`, afterGate: 3 },
         ];
         case 'FNB-51890': return [
-            { channel: 'SMS', text: `Hi ${first}, thanks for flagging the ${amt} you didn't recognise - we're on it now.`, afterGate: null },
-            { channel: 'SMS', text: `We've locked your profile down for now, just as a precaution while we get to the bottom of how this happened.`, afterGate: 1 },
-            { channel: 'SMS', text: `We've refunded the full ${amt} to your account and we're still tracing where it went. We'll keep you posted.`, afterGate: 3 },
+            { channel: 'SMS', text: `Hi ${p.customer.split(' ')[0]}, thanks for flagging the ${amt} disputed activity on your account — we're reviewing it now.`, afterGate: null },
+            { channel: 'App push', text: `Your profile has been locked and secured following the malicious app install on your device.`, afterGate: 1 },
+            { channel: 'Email', text: `We've reimbursed the full ${amt} and are actively tracing where the funds moved.`, afterGate: 3 },
         ];
         case 'FNB-52377': return [
-            { channel: 'SMS', text: `Hi ${first}, we've had a look at the ${amt} debit you queried.`, afterGate: null },
-            { channel: 'SMS', text: `Good news - it's actually your gym membership. The rate went up because your introductory offer ended this month. Let us know if you'd like help cancelling it.`, afterGate: 1 },
+            { channel: 'App push', text: `Hi ${p.customer.split(' ')[0]}, we've reviewed your report on the ${amt} debit.`, afterGate: null },
+            { channel: 'App push', text: `We've matched this to your recurring card mandate — your introductory rate ended this billing cycle, which is why the amount changed.`, afterGate: 1 },
         ];
         case 'FNB-53042': return [
-            { channel: 'SMS', text: `Hi Mr ${p.customer.split(' ')[1]}, we've received your report about the ${amt} in unrecognised activity after the SIM swap. We're securing your accounts now.`, afterGate: null },
-            { channel: 'SMS', text: `We've put the full ${amt} back in your account while recovery continues - given your circumstances we wanted you to have that peace of mind straight away.`, suppression: true, afterGate: 3 },
+            { channel: 'Voice call', text: `Hi Mr ${p.customer.split(' ')[1]}, we've received your report of ${amt} in disputed activity following the SIM swap and are securing your accounts.`, afterGate: null },
+            { channel: 'Email', text: `We've credited the full ${amt} to your account while recovery continues.`, suppression: true, afterGate: 3 },
         ];
         default: return [];
     }
 }
-const CHANNEL_ICON = { 'SMS': 'send' };
+const CHANNEL_ICON = { 'App push': 'radio', 'SMS': 'send', 'Email': 'filetext', 'Voice call': 'user' };
 
 // Filler cases exist purely to give the queue realistic volume - they never run
 // agents (see renderFillerCaseShell). Generated deterministically from two name
@@ -532,8 +513,8 @@ function freshState(p) {
     base.urgencyLevel = p.a.caseIntake.urgencyLevel || 'High';
     base.slaStartedAt = Date.now() - 3600000;
     base.messages = [
-        { text: 'Hi Sipho, got your call about the R44,300.00 charges you don\u2019t recognise - we\u2019re looking into it right away.', channel: 'SMS', trigger: 1, status: 'sent', draftedAt: '2026-08-26T21:05:00+02:00', sentAt: '2026-08-26T21:05:30+02:00' },
-        { text: 'Good news - we\u2019ve put the full R44,300.00 back in your account while we recover it from the merchants. No action needed from you.', channel: 'SMS', trigger: 2, status: 'sent', draftedAt: '2026-08-26T21:24:00+02:00', sentAt: '2026-08-26T21:24:20+02:00' },
+        { text: 'We\u2019ve received your report and we\u2019re looking into it now.', channel: 'SMS', trigger: 1, status: 'sent', draftedAt: '2026-08-26T21:05:00+02:00', sentAt: '2026-08-26T21:05:30+02:00' },
+        { text: 'Your card has been blocked and a new one is on its way. We\u2019ve credited your account while we recover the funds.', channel: 'SMS', trigger: 2, status: 'sent', draftedAt: '2026-08-26T21:24:00+02:00', sentAt: '2026-08-26T21:24:20+02:00' },
     ];
     return base;
 }
@@ -767,7 +748,7 @@ function formatAgentData(agentKey, data) {
         if (data.status) parts.push(`Status: ${data.status}`);
         const reportedTotal = getProp(reportedEvent, 'reportedTotal', 'reported Total') || getProp(data, 'reportedTotal', 'reported Total');
         if (reportedTotal && reportedTotal.amount) {
-            parts.push(`Reported Amount: R${Number(reportedTotal.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} ${reportedTotal.currency || 'ZAR'}`);
+            parts.push(`Reported Amount: R${Number(reportedTotal.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })} ${reportedTotal.currency || 'ZAR'}`);
         }
         const reportedCount = getProp(reportedEvent, 'reportedCount', 'reported Count') || getProp(data, 'reportedCount', 'reported Count');
         if (reportedCount) parts.push(`Disputed Items: ${reportedCount}`);
@@ -989,7 +970,7 @@ function renderCaseIntakeReport(obj) {
 
     const reportedTotal = gP(reportedEvent, 'reportedTotal', 'reported Total') || {};
     const totalAmt = reportedTotal.amount
-        ? `R${Number(reportedTotal.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+        ? `R${Number(reportedTotal.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`
         : 'R0.00';
 
     // Real timeline entries look like "2026-08-12T19:47:00+02:00 — Customer opened
@@ -1018,7 +999,7 @@ function renderCaseIntakeReport(obj) {
     const includedItemsHtml = includedItems.map(item => `
         <tr style="border-bottom:1px solid var(--border-soft);">
             <td style="font-family:var(--mono);font-weight:700;padding:6px 0;">${gP(item, 'transactionRef', 'transaction Ref') || 'N/A'}</td>
-            <td style="font-weight:700;padding:6px 0;">R${Number(item.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+            <td style="font-weight:700;padding:6px 0;">R${Number(item.amount || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</td>
             <td style="padding:6px 0;"><span class="badge b-high">Disputed</span></td>
         </tr>
     `).join('');
@@ -1289,9 +1270,9 @@ function renderFundsTraceReport(obj) {
         <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
             <div style="font-size:16px;font-weight:800;color:var(--purple-800);">🌐 Funds Trace</div>
             <div style="font-size:12px;color:var(--text-2);margin-top:2px;">
-                Potentially Recoverable: <b>R${Number(potentiallyRecoverable || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} ${recPosition.currency || 'ZAR'}</b>
-                ${recPosition.heldOrRestrictable ? ` · Held/Restrictable: <b>R${Number(recPosition.heldOrRestrictable).toLocaleString('en-US', { minimumFractionDigits: 2 })}</b>` : ''}
-                ${recPosition.confirmedGone ? ` · Confirmed Gone: <b>R${Number(recPosition.confirmedGone).toLocaleString('en-US', { minimumFractionDigits: 2 })}</b>` : ''}
+                Potentially Recoverable: <b>R${Number(potentiallyRecoverable || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })} ${recPosition.currency || 'ZAR'}</b>
+                ${recPosition.heldOrRestrictable ? ` · Held/Restrictable: <b>R${Number(recPosition.heldOrRestrictable).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</b>` : ''}
+                ${recPosition.confirmedGone ? ` · Confirmed Gone: <b>R${Number(recPosition.confirmedGone).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</b>` : ''}
             </div>
         </div>
 
@@ -1303,7 +1284,7 @@ function renderFundsTraceReport(obj) {
         return `
                 <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;">
                     <div style="font-family:var(--mono);font-size:11px;font-weight:700;">${gP(item, 'transactionRef', 'transaction Ref') || 'Item'}${item.arn ? ` (ARN: ${item.arn})` : ''}</div>
-                    ${item.amount ? `<div style="font-size:12px;font-weight:700;color:var(--purple-700);margin-top:2px;">R${Number(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>` : ''}
+                    ${item.amount ? `<div style="font-size:12px;font-weight:700;color:var(--purple-700);margin-top:2px;">R${Number(item.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</div>` : ''}
                     ${movPath.length ? `<div style="font-size:11px;color:var(--text-2);margin-top:4px;">Path: ${movPath.join(' ➔ ')}</div>` : ''}
                 </div>`;
     }).join('')}
@@ -1406,7 +1387,7 @@ function renderShadowCreditReport(obj) {
         <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
             <div style="font-size:16px;font-weight:800;color:var(--purple-800);">🏦 Shadow Credit</div>
             <div style="font-size:12px;font-weight:700;color:var(--green-700);margin-top:2px;">
-                Refund Decision: ${gP(rec, 'decision') || 'Approve Provisional Refund'} (R${gP(rec, 'refundAmount') ? Number(gP(rec, 'refundAmount')).toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0'})
+                Refund Decision: ${gP(rec, 'decision') || 'Approve Provisional Refund'} (R${gP(rec, 'refundAmount') ? Number(gP(rec, 'refundAmount')).toLocaleString('en-ZA', { minimumFractionDigits: 2 }) : '0'})
             </div>
         </div>
 
@@ -1447,7 +1428,7 @@ function renderChargebackPreparationReport(obj) {
         <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
             <div style="font-size:16px;font-weight:800;color:var(--purple-800);">📋 Chargeback Preparation</div>
             <div style="font-size:12px;color:var(--text-2);margin-top:2px;">
-                Packs Prepared: <b>${gP(summary, 'chargebackCount') || 0}</b> · Total Value: <b>R${Number(chargebackTotal.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</b>
+                Packs Prepared: <b>${gP(summary, 'chargebackCount') || 0}</b> · Total Value: <b>R${Number(chargebackTotal.amount || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</b>
             </div>
         </div>
 
@@ -1459,7 +1440,7 @@ function renderChargebackPreparationReport(obj) {
                         <span style="font-family:var(--mono);font-size:11px;font-weight:700;">${gP(cb, 'chargebackRef', 'chargebackRef')} (${cb.merchant})</span>
                         <span class="badge b-low">${gP(cb, 'packStatus', 'packStatus') || 'Prepared'}</span>
                     </div>
-                    <div style="font-size:12px;font-weight:700;color:var(--purple-700);margin-top:2px;">R${Number(cb.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} (${cb.scheme} ${cb.condition})</div>
+                    <div style="font-size:12px;font-weight:700;color:var(--purple-700);margin-top:2px;">R${Number(cb.amount || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })} (${cb.scheme} ${cb.condition})</div>
                     <div style="font-size:11px;color:var(--text-3);margin-top:4px;">
                         Filing Deadline: <b>${gP(cb, 'filingDeadline', 'filing Deadline')}</b> (${gP(cb, 'daysRemainingAtPreparation', 'days RemainingAtPreparati on')} days remaining)
                     </div>
@@ -1496,7 +1477,7 @@ function renderRecallRepatriationReport(obj) {
         <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:14px;">
             <div style="font-size:16px;font-weight:800;color:var(--purple-800);">📨 Recall & Repatriation</div>
             <div style="font-size:12px;color:var(--text-2);margin-top:2px;">
-                Potentially Recoverable: <b>R${Number(potentiallyRecoverable || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} ${recPosition.currency || 'ZAR'}</b>
+                Potentially Recoverable: <b>R${Number(potentiallyRecoverable || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })} ${recPosition.currency || 'ZAR'}</b>
                 ${routeOwner ? ` · Route owner: <b>${String(routeOwner).replace(/-/g, ' ')}</b>` : ''}
             </div>
         </div>
@@ -1625,7 +1606,7 @@ function humanizeKey(key) {
 function formatLeafValue(val) {
     if (val === null || val === undefined || val === '') return '—';
     if (typeof val === 'boolean') return val ? 'Yes' : 'No';
-    if (typeof val === 'number') return val.toLocaleString('en-US');
+    if (typeof val === 'number') return val.toLocaleString('en-ZA');
     return String(val);
 }
 
@@ -1814,7 +1795,11 @@ function renderDocumentGeneratorReport(obj) {
 
     return `
     <div class="agent-report-wrap" style="line-height:1.6;font-size:13px;">
-        <div class="dg-section-label" style="margin-top:0;">Case Overview</div>
+        <div style="border-bottom:2px solid var(--border-soft);padding-bottom:10px;margin-bottom:16px;">
+            <div style="font-size:16px;font-weight:800;color:var(--purple-800);">📑 Document Generator</div>
+        </div>
+
+        <div class="dg-section-label">Case Overview</div>
         <p style="margin:0 0 4px;">Case Reference: <b>${caseRef || '—'}</b></p>
         <p style="margin:0 0 16px;">Customer Reference: <b>${customerRef || '—'}</b></p>
         <p style="margin:0 0 16px;">Status: <b>${obj.status || 'Completed'}</b></p>
@@ -1823,7 +1808,7 @@ function renderDocumentGeneratorReport(obj) {
         <div class="dg-section-label">Incident Summary</div>
         <p>${incidentParts.join(' ')}</p>
         ${txSchedule.length ? `
-        <p style="margin-bottom:4px;"><b>The disputed transaction${txSchedule.length === 1 ? ' is' : 's are'}:</b></p>
+        <p style="margin-bottom:4px;">The disputed transaction${txSchedule.length === 1 ? ' is' : 's are'}:</p>
         <ul style="margin:0 0 10px;padding-left:20px;">
             ${txSchedule.map(row => `<li>${row.slice(0, 3).join(' — ')}</li>`).join('')}
         </ul>` : ''}
@@ -2507,7 +2492,7 @@ function getLiveCaseInfo(p) {
     const customer = gP(parsed, 'customer') || {};
 
     if (reportedTotal.amount != null) {
-        info.amount = `R${Number(reportedTotal.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+        info.amount = `R${Number(reportedTotal.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`;
         info.live = true;
     }
     const liveChannel = gP(reportedEvent, 'channel') || gP(parsed, 'channel') || gP(customer, 'channel');
@@ -3008,7 +2993,7 @@ function runOneAgent(p, ak, onComplete) {
                 } else {
                     p.a[ak].desc = apiRes.outputText.replace(/[\{\}\[\]"]/g, '').trim();
                     p.a[ak].fullText = apiRes.outputText;
-                    if (ak === 'caseIntake') p.a[ak].urgencyLevel = p.urgency || 'Medium';
+                    if (ak === 'caseIntake') p.a[ak].urgencyLevel = 'Medium';
                 }
                 s.agentStatus[ak] = p.a[ak] && p.a[ak].blocked ? 'blocked' : 'done';
             } else {
@@ -3025,7 +3010,7 @@ function runOneAgent(p, ak, onComplete) {
                     agent: ak,
                     recommendation: { action: p.a[ak]?.finding || 'Processed', reason: p.a[ak]?.desc || 'Analysis completed.' }
                 });
-                if (ak === 'caseIntake') p.a[ak].urgencyLevel = p.urgency || 'Medium';
+                if (ak === 'caseIntake') p.a[ak].urgencyLevel = 'Medium';
                 s.agentStatus[ak] = 'done';
             }
 
@@ -3494,42 +3479,11 @@ function buildCaseFileHtml(p, forExport) {
 function downloadReportAsPdf(p) {
     const win = window.open('', '_blank');
     if (!win) { showToast('Pop-up blocked - allow pop-ups to export PDF.', 'flag', 'flag'); return; }
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${p.id} — Case File</title>
+    win.document.write(`<!DOCTYPE html><html><head><title>${p.id} — Case File</title>
         <style>
             body { font-family: 'Plus Jakarta Sans', Arial, sans-serif; color: #150F26; padding: 32px; max-width: 900px; margin: 0 auto; }
             * { box-sizing: border-box; }
             @media print { .cf-actions { display: none !important; } }
-            /* This popup is a separate document that never loads site.css, so
-               every class buildCaseFileHtml uses needs its own literal rule
-               here - without this the whole case file export was rendering
-               as plain unstyled text, not just missing a few bold headers. */
-            .case-file-header, .case-overview-card { background: #FFFFFF; border: 1px solid #E5E2F0; border-radius: 16px; box-shadow: 0 1px 2px rgba(20,10,40,0.04), 0 10px 26px -14px rgba(46,11,82,0.14); padding: 18px 20px; margin-bottom: 20px; }
-            .cf-actions { display: flex; align-items: center; gap: 8px; }
-            .cf-header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-            .cf-header-divider { border-top: 1px solid #EFEDF7; margin: 16px 0 4px; }
-            .cf-title { font-size: 17px; font-weight: 800; color: #2A0A50; }
-            .cf-meta { font-size: 11.5px; color: #5E5771; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
-            .cf-dot { width: 6px; height: 6px; border-radius: 50%; background: #7C3AED; display: inline-block; }
-            .cf-section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #5B21B6; border-bottom: 1px solid #EFEDF7; padding-bottom: 6px; margin: 22px 0 12px; }
-            .cf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 20px; margin-bottom: 8px; }
-            .cf-span2 { grid-column: span 2; }
-            .cf-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: #9791A8; margin-bottom: 3px; }
-            .cf-value { font-size: 13px; font-weight: 600; color: #150F26; }
-            .cf-subvalue { font-size: 10.5px; font-family: 'JetBrains Mono', ui-monospace, monospace; color: #9791A8; margin-top: 2px; }
-            .cf-findings { display: flex; flex-direction: column; gap: 2px; }
-            .cf-finding-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid #EFEDF7; font-size: 12.5px; }
-            .cf-finding-row:last-child { border-bottom: none; }
-            .cf-finding-label { font-weight: 700; flex-shrink: 0; width: 170px; }
-            .cf-decision-head .cf-finding-label { width: auto; white-space: nowrap; }
-            .cf-finding-text { color: #5E5771; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            .cf-decisions { display: flex; flex-direction: column; gap: 10px; max-width: 640px; }
-            .cf-decision-row { background: #F8F6FE; border: 1px solid #EFEDF7; border-radius: 10px; padding: 10px 12px; }
-            .cf-decision-head { display: flex; align-items: center; gap: 10px; }
-            .cf-decision-time { margin-left: auto; font-size: 10.5px; font-family: 'JetBrains Mono', ui-monospace, monospace; color: #9791A8; }
-            .cf-decision-meta { font-size: 11.5px; color: #5E5771; margin-top: 6px; }
-            .report-empty b { display: block; font-size: 14px; color: #150F26; margin-bottom: 6px; }
-            .kv-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-            .badge { display: inline-flex; padding: 3px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 700; }
         </style>
     </head><body>${buildCaseFileHtml(p, true)}</body></html>`);
     win.document.close();
@@ -3543,33 +3497,7 @@ function downloadReportAsPdf(p) {
 function downloadReportAsDocx(p) {
     const htmlContent = `<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
         <head><meta charset="utf-8"><title>${p.id} — Case File</title>
-        <style>
-            body { font-family: Calibri, Arial, sans-serif; color: #150F26; }
-            * { box-sizing: border-box; }
-            .case-file-header, .case-overview-card { background: #FFFFFF; border: 1px solid #E5E2F0; border-radius: 16px; padding: 18px 20px; margin-bottom: 20px; }
-            .cf-actions { display: flex; align-items: center; gap: 8px; }
-            .cf-header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-            .cf-header-divider { border-top: 1px solid #EFEDF7; margin: 16px 0 4px; }
-            .cf-title { font-size: 17px; font-weight: 800; color: #2A0A50; }
-            .cf-meta { font-size: 11.5px; color: #5E5771; margin-top: 4px; }
-            .cf-section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #5B21B6; border-bottom: 1px solid #EFEDF7; padding-bottom: 6px; margin: 22px 0 12px; }
-            .cf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 20px; margin-bottom: 8px; }
-            .cf-span2 { grid-column: span 2; }
-            .cf-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: #9791A8; margin-bottom: 3px; }
-            .cf-value { font-size: 13px; font-weight: 600; color: #150F26; }
-            .cf-subvalue { font-size: 10.5px; color: #9791A8; margin-top: 2px; }
-            .cf-findings { display: flex; flex-direction: column; gap: 2px; }
-            .cf-finding-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid #EFEDF7; font-size: 12.5px; }
-            .cf-finding-label { font-weight: 700; width: 170px; }
-            .cf-decision-head .cf-finding-label { width: auto; }
-            .cf-finding-text { color: #5E5771; }
-            .cf-decisions { display: flex; flex-direction: column; gap: 10px; }
-            .cf-decision-row { background: #F8F6FE; border: 1px solid #EFEDF7; border-radius: 10px; padding: 10px 12px; }
-            .cf-decision-head { display: flex; align-items: center; gap: 10px; }
-            .cf-decision-time { margin-left: auto; font-size: 10.5px; color: #9791A8; }
-            .cf-decision-meta { font-size: 11.5px; color: #5E5771; margin-top: 6px; }
-            .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 700; }
-        </style>
+        <style>body { font-family: Calibri, Arial, sans-serif; color: #150F26; } * { box-sizing: border-box; }</style>
         </head><body>${buildCaseFileHtml(p, true)}</body></html>`;
     const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
@@ -3602,17 +3530,10 @@ function downloadDocumentGeneratorPdf(p) {
         ? renderRichAgentReport(parsed, 'documentGenerator')
         : `<div style="font-size:13px;line-height:1.6;"><b>${data.finding || ''}</b><p style="margin-top:8px;color:#5E5771;">${data.desc || ''}</p></div>`;
 
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${p.id} — Generated Documents</title>
+    win.document.write(`<!DOCTYPE html><html><head><title>${p.id} — Generated Documents</title>
         <style>
             body { font-family: 'Plus Jakarta Sans', Arial, sans-serif; color: #150F26; padding: 32px; max-width: 900px; margin: 0 auto; }
             * { box-sizing: border-box; }
-            /* This popup is a separate document that never loads site.css, so
-               classes referenced by the generated report (.dg-section-label)
-               need their own literal rule here - otherwise they render as
-               plain unstyled divs, which is why headers weren't bold and
-               colors weren't appearing in the downloaded PDF. */
-            .dg-section-label { font-size: 14.5px; font-weight: 800; letter-spacing: 0.2px; color: #5B21B6; border-bottom: 1px solid #EFEDF7; padding-bottom: 6px; margin: 18px 0 10px; }
-            .dg-section-label:first-of-type { margin-top: 0; }
         </style>
     </head><body>
         <div style="border-bottom:2px solid #EFEDF7;padding-bottom:12px;margin-bottom:20px;">
@@ -3688,45 +3609,29 @@ function renderSapsDraftCard(p) {
         </div>`;
     }
 
-    const sent = s.sapsDraft.status === 'sent';
     return `<div class="corr-card">
         <div class="cc-head"><div class="cc-ico">${I('filetext', 14)}</div>
-            <div><div class="cc-title">SAPS Voluntary Criminal Complaint</div><div class="cc-sub">${sent ? 'Sent' : 'Draft — not sent, edit freely before use'}</div></div>
-            <span class="cc-status ${sent ? 'done' : 'pending'}">${sent ? 'Sent' : 'Draft'}</span></div>
+            <div><div class="cc-title">SAPS Voluntary Criminal Complaint</div><div class="cc-sub">Draft — not sent, edit freely before use</div></div>
+            <span class="cc-status done">Draft</span></div>
         <div style="padding:12px 0;">
             <label class="gr-label" for="sapsSubjectInput">Subject</label>
-            <input type="text" id="sapsSubjectInput" class="case-search-input" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:10px;" value="${s.sapsDraft.subject.replace(/"/g, '&quot;')}" ${sent ? 'disabled' : ''}>
+            <input type="text" id="sapsSubjectInput" class="case-search-input" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:10px;" value="${s.sapsDraft.subject.replace(/"/g, '&quot;')}">
             <label class="gr-label" for="sapsBodyInput">Body</label>
-            <textarea id="sapsBodyInput" class="gr-textarea" rows="12" style="width:100%;" ${sent ? 'disabled' : ''}>${s.sapsDraft.body}</textarea>
-            ${sent ? '' : `<div style="display:flex;gap:8px;margin-top:10px;">
-                <button class="btn primary pill-btn" id="sendSapsDraftBtn">Send email</button>
-            </div>`}
+            <textarea id="sapsBodyInput" class="gr-textarea" rows="12" style="width:100%;">${s.sapsDraft.body}</textarea>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+                <button class="btn ghost pill-btn" id="regenSapsDraftBtn">Regenerate from case data</button>
+            </div>
         </div>
     </div>`;
 }
 
 // Real counterparties come from Funds Trace's own `counterparties` field
 // (confirmed real structure: [{name, type}]) - not guessed or invented.
-// Visa is added separately, on top of that list: it isn't something Funds
-// Trace identifies (it's the scheme itself, not a merchant/bank endpoint),
-// but whenever Chargeback Preparation has real items routed through a Visa
-// scheme condition, the scheme dispute filing itself is a real piece of
-// correspondence a case handler needs to send - so it only appears when
-// there's genuinely a Visa-scheme chargeback to notify about, never
-// unconditionally.
 function getCaseCounterparties(p) {
     const ft = p.a.fundsTrace;
     const parsed = ft && ft.rawText ? parseAgentJson(ft.rawText) : null;
-    const list = parsed ? (gP(parsed, 'counterparties') || []) : [];
-
-    const cb = p.a.chargebackPreparation;
-    const cbParsed = cb && cb.rawText ? parseAgentJson(cb.rawText) : null;
-    const chargebacks = (cbParsed && gP(cbParsed, 'chargebacks')) || [];
-    const hasVisaItems = chargebacks.some(c => String(c.scheme || '').toLowerCase() === 'visa');
-    if (hasVisaItems && !list.some(c => c.name === 'Visa')) {
-        return [...list, { name: 'Visa', type: 'card scheme' }];
-    }
-    return list;
+    if (!parsed) return [];
+    return gP(parsed, 'counterparties') || [];
 }
 
 // Decides what kind of email a counterparty needs and drafts it from real
@@ -3737,43 +3642,9 @@ function getCaseCounterparties(p) {
 // Preparation's real filing data. If Recall & Repatriation is genuinely
 // applicable (a counterparty bank/CASP actually needs to be chased, as in
 // cases with no scheme route), counterparties get a funds-recall request
-// built from Recall & Repatriation's own real reasoning instead. Visa gets
-// its own distinct scheme-dispute-filing template, never the merchant
-// notification wording, since it's a fundamentally different kind of
-// correspondence (filing a dispute with the scheme vs notifying a merchant).
-// Recall & Repatriation's real reasoning text (confirmed from live output)
-// names specific counterparties inline with their own specific amounts, e.g.
-// "...unlock repatriation of the confirmed held R41,000 and prepare a
-// Licensed CASP specific-value hold request for the identified R48,000...".
-// There's no confirmed structured per-counterparty amount field to rely on
-// instead, so this finds the Rand figure appearing nearest to whichever
-// keyword the counterparty's own type/name suggests, rather than ever
-// falling back to the full case total (which is correct for none of the
-// individual counterparties in a multi-item case).
-function extractAmountNearKeyword(text, keywords) {
-    if (!text) return null;
-    const lower = text.toLowerCase();
-    for (const kw of keywords) {
-        if (!kw) continue;
-        const idx = lower.indexOf(kw.toLowerCase());
-        if (idx === -1) continue;
-        // Search forward from the keyword first - the real reasoning text
-        // consistently names the entity, then states its amount afterward
-        // ("...Licensed CASP specific-value hold request for the identified
-        // R48,000..."), not before it. A symmetric window around the
-        // keyword let an earlier, unrelated amount win over the one that
-        // actually describes this entity.
-        const forward = text.substring(idx, idx + 150);
-        let match = forward.match(/R\s?\d{1,3}(?:,\d{3})*(?:\.\d+)?/);
-        if (match) return match[0].replace(/\s/g, '');
-        const backward = text.substring(Math.max(0, idx - 100), idx);
-        match = backward.match(/R\s?\d{1,3}(?:,\d{3})*(?:\.\d+)?(?!.*R\s?\d{1,3}(?:,\d{3})*(?:\.\d+)?)/);
-        if (match) return match[0].replace(/\s/g, '');
-    }
-    return null;
-}
-
+// built from Recall & Repatriation's own real reasoning instead.
 function generateCounterpartyDraft(p, counterparty) {
+    const info = getLiveCaseInfo(p);
     const cb = p.a.chargebackPreparation;
     const cbParsed = cb && cb.rawText ? parseAgentJson(cb.rawText) : null;
     const rar = p.a.recallRepatriation;
@@ -3781,57 +3652,13 @@ function generateCounterpartyDraft(p, counterparty) {
 
     const caseRef = (cbParsed && gP(cbParsed, 'caseRef', 'case Ref')) || (rarParsed && gP(rarParsed, 'caseRef', 'case Ref')) || p.id;
     const rarApplicable = rarParsed && rarParsed.applicability && rarParsed.applicability !== 'not-applicable';
-    const chargebacks = (cbParsed && gP(cbParsed, 'chargebacks')) || [];
 
-    if (counterparty.name === 'Visa') {
-        const visaItems = chargebacks.filter(c => String(c.scheme || '').toLowerCase() === 'visa');
-        const visaTotal = visaItems.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
-        const subject = `Scheme Dispute Filing — Visa — Case ${caseRef}`;
-        const body = `To: Visa — Scheme Dispute Filing Desk
-Case Reference: ${caseRef}
-Total Amount Filed: R${visaTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} across ${visaItems.length} item${visaItems.length === 1 ? '' : 's'}
-
-We are submitting the following card-not-present fraud dispute${visaItems.length === 1 ? '' : 's'} for filing under the scheme condition${visaItems.length === 1 ? '' : 's'} referenced below:
-
-${visaItems.map(c => `- ${c.chargebackRef || 'Reference pending'}: R${Number(c.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} (${c.scheme} ${c.condition || ''})${c.filingDeadline ? `, filing deadline ${c.filingDeadline}` : ''}`).join('\n')}
-
-Supporting evidence packs for each item have been prepared and are available on request. Please confirm receipt and filing acceptance for each reference above.
-
-Regards,
-FNB Fraud Operations`;
-        return { subject, body };
-    }
-
-    // Whether THIS specific counterparty is on the chargeback route (has its
-    // own prepared chargeback item) has to be checked per-counterparty, not
-    // decided once for the whole case - a mixed-rails case like a SIM-swap
-    // with both card and EFT movement genuinely has some counterparties on
-    // the scheme/chargeback route and others on the recall route at the same
-    // time. Deciding this case-wide previously sent a merchant with its own
-    // real chargeback through the recall email template instead.
-    const chargebackMatch = chargebacks.find(c => String(c.merchant || '').toUpperCase() === String(counterparty.name).toUpperCase());
-
-    if (!chargebackMatch && rarApplicable) {
+    if (rarApplicable) {
         const rec = gP(rarParsed, 'recommendation') || {};
-        const typeStr = String(counterparty.type || '').toLowerCase();
-        const nameStr = String(counterparty.name || '');
-
-        // "cash" (already converted and withdrawn) has no real correspondence
-        // target - there's no institution to email for value that's already
-        // left the system, so this isn't drafted as an email at all.
-        if (typeStr.includes('cash') || typeStr.includes('withdraw')) {
-            return { noEmail: true, note: `${nameStr} represents value already converted and withdrawn - there is no institution to recall funds from at this stage, so no correspondence is drafted for it. It remains listed here for visibility into the full recovery picture.` };
-        }
-
-        const keywords = typeStr.includes('casp') ? ['casp', 'wallet']
-            : (typeStr.includes('bank') || typeStr.includes('account')) ? ['bank', 'account', 'repatriation']
-                : [nameStr];
-        const matchedAmount = extractAmountNearKeyword(rec.reason || '', keywords);
-
         const subject = `Funds Recall Request — ${counterparty.name} — Case ${caseRef}`;
         const body = `To: ${counterparty.name}${counterparty.type ? ` (${counterparty.type})` : ''} — Fraud/Compliance Desk
 Case Reference: ${caseRef}
-${matchedAmount ? `Amount Held/Requested: ${matchedAmount}` : 'Amount: to be confirmed once Recall & Repatriation correspondence details are available'}
+Disputed Amount: ${info.amount}
 
 We are writing to request your urgent assistance in recalling funds connected to a confirmed fraud case linked to your institution.
 
@@ -3844,13 +3671,15 @@ FNB Fraud Operations`;
         return { subject, body };
     }
 
+    const chargebacks = (cbParsed && gP(cbParsed, 'chargebacks')) || [];
+    const match = chargebacks.find(c => String(c.merchant || '').toUpperCase() === String(counterparty.name).toUpperCase());
     const subject = `Fraud Notification — ${counterparty.name} — Case ${caseRef}`;
     const body = `To: ${counterparty.name}${counterparty.type ? ` (${counterparty.type})` : ''} — Fraud/Chargeback Desk
 Case Reference: ${caseRef}
-Disputed Amount: ${chargebackMatch ? `R${Number(chargebackMatch.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'to be confirmed from Chargeback Preparation output'}
-${chargebackMatch ? `Reference: ${chargebackMatch.chargebackRef || ''}` : ''}
-${chargebackMatch ? `Scheme Condition: ${chargebackMatch.scheme || ''} ${chargebackMatch.condition || ''}`.trim() : ''}
-${chargebackMatch && chargebackMatch.filingDeadline ? `Filing Deadline: ${chargebackMatch.filingDeadline}` : ''}
+Disputed Amount: ${match ? `R${Number(match.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}` : info.amount}
+${match ? `Reference: ${match.chargebackRef || ''}` : ''}
+${match ? `Scheme Condition: ${match.scheme || ''} ${match.condition || ''}`.trim() : ''}
+${match && match.filingDeadline ? `Filing Deadline: ${match.filingDeadline}` : ''}
 
 We are formally notifying you of a confirmed card-not-present fraud dispute involving a transaction processed through your merchant account. A chargeback has been prepared under the scheme condition referenced above and will be filed within the applicable window.
 
@@ -3864,21 +3693,6 @@ FNB Fraud Operations`;
 function renderCounterpartyDraftCard(p, counterparty) {
     const s = state[p.id];
     const key = counterparty.name;
-
-    // "cash"/already-withdrawn value has no institution to actually email -
-    // show why, not a button that would draft a pointless letter.
-    const typeStr = String(counterparty.type || '').toLowerCase();
-    if (typeStr.includes('cash') || typeStr.includes('withdraw')) {
-        return `<div class="corr-card">
-            <div class="cc-head"><div class="cc-ico">${I('send', 14)}</div>
-                <div><div class="cc-title">${counterparty.name}</div><div class="cc-sub">${counterparty.type || 'Counterparty'}</div></div>
-                <span class="cc-status pending">No correspondence</span></div>
-            <div style="padding:12px 0;">
-                <p style="font-size:12.5px;color:var(--text-2);margin:0;">This represents value already converted and withdrawn - there's no institution to send a recall request to at this stage. Listed here for visibility into the full recovery picture, not as an actionable item.</p>
-            </div>
-        </div>`;
-    }
-
     const draft = s.counterpartyDrafts[key];
 
     if (!draft) {
@@ -3989,18 +3803,16 @@ function wireSapsDraftHandlers(p) {
     const genBtn = document.getElementById('genSapsDraftBtn');
     if (genBtn) {
         genBtn.addEventListener('click', () => {
-            s.sapsDraft = { ...generateSapsDraft(p), status: 'draft' };
+            s.sapsDraft = generateSapsDraft(p);
             renderCorrespondenceTab(p);
         });
     }
-    const sendBtn = document.getElementById('sendSapsDraftBtn');
-    if (sendBtn) {
-        sendBtn.addEventListener('click', () => {
-            if (!s.sapsDraft) return;
-            if (!s.sapsDraft.body || !s.sapsDraft.body.trim()) { showToast('Email body is empty - add some text before sending.', 'flag', 'flag'); return; }
-            s.sapsDraft.status = 'sent';
+    const regenBtn = document.getElementById('regenSapsDraftBtn');
+    if (regenBtn) {
+        regenBtn.addEventListener('click', () => {
+            if (!window.confirm('Replace your edits with a freshly generated draft?')) return;
+            s.sapsDraft = generateSapsDraft(p);
             renderCorrespondenceTab(p);
-            showToast('SAPS complaint email sent', 'msg', 'msg');
         });
     }
     const subjectInput = document.getElementById('sapsSubjectInput');

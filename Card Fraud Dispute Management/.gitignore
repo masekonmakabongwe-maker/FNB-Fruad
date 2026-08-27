@@ -1,0 +1,8 @@
+## .NET build artifacts — never commit these
+bin/
+obj/
+*.user
+.vs/
+
+## Local secrets — see README for dotnet user-secrets setup
+appsettings.Local.json
