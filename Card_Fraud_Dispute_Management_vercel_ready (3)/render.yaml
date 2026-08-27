@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: card-fraud-dispute-management
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: PurpleFabric__ApiKey
+        sync: false
+      - key: PurpleFabric__Username
+        sync: false
+      - key: PurpleFabric__Password
+        sync: false
+
+# This file assumes Dockerfile sits at the same level as render.yaml - i.e.
+# the repo has been flattened so the .csproj, Dockerfile, and this file are
+# all at the true repo root, not nested inside "Card Fraud Dispute
+# Management/Card Fraud Dispute Management/" folders. See DEPLOYMENT_RENDER.md
+# for exactly how to do that. If you deploy without flattening, add a
+# `rootDir:` field here pointing at the actual project folder instead - but
+# flattening is the simpler, less error-prone path, and the one this file is
+# written for.
+#
+# sync: false on the env vars means Render won't try to pull a value from
+# anywhere automatically - it'll prompt you to type each one in when you
+# create the service from this blueprint, and store it as a secret from
+# then on. Never put real values in this file.
